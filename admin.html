@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Project Studio · RaghusLogicLab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="section" style="padding-top:40px">
+    <div class="wrap">
+      <span class="eyebrow">// project studio</span>
+      <h1 style="font-size:clamp(1.8rem,4.5vw,2.6rem)">Create &amp; manage the lab</h1>
+      <p class="muted" style="max-width:760px">Changes save automatically in this browser as a draft and show on your pages in preview mode.
+        When you're happy, go to <a href="#publish" data-tab-link="publish">Publish</a> and download <span class="mono">site-data.js</span> — upload it to your host to make it live for customers.</p>
+      <div id="unpublished-note" class="draft-banner" style="border-radius:10px;border:1px solid rgba(251,191,36,.4);margin:0 0 20px;display:none"></div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="create" role="tab">+ Create Project</button>
+        <button class="tab" data-tab="manage" role="tab">Manage Projects</button>
+        <button class="tab" data-tab="update" role="tab">Daily Update</button>
+        <button class="tab" data-tab="publish" role="tab">Settings &amp; Publish</button>
+      </div>
+
+      <!-- CREATE / EDIT PROJECT -->
+      <section class="tab-panel" id="tab-create">
+        <div class="two-col">
+          <form class="panel" id="project-form" autocomplete="off">
+            <h3 id="form-title">New project</h3>
+            <input type="hidden" id="f-id">
+            <div class="form-grid" style="margin-top:14px">
+              <div class="full">
+                <label for="f-name">Project name *</label>
+                <input type="text" id="f-name" required placeholder="e.g. Smart Invoice Tool">
+              </div>
+              <div>
+                <label for="f-slug">Link name <span class="hint">(used in the customer link)</span></label>
+                <input type="text" id="f-slug" placeholder="smart-invoice-tool">
+              </div>
+              <div>
+                <label for="f-category">Category</label>
+                <select id="f-category">
+                  <option>Website</option><option>Tool</option><option>App</option><option>Service</option>
+                  <option>Client work</option><option>Experiment</option><option>Learning</option><option>Other</option>
+                </select>
+              </div>
+              <div class="full">
+                <label for="f-tagline">Short tagline</label>
+                <input type="text" id="f-tagline" maxlength="140" placeholder="One line that explains the project">
+              </div>
+              <div>
+                <label for="f-status">Status</label>
+                <select id="f-status"></select>
+              </div>
+              <div>
+                <label for="f-visibility">Visibility</label>
+                <select id="f-visibility">
+                  <option value="public">Public (listed)</option>
+                  <option value="unlisted">Unlisted (link only)</option>
+                </select>
+              </div>
+              <div class="full">
+                <label for="f-url">Project website / subdomain <span class="hint">(where customers go — optional)</span></label>
+                <input type="text" inputmode="url" id="f-url" placeholder="https://invoice.raghuslogiclab.com">
+              </div>
+              <div>
+                <label for="f-started">Start date</label>
+                <input type="date" id="f-started">
+              </div>
+              <div>
+                <label for="f-color">Icon colour</label>
+                <input type="color" id="f-color" value="#22d3ee">
+              </div>
+              <div class="full">
+                <label for="f-desc">Description</label>
+                <textarea id="f-desc" placeholder="What is it, who is it for, what can customers do there?"></textarea>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:18px">
+              <button type="submit" class="btn btn-primary" id="save-btn">Create project</button>
+              <button type="button" class="btn" id="cancel-edit" style="display:none">Cancel edit</button>
+            </div>
+
+            <div class="success-box" id="success-box">
+              <strong id="success-title">Project created.</strong>
+              <p class="muted" style="margin:4px 0 10px;font-size:.9rem">Customer link:</p>
+              <div class="linkbox"><input type="text" id="success-link" readonly><button type="button" class="btn btn-sm" id="success-copy">Copy</button></div>
+              <div class="btn-row" style="margin-top:12px">
+                <a class="btn btn-sm" id="success-view" href="#" target="_blank">Preview page</a>
+                <button type="button" class="btn btn-sm" id="success-new">Create another</button>
+              </div>
+            </div>
+          </form>
+
+          <aside class="panel">
+            <h3>Live preview</h3>
+            <p class="muted" style="font-size:.88rem">How the card will look on the home page.</p>
+            <div id="card-preview" style="margin-top:12px"></div>
+            <p class="muted" style="font-size:.85rem;margin:16px 0 4px">Customer link</p>
+            <div class="mono" id="link-preview" style="word-break:break-all;color:var(--accent)"></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- MANAGE -->
+      <section class="tab-panel" id="tab-manage">
+        <div class="panel">
+          <div class="section-head" style="margin-bottom:12px">
+            <h3 style="margin:0">All projects <span class="muted" id="proj-count"></span></h3>
+            <button class="btn btn-sm btn-primary" data-tab-link="create">+ Create Project</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Project</th><th>Status</th><th>Visibility</th><th>Customer link</th><th></th></tr></thead>
+              <tbody id="proj-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- DAILY UPDATE -->
+      <section class="tab-panel" id="tab-update">
+        <div class="two-col">
+          <form class="panel" id="update-form">
+            <h3>Post today's update</h3>
+            <div class="form-grid" style="margin-top:14px">
+              <div>
+                <label for="u-date">Date</label>
+                <input type="date" id="u-date" required>
+              </div>
+              <div>
+                <label for="u-type">Type</label>
+                <select id="u-type"></select>
+              </div>
+              <div class="full">
+                <label for="u-project">Related project</label>
+                <select id="u-project"></select>
+              </div>
+              <div class="full">
+                <label for="u-title">Title *</label>
+                <input type="text" id="u-title" required placeholder="e.g. Added login page to the client portal">
+              </div>
+              <div class="full">
+                <label for="u-body">Details</label>
+                <textarea id="u-body" placeholder="What changed today?"></textarea>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:18px">
+              <button type="submit" class="btn btn-primary">Add to Lab Log</button>
+            </div>
+          </form>
+          <div class="panel">
+            <h3>Recent updates</h3>
+            <ul class="timeline" id="update-list" style="margin-top:16px"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS & PUBLISH -->
+      <section class="tab-panel" id="tab-publish">
+        <div class="two-col">
+          <form class="panel" id="settings-form">
+            <h3>Site settings</h3>
+            <div class="form-grid" style="margin-top:14px">
+              <div><label for="s-name">Site name</label><input type="text" id="s-name"></div>
+              <div><label for="s-email">Contact email</label><input type="email" id="s-email"></div>
+              <div class="full"><label for="s-tagline">Tagline</label><input type="text" id="s-tagline"></div>
+              <div class="full">
+                <label for="s-base">Your domain <span class="hint">(used to build customer links, e.g. https://raghuslogiclab.com)</span></label>
+                <input type="text" inputmode="url" id="s-base" placeholder="https://raghuslogiclab.com">
+              </div>
+              <div class="full"><label for="s-intro">Home page intro</label><textarea id="s-intro" style="min-height:80px"></textarea></div>
+              <div class="full"><label for="s-about">About text</label><textarea id="s-about" style="min-height:80px"></textarea></div>
+            </div>
+            <div class="btn-row" style="margin-top:18px"><button class="btn btn-primary" type="submit">Save settings</button></div>
+          </form>
+
+          <div>
+            <div class="panel">
+              <h3>Publish to your domain</h3>
+              <ol class="muted" style="padding-left:20px;font-size:.93rem">
+                <li>Click <strong style="color:var(--text)">Download site-data.js</strong>.</li>
+                <li>Replace <span class="mono">data/site-data.js</span> in your website folder with it.</li>
+                <li>Upload that file to your host. Customers see the changes right away.</li>
+              </ol>
+              <div class="btn-row">
+                <button class="btn btn-primary" id="download-btn">Download site-data.js</button>
+                <label class="btn" style="margin:0">Import site-data.js<input type="file" id="import-file" accept=".js,.json" hidden></label>
+              </div>
+              <p class="muted" style="font-size:.85rem;margin:14px 0 8px">If the download doesn't start, copy the file contents instead and paste them into <span class="mono">data/site-data.js</span>.</p>
+              <button class="btn btn-sm" id="copy-file-btn" type="button">Copy file contents</button>
+              <textarea id="file-text" class="mono" readonly hidden style="margin-top:10px;min-height:160px;font-size:.78rem"></textarea>
+            </div>
+            <div class="panel">
+              <h3>Draft</h3>
+              <p class="muted" style="font-size:.9rem" id="draft-status"></p>
+              <button class="btn btn-danger btn-sm" id="discard-btn">Discard draft &amp; reload published data</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="data/site-data.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+  (function () {
+    var esc = RLL.esc;
+    var data = RLL.readDraft() || RLL.published();
+    var $ = function (id) { return document.getElementById(id); };
+
+    function persist() {
+      RLL.saveDraft(data);
+      refreshAll();
+    }
+    function hasChanges() {
+      return JSON.stringify(data) !== JSON.stringify(RLL.published());
+    }
+
+    /* ---------- Tabs ---------- */
+    function showTab(name) {
+      if (!$("tab-" + name)) name = "create";
+      document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.tab === name); });
+      document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.toggle("active", p.id === "tab-" + name); });
+      if (location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+    }
+    document.querySelectorAll(".tab").forEach(function (t) {
+      t.addEventListener("click", function () { showTab(t.dataset.tab); });
+    });
+    document.addEventListener("click", function (e) {
+      var l = e.target.closest("[data-tab-link]");
+      if (l) { e.preventDefault(); if (l.dataset.tabLink === "create") resetForm(); showTab(l.dataset.tabLink); window.scrollTo(0, 0); }
+    });
+    window.addEventListener("hashchange", function () { showTab(location.hash.slice(1)); });
+
+    /* ---------- Fill selects ---------- */
+    $("f-status").innerHTML = Object.keys(RLL.STATUS).map(function (k) {
+      return '<option value="' + k + '">' + RLL.STATUS[k].label + "</option>";
+    }).join("");
+    $("f-status").value = "idea";
+    $("u-type").innerHTML = Object.keys(RLL.UPDATE_TYPES).map(function (k) {
+      return '<option value="' + k + '">' + RLL.UPDATE_TYPES[k] + "</option>";
+    }).join("");
+
+    /* ---------- Project form ---------- */
+    var slugTouched = false;
+    $("f-slug").addEventListener("input", function () { slugTouched = true; livePreview(); });
+    $("f-name").addEventListener("input", function () {
+      if (!slugTouched) $("f-slug").value = RLL.slugify($("f-name").value);
+      livePreview();
+    });
+    ["f-tagline", "f-status", "f-category", "f-color", "f-started", "f-desc", "f-visibility", "f-url"].forEach(function (id) {
+      $(id).addEventListener("input", livePreview);
+      $(id).addEventListener("change", livePreview);
+    });
+
+    function formProject() {
+      return {
+        id: $("f-id").value || "p-" + Date.now().toString(36),
+        slug: RLL.slugify($("f-slug").value || $("f-name").value),
+        name: $("f-name").value.trim(),
+        tagline: $("f-tagline").value.trim(),
+        description: $("f-desc").value.trim(),
+        category: $("f-category").value,
+        status: $("f-status").value,
+        visibility: $("f-visibility").value,
+        url: $("f-url").value.trim(),
+        color: $("f-color").value,
+        started: $("f-started").value
+      };
+    }
+
+    function livePreview() {
+      var p = formProject();
+      if (!p.name) p.name = "Your project";
+      $("card-preview").innerHTML = '<div class="card">' +
+        '<div class="card-top">' + RLL.iconHtml(p) + RLL.statusBadge(p.status) + "</div>" +
+        '<h3 style="margin:4px 0 0">' + esc(p.name) + "</h3><p>" + esc(p.tagline || p.description || "Tagline goes here") + "</p>" +
+        '<div class="meta"><span class="tag">' + esc(p.category) + "</span>" +
+        (p.visibility === "unlisted" ? '<span class="tag">unlisted</span>' : "") + "</div></div>";
+      $("link-preview").textContent = RLL.projectLink(data.site, p.slug || "your-project");
+    }
+
+    function resetForm() {
+      $("project-form").reset();
+      $("f-id").value = "";
+      $("f-status").value = "idea";
+      $("f-color").value = "#22d3ee";
+      $("f-started").value = RLL.today();
+      $("form-title").textContent = "New project";
+      $("save-btn").textContent = "Create project";
+      $("cancel-edit").style.display = "none";
+      $("success-box").classList.remove("show");
+      slugTouched = false;
+      livePreview();
+    }
+
+    function editProject(id) {
+      var p = data.projects.filter(function (x) { return x.id === id; })[0];
+      if (!p) return;
+      $("f-id").value = p.id;
+      $("f-name").value = p.name || "";
+      $("f-slug").value = p.slug || "";
+      $("f-tagline").value = p.tagline || "";
+      $("f-desc").value = p.description || "";
+      $("f-category").value = p.category || "Other";
+      $("f-status").value = p.status || "idea";
+      $("f-visibility").value = p.visibility || "public";
+      $("f-url").value = p.url || "";
+      $("f-color").value = p.color || "#22d3ee";
+      $("f-started").value = p.started || "";
+      $("form-title").textContent = "Edit: " + p.name;
+      $("save-btn").textContent = "Save changes";
+      $("cancel-edit").style.display = "";
+      $("success-box").classList.remove("show");
+      slugTouched = true;
+      livePreview();
+      showTab("create");
+      window.scrollTo(0, 0);
+    }
+
+    $("cancel-edit").addEventListener("click", resetForm);
+    $("success-new").addEventListener("click", function () { resetForm(); $("f-name").focus(); });
+
+    $("project-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var p = formProject();
+      if (!p.name) { RLL.toast("Please give the project a name"); return; }
+      if (!p.slug) { RLL.toast("Please add a link name"); return; }
+      var clash = data.projects.filter(function (x) { return x.slug === p.slug && x.id !== p.id; })[0];
+      if (clash) { RLL.toast("That link name is already used by " + clash.name); $("f-slug").focus(); return; }
+      if (p.url && !/^https?:\/\//i.test(p.url)) p.url = "https://" + p.url;
+
+      var idx = data.projects.findIndex(function (x) { return x.id === p.id; });
+      var isNew = idx === -1;
+      if (isNew) {
+        p.created = RLL.today();
+        data.projects.push(p);
+      } else {
+        var old = data.projects[idx];
+        p.created = old.created || RLL.today();
+        if (old.slug !== p.slug) {
+          data.updates.forEach(function (u) { if (u.project === old.slug) u.project = p.slug; });
+        }
+        data.projects[idx] = p;
+      }
+      persist();
+
+      var link = RLL.projectLink(data.site, p.slug);
+      $("success-title").textContent = isNew ? "Project created: " + p.name : "Saved: " + p.name;
+      $("success-link").value = link;
+      $("success-view").href = "project.html?p=" + encodeURIComponent(p.slug);
+      $("success-box").classList.add("show");
+      $("f-id").value = p.id;
+      $("form-title").textContent = "Edit: " + p.name;
+      $("save-btn").textContent = "Save changes";
+      $("cancel-edit").style.display = "";
+      RLL.toast(isNew ? "Project created — remember to publish" : "Changes saved");
+    });
+    $("success-copy").addEventListener("click", function () { RLL.copy($("success-link").value); });
+
+    /* ---------- Manage table ---------- */
+    function drawTable() {
+      $("proj-count").textContent = "(" + data.projects.length + ")";
+      if (!data.projects.length) {
+        $("proj-rows").innerHTML = '<tr><td colspan="5" class="muted">No projects yet. Create your first one.</td></tr>';
+        return;
+      }
+      $("proj-rows").innerHTML = data.projects.map(function (p, i) {
+        var link = RLL.projectLink(data.site, p.slug);
+        return "<tr>" +
+          '<td><div style="display:flex;align-items:center;gap:10px">' + RLL.iconHtml(p, 32) +
+            "<div><strong>" + esc(p.name) + '</strong><div class="muted mono">/' + esc(p.slug) + "</div></div></div></td>" +
+          "<td>" + RLL.statusBadge(p.status) + "</td>" +
+          "<td>" + (p.visibility === "unlisted" ? "Unlisted" : "Public") + "</td>" +
+          '<td><button class="btn btn-sm" data-copy="' + esc(link) + '">Copy link</button> ' +
+            '<a class="btn btn-sm" href="project.html?p=' + encodeURIComponent(p.slug) + '" target="_blank">View</a></td>' +
+          '<td style="white-space:nowrap">' +
+            '<button class="btn btn-sm" data-move="' + i + '" data-dir="-1" title="Move up"' + (i === 0 ? " disabled" : "") + ">&uarr;</button> " +
+            '<button class="btn btn-sm" data-move="' + i + '" data-dir="1" title="Move down"' + (i === data.projects.length - 1 ? " disabled" : "") + ">&darr;</button> " +
+            '<button class="btn btn-sm" data-edit="' + esc(p.id) + '">Edit</button> ' +
+            '<button class="btn btn-sm btn-danger" data-del="' + esc(p.id) + '">Delete</button></td>' +
+          "</tr>";
+      }).join("");
+    }
+    $("proj-rows").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.copy) RLL.copy(b.dataset.copy);
+      if (b.dataset.edit) editProject(b.dataset.edit);
+      if (b.dataset.move) {
+        var i = +b.dataset.move, j = i + (+b.dataset.dir);
+        var t = data.projects[i]; data.projects[i] = data.projects[j]; data.projects[j] = t;
+        persist();
+      }
+      if (b.dataset.del) {
+        var p = data.projects.filter(function (x) { return x.id === b.dataset.del; })[0];
+        if (p) RLL.confirmClick(b, function () {
+          data.projects = data.projects.filter(function (x) { return x.id !== p.id; });
+          persist();
+          RLL.toast("Deleted " + p.name + ". Publish to remove it from the live site.");
+        });
+      }
+    });
+
+    /* ---------- Daily updates ---------- */
+    function drawUpdateForm() {
+      var cur = $("u-project").value;
+      $("u-project").innerHTML = '<option value="">General (whole lab)</option>' + data.projects.map(function (p) {
+        return '<option value="' + esc(p.slug) + '">' + esc(p.name) + "</option>";
+      }).join("");
+      $("u-project").value = cur;
+    }
+    function drawUpdates() {
+      var ups = RLL.sortedUpdates(data);
+      $("update-list").innerHTML = ups.length ? ups.slice(0, 30).map(function (u) {
+        return '<li><span class="t-date">' + esc(RLL.fmtDate(u.date)) + " · " + esc(RLL.UPDATE_TYPES[u.type] || "Update") + "</span>" +
+          "<h4>" + esc(u.title) + "</h4><p>" + esc(u.body || "") + "</p>" +
+          '<div class="t-meta"><button class="btn btn-sm btn-danger" data-del-update="' + esc(u.id) + '">Delete</button></div></li>';
+      }).join("") : '<li><p>No updates yet.</p></li>';
+    }
+    $("update-list").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-del-update]"); if (!b) return;
+      RLL.confirmClick(b, function () {
+        data.updates = data.updates.filter(function (u) { return u.id !== b.dataset.delUpdate; });
+        persist();
+        RLL.toast("Update deleted");
+      });
+    });
+    $("update-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var title = $("u-title").value.trim();
+      if (!title) return;
+      data.updates.push({
+        id: "u-" + Date.now().toString(36),
+        date: $("u-date").value || RLL.today(),
+        type: $("u-type").value,
+        title: title,
+        body: $("u-body").value.trim(),
+        project: $("u-project").value
+      });
+      persist();
+      $("u-title").value = ""; $("u-body").value = "";
+      RLL.toast("Update added to the Lab Log");
+    });
+    $("u-date").value = RLL.today();
+
+    /* ---------- Settings ---------- */
+    function fillSettings() {
+      var s = data.site;
+      $("s-name").value = s.name || ""; $("s-email").value = s.email || "";
+      $("s-tagline").value = s.tagline || ""; $("s-base").value = s.baseUrl || "";
+      $("s-intro").value = s.intro || ""; $("s-about").value = s.about || "";
+    }
+    $("settings-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      data.site.name = $("s-name").value.trim() || "RaghusLogicLab";
+      data.site.email = $("s-email").value.trim();
+      data.site.tagline = $("s-tagline").value.trim();
+      var bu = $("s-base").value.trim().replace(/\/+$/, "");
+      if (bu && !/^https?:\/\//i.test(bu)) bu = "https://" + bu;
+      data.site.baseUrl = bu; $("s-base").value = bu;
+      data.site.intro = $("s-intro").value.trim();
+      data.site.about = $("s-about").value.trim();
+      persist();
+      RLL.toast("Settings saved");
+    });
+
+    /* ---------- Publish ---------- */
+    function buildFile() {
+      return "/*\n  RaghusLogicLab — site data (generated by Project Studio on " + new Date().toLocaleString() + ")\n" +
+        "  Replace data/site-data.js on your host with this file to publish.\n*/\n" +
+        "window.RLL_DATA = " + JSON.stringify(data, null, 2) + ";\n";
+    }
+    $("copy-file-btn").addEventListener("click", function () {
+      var ta = $("file-text");
+      ta.value = buildFile(); ta.hidden = false; ta.select();
+      RLL.copy(ta.value); RLL.toast("File contents copied. Paste them into data/site-data.js");
+    });
+    $("download-btn").addEventListener("click", function () {
+      var out = buildFile();
+      var blob = new Blob([out], { type: "text/javascript" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "site-data.js";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      RLL.toast("Downloaded — now upload it to data/ on your host");
+    });
+    $("import-file").addEventListener("change", function (e) {
+      var f = e.target.files[0]; if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var txt = String(r.result);
+          var start = txt.indexOf("{"), end = txt.lastIndexOf("}");
+          var obj = JSON.parse(txt.slice(start, end + 1));
+          if (!obj.projects) throw new Error("no projects");
+          obj.site = obj.site || {}; obj.updates = obj.updates || [];
+          data = obj; persist(); fillSettings();
+          RLL.toast("Imported " + obj.projects.length + " projects");
+        } catch (err) { RLL.toast("Could not read that file"); }
+      };
+      r.readAsText(f);
+      e.target.value = "";
+    });
+    $("discard-btn").addEventListener("click", function () {
+      RLL.confirmClick($("discard-btn"), discardDraft);
+    });
+    function discardDraft() {
+      RLL.clearDraft();
+      data = RLL.published();
+      fillSettings(); resetForm(); refreshAll(true);
+      RLL.toast("Draft discarded");
+      $("discard-btn").dataset.armed = ""; $("discard-btn").textContent = "Discard draft & reload published data"; $("discard-btn").classList.remove("armed");
+    }
+
+    function refreshAll(skipHeader) {
+      var changed = hasChanges();
+      RLL.renderHeader(data, "projects", false);
+      RLL.renderFooter(data);
+      var note = $("unpublished-note");
+      note.style.display = changed ? "" : "none";
+      note.innerHTML = 'You have unpublished changes. <a href="#publish" data-tab-link="publish">Download site-data.js</a> and upload it to go live.';
+      $("draft-status").textContent = changed ?
+        "This browser holds unpublished changes (" + data.projects.length + " projects, " + data.updates.length + " updates)." :
+        "No unpublished changes — this browser matches the published site-data.js.";
+      if (!changed) RLL.clearDraft();
+      drawTable(); drawUpdateForm(); drawUpdates(); livePreview();
+    }
+
+    fillSettings();
+    resetForm();
+    refreshAll();
+    showTab(location.hash.slice(1) || "create");
+  })();
+  </script>
+</body>
+</html>

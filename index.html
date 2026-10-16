@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RaghusLogicLab</title>
+  <meta name="description" content="RaghusLogicLab — the main domain for every project, tool and website I build.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">// main domain</span>
+        <h1 id="hero-title">RaghusLogicLab<br><span class="grad">Where logic becomes products.</span></h1>
+        <p class="lead" id="hero-intro"></p>
+        <div class="btn-row" style="margin-top:24px">
+          <a class="btn btn-primary" href="#projects">Explore projects</a>
+          <a class="btn" href="#tools">Free tools</a>
+          <a class="btn" href="#lab-log">Today in the lab</a>
+        </div>
+        <div class="stats" id="stats"></div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="section" id="projects" style="padding-top:24px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">// projects</span>
+            <h2>Everything in the lab</h2>
+            <p class="muted" style="margin:0">Each project has its own page and a link you can share with customers.</p>
+          </div>
+          <div class="filters" id="filters"></div>
+        </div>
+        <div class="grid" id="project-grid"></div>
+      </div>
+    </section>
+
+    <!-- TOOLS -->
+    <section class="section" id="tools" style="padding-top:24px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">// tools</span>
+            <h2>Free tools</h2>
+            <p class="muted" style="margin:0">Open in your browser, fill in, download. Nothing you type is saved or sent anywhere.</p>
+          </div>
+        </div>
+        <div class="grid" id="tool-grid"></div>
+      </div>
+    </section>
+
+    <!-- LAB LOG (daily updates) -->
+    <section class="section" id="lab-log">
+      <div class="wrap two-col">
+        <div>
+          <span class="eyebrow">// lab log</span>
+          <h2>Daily updates</h2>
+          <p class="muted">What changed, what shipped, what's next — added a little every day.</p>
+          <ul class="timeline" id="timeline" style="margin-top:24px"></ul>
+          <button class="btn btn-sm" id="more-updates" style="display:none">Show older updates</button>
+        </div>
+        <aside class="panel">
+          <span class="eyebrow">// up next</span>
+          <h3>On the workbench</h3>
+          <p class="muted" style="font-size:.93rem">Projects currently being built or planned.</p>
+          <div id="workbench"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section" id="about">
+      <div class="wrap two-col">
+        <div>
+          <span class="eyebrow">// about</span>
+          <h2>A never-ending website</h2>
+          <p class="muted" id="about-text"></p>
+        </div>
+        <div class="panel">
+          <h3>How the lab works</h3>
+          <ul class="timeline" style="margin-top:14px">
+            <li><span class="t-date">01 · Idea</span><p>A new project gets created in the Project Studio.</p></li>
+            <li><span class="t-date">02 · Link</span><p>It gets its own page and a shareable customer link.</p></li>
+            <li><span class="t-date">03 · Build</span><p>Progress is posted to the Lab Log every day.</p></li>
+            <li style="padding-bottom:0"><span class="t-date">04 · Launch</span><p>It goes live on its own subdomain or website.</p></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section" id="contact">
+      <div class="wrap">
+        <div class="panel" style="text-align:center;padding:40px 24px">
+          <span class="eyebrow">// contact</span>
+          <h2>Have an idea or need access?</h2>
+          <p class="muted">Get in touch about any project in the lab.</p>
+          <div class="email-line"><a class="btn btn-primary" id="contact-btn" href="#">Email the lab</a>
+            <span class="mono" id="contact-email" style="user-select:all"></span>
+            <button class="btn btn-sm" id="contact-copy" type="button">Copy email</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="data/site-data.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+  (function () {
+    var loaded = RLL.load(), data = loaded.data, site = data.site, esc = RLL.esc;
+    RLL.renderHeader(data, "home", loaded.isDraft);
+    RLL.renderFooter(data);
+
+    document.title = site.name || "RaghusLogicLab";
+    if (site.name || site.tagline) {
+      document.getElementById("hero-title").innerHTML = esc(site.name || "RaghusLogicLab") +
+        '<br><span class="grad">' + esc(site.tagline || "") + "</span>";
+    }
+    document.getElementById("hero-intro").textContent = site.intro || "";
+    document.getElementById("about-text").textContent = site.about || "";
+    var cb = document.getElementById("contact-btn");
+    if (site.email) {
+      cb.href = "mailto:" + site.email;
+      document.getElementById("contact-email").textContent = site.email;
+      document.getElementById("contact-copy").addEventListener("click", function () { RLL.copy(site.email); RLL.toast("Email copied"); });
+    } else { cb.parentNode.style.display = "none"; }
+
+    var pub = RLL.publicProjects(data);
+    var ups = RLL.sortedUpdates(data);
+
+    /* Stats */
+    var live = pub.filter(function (p) { return p.status === "live"; }).length;
+    var building = pub.filter(function (p) { return p.status === "progress" || p.status === "beta"; }).length;
+    var days = 1;
+    if (ups.length) {
+      var first = new Date(ups[ups.length - 1].date + "T00:00:00");
+      days = Math.max(1, Math.floor((Date.now() - first) / 86400000) + 1);
+    }
+    document.getElementById("stats").innerHTML = [
+      [pub.length, "Projects"], [live, "Live"], [building, "In the works"], [days, days === 1 ? "Day in the lab" : "Days in the lab"]
+    ].map(function (s) { return '<div class="stat"><b>' + s[0] + "</b><span>" + s[1] + "</span></div>"; }).join("");
+
+    /* Filters + grid */
+    var current = "all";
+    var filterKeys = ["all"].concat(Object.keys(RLL.STATUS).filter(function (k) {
+      return pub.some(function (p) { return p.status === k; });
+    }));
+    var fEl = document.getElementById("filters");
+    function drawFilters() {
+      fEl.innerHTML = filterKeys.map(function (k) {
+        var label = k === "all" ? "All" : RLL.STATUS[k].label;
+        return '<button class="chip' + (k === current ? " active" : "") + '" data-k="' + k + '">' + label + "</button>";
+      }).join("");
+    }
+    fEl.addEventListener("click", function (e) {
+      var b = e.target.closest(".chip"); if (!b) return;
+      current = b.dataset.k; drawFilters(); drawGrid();
+    });
+
+    function drawGrid() {
+      var list = pub.filter(function (p) { return current === "all" || p.status === current; });
+      var html = list.map(function (p) {
+        return '<a class="card" href="project.html?p=' + encodeURIComponent(p.slug) + '">' +
+          '<div class="card-top">' + RLL.iconHtml(p) + RLL.statusBadge(p.status) + "</div>" +
+          "<h3 style=\"margin:4px 0 0\">" + esc(p.name) + "</h3>" +
+          "<p>" + esc(p.tagline || p.description || "") + "</p>" +
+          '<div class="meta">' + (p.category ? '<span class="tag">' + esc(p.category) + "</span>" : "") +
+          (p.started ? "<span>Since " + esc(RLL.fmtDate(p.started)) + "</span>" : "") + "</div>" +
+          "</a>";
+      }).join("");
+      html += '<a class="card new-card" href="admin.html#create"><span class="plus">+</span><strong style="color:var(--text)">Create Project</strong><span style="font-size:.88rem">Add the next thing to the lab</span></a>';
+      document.getElementById("project-grid").innerHTML = html;
+    }
+    drawFilters(); drawGrid();
+
+    /* Tools */
+    var tools = RLL.publicTools(data);
+    document.getElementById("tool-grid").innerHTML = tools.length ? tools.map(function (t) {
+      return '<a class="card tool-card" href="' + esc(t.url) + '">' +
+        '<div class="card-top">' + RLL.iconHtml(t) + '<span class="badge s-live">Free</span></div>' +
+        "<h3 style=\"margin:4px 0 0\">" + esc(t.name) + "</h3>" +
+        "<p>" + esc(t.tagline || "") + "</p>" +
+        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+        '<div class="meta">' + (t.category ? '<span class="tag">' + esc(t.category) + "</span>" : "") +
+        '<span class="tool-open">Open tool &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">Tools are on the way.</p>';
+
+    /* Timeline */
+    var shown = 6;
+    var bySlug = {}; data.projects.forEach(function (p) { bySlug[p.slug] = p; });
+    function drawTimeline() {
+      var tl = document.getElementById("timeline");
+      if (!ups.length) { tl.innerHTML = '<li><p>No updates yet — the first one is coming soon.</p></li>'; return; }
+      tl.innerHTML = ups.slice(0, shown).map(function (u) {
+        var p = bySlug[u.project];
+        var projLink = p && p.visibility !== "unlisted" ? '<a class="tag" href="project.html?p=' + encodeURIComponent(p.slug) + '">' + esc(p.name) + "</a>" : "";
+        return "<li><span class=\"t-date\">" + esc(RLL.fmtDate(u.date)) + "</span>" +
+          "<h4>" + esc(u.title) + "</h4><p>" + esc(u.body || "") + "</p>" +
+          '<div class="t-meta"><span class="tag">' + esc(RLL.UPDATE_TYPES[u.type] || "Update") + "</span>" + projLink + "</div></li>";
+      }).join("");
+      document.getElementById("more-updates").style.display = ups.length > shown ? "" : "none";
+    }
+    document.getElementById("more-updates").addEventListener("click", function () { shown += 10; drawTimeline(); });
+    drawTimeline();
+
+    /* Workbench */
+    var wb = pub.filter(function (p) { return ["progress", "beta", "idea"].indexOf(p.status) > -1; });
+    document.getElementById("workbench").innerHTML = wb.length ? wb.map(function (p) {
+      return '<a href="project.html?p=' + encodeURIComponent(p.slug) + '" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);color:var(--text)">' +
+        RLL.iconHtml(p, 34) + '<span style="flex:1">' + esc(p.name) + "</span>" + RLL.statusBadge(p.status) + "</a>";
+    }).join("") : '<p class="muted">Nothing on the bench right now.</p>';
+  })();
+  </script>
+</body>
+</html>

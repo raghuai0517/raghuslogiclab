@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project · RaghusLogicLab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="section" style="padding-top:48px">
+    <div class="wrap" id="project-root"></div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="data/site-data.js"></script>
+  <script src="assets/app.js"></script>
+  <script>
+  (function () {
+    var loaded = RLL.load(), data = loaded.data, esc = RLL.esc;
+    RLL.renderHeader(data, "projects", loaded.isDraft);
+    RLL.renderFooter(data);
+
+    var slug = RLL.currentSlug();
+    var p = data.projects.filter(function (x) { return x.slug === slug; })[0];
+    var root = document.getElementById("project-root");
+
+    if (!p) {
+      root.innerHTML = '<div class="panel" style="text-align:center;padding:48px 24px">' +
+        '<span class="eyebrow">// 404</span><h2>Project not found</h2>' +
+        '<p class="muted">This link may be old, or the project has not been published yet.</p>' +
+        '<a class="btn btn-primary" href="index.html#projects">See all projects</a></div>';
+      return;
+    }
+
+    document.title = p.name + " · " + (data.site.name || "RaghusLogicLab");
+    var link = RLL.projectLink(data.site, p.slug);
+    var ups = RLL.sortedUpdates(data).filter(function (u) { return u.project === p.slug; });
+    var host = "";
+    if (p.url) { try { host = new URL(p.url).host; } catch (e) { host = p.url; } }
+
+    root.innerHTML =
+      '<a href="index.html#projects" class="muted" style="font-size:.9rem">&larr; All projects</a>' +
+      '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin:20px 0 8px">' +
+        RLL.iconHtml(p, 64) +
+        '<div style="flex:1;min-width:220px"><span class="eyebrow">// ' + esc(p.category || "project") + "</span>" +
+        '<h1 style="font-size:clamp(1.8rem,4.5vw,2.8rem);margin:0">' + esc(p.name) + "</h1></div>" +
+        RLL.statusBadge(p.status) +
+      "</div>" +
+      (p.tagline ? '<p class="lead muted" style="font-size:1.12rem;max-width:720px">' + esc(p.tagline) + "</p>" : "") +
+      '<div class="btn-row" style="margin:20px 0 36px">' +
+        (p.url ? '<a class="btn btn-primary" href="' + esc(p.url) + '" target="_blank" rel="noopener">Open ' + esc(host || "project") + " &nearr;</a>" :
+          '<span class="btn" style="cursor:default;opacity:.7">Link coming soon</span>') +
+        '<button class="btn" id="share-btn">Copy customer link</button>' +
+      "</div>" +
+      '<div class="two-col">' +
+        "<div>" +
+          '<div class="panel"><h3>About this project</h3><p class="muted" style="white-space:pre-line;margin:0">' + esc(p.description || "Details coming soon.") + "</p></div>" +
+          '<div class="panel"><h3>Project updates</h3>' +
+            (ups.length ? '<ul class="timeline" style="margin-top:16px">' + ups.map(function (u) {
+              return '<li><span class="t-date">' + esc(RLL.fmtDate(u.date)) + "</span><h4>" + esc(u.title) + "</h4><p>" + esc(u.body || "") + "</p></li>";
+            }).join("") + "</ul>" : '<p class="muted" style="margin:0">No updates posted yet.</p>') +
+          "</div>" +
+        "</div>" +
+        '<aside class="panel">' +
+          "<h3>Details</h3>" +
+          '<table><tbody>' +
+            "<tr><th>Status</th><td>" + RLL.statusBadge(p.status) + "</td></tr>" +
+            (p.category ? "<tr><th>Category</th><td>" + esc(p.category) + "</td></tr>" : "") +
+            (p.started ? "<tr><th>Started</th><td>" + esc(RLL.fmtDate(p.started)) + "</td></tr>" : "") +
+            (host ? '<tr><th>Address</th><td class="mono" style="word-break:break-all">' + esc(host) + "</td></tr>" : "") +
+            "<tr><th>Updates</th><td>" + ups.length + "</td></tr>" +
+          "</tbody></table>" +
+          '<p class="muted" style="font-size:.85rem;margin:16px 0 0">Part of <a href="index.html">' + esc(data.site.name || "RaghusLogicLab") + "</a>.</p>" +
+        "</aside>" +
+      "</div>";
+
+    document.getElementById("share-btn").addEventListener("click", function () { RLL.copy(link); });
+  })();
+  </script>
+</body>
+</html>

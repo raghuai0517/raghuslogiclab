@@ -1,0 +1,647 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Aadhaar DoB Annexure Maker · RaghusLogicLab</title>
+<meta name="description" content="Free tool: fill UIDAI's date of birth update affidavit or self-declaration (Annexure I, IA, II, IIA, III, IIIA) and download a print-ready A4 PDF or Word file for stamp paper."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: picker strip on top, then form (left) beside a true-scale A4 sheet preview (right); stacks on phones. */
+:root {
+  --bg: #eef1ef;
+  --panel: #ffffff;
+  --fg: #16232a;
+  --muted: #5a6b68;
+  --line: #d3dbd8;
+  --accent: #1f6b57;      /* stamp-paper green */
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe5;
+  --warn: #b23a2e;
+  --warn-soft: #f7e3e0;
+  --sheet: #ffffff;       /* paper is always white */
+  --sheet-ink: #111111;
+  --stamp-band: #e8efe9;
+  --stamp-line: #9db8ad;
+  --ui: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --doc: "Tinos", "Times New Roman", Times, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111a19; --panel: #18231f; --fg: #e4ece8; --muted: #9aaea7; --line: #2c3b36;
+    --accent: #5fbf9d; --accent-ink: #0c1714; --accent-soft: #1f3a31;
+    --warn: #f08a7c; --warn-soft: #3a1f1b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111a19; --panel: #18231f; --fg: #e4ece8; --muted: #9aaea7; --line: #2c3b36;
+  --accent: #5fbf9d; --accent-ink: #0c1714; --accent-soft: #1f3a31;
+  --warn: #f08a7c; --warn-soft: #3a1f1b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 20px; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+header.top h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.01em; text-wrap: balance; }
+header.top p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.src { font-size: 0.8rem; color: var(--muted); }
+
+.step { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+
+/* Picker */
+.picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pgroup { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.pgroup h3 { margin: 0; font-size: 0.92rem; }
+.pgroup .why { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.popts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.popt { font: inherit; font-size: 0.86rem; text-align: left; border: 1px solid var(--line); background: transparent; color: var(--fg);
+  border-radius: 8px; padding: 8px 10px; cursor: pointer; display: grid; gap: 1px; }
+.popt b { font-size: 0.95rem; }
+.popt span { color: var(--muted); font-size: 0.78rem; }
+.popt:hover { border-color: var(--accent); }
+.popt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.popt[aria-pressed="true"] span { color: var(--accent-ink); opacity: 0.85; }
+.popt:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Main two-column */
+.main { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+form { display: grid; gap: 14px; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+legend { font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 4px; }
+.f { display: grid; gap: 4px; min-width: 0; }
+.f label { font-size: 0.84rem; font-weight: 600; }
+.f .hint { font-size: 0.75rem; color: var(--muted); }
+.f .err { font-size: 0.75rem; color: var(--warn); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+input, select, textarea { font: inherit; font-size: 0.92rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; width: 100%; min-width: 0; }
+textarea { resize: vertical; min-height: 64px; }
+input.upper { text-transform: uppercase; }
+.tabnum { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+
+.settings { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 0.8rem; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+
+/* Preview column */
+.pv { display: grid; gap: 12px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: inherit; font-weight: 600; font-size: 0.9rem; border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn:disabled { opacity: 0.55; cursor: progress; }
+.status { font-size: 0.82rem; color: var(--muted); }
+.status.bad { color: var(--warn); }
+.overflow { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: 0.84rem; }
+.tip { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+.stage { background: color-mix(in srgb, var(--line) 55%, var(--bg)); border-radius: 10px; padding: 14px; overflow: hidden; }
+.scaler { position: relative; margin: 0 auto; }
+.scaler > .sheet { position: absolute; top: 0; left: 0; transform-origin: top left; box-shadow: 0 2px 14px rgba(0,0,0,0.18); }
+
+/* The A4 sheet — true physical size, matched by the Word file */
+.sheet { width: 210mm; height: 297mm; background: var(--sheet); color: var(--sheet-ink); font-family: var(--doc);
+  padding: var(--gap, 4in) 0.71in 0.5in 0.79in; position: relative; overflow: hidden; font-size: var(--fs, 11pt); line-height: 1.2; }
+.band { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--gap, 4in) - 0.15in); background: repeating-linear-gradient(135deg, var(--stamp-band) 0 10px, transparent 10px 20px);
+  border-bottom: 1.5px dashed var(--stamp-line); display: grid; place-items: center; color: #5b7a6e; font-family: var(--ui); font-size: 11pt; text-align: center; }
+.band.off { display: none; }
+.body { height: 100%; overflow: hidden; }
+.d-tag { text-align: right; font-weight: 700; margin: 0 0 8pt; }
+.d-title { text-align: center; font-weight: 700; text-decoration: underline; font-size: 1.18em; margin: 0 0 4pt; text-wrap: balance; }
+.d-note { text-align: center; font-style: italic; font-size: 0.92em; margin: 0 0 10pt; }
+.d-p { display: grid; grid-template-columns: 2.4em 1fr; margin: 0 0 4pt; text-align: justify; }
+.d-p.l1 { margin-left: 2.4em; grid-template-columns: 2.6em 1fr; margin-bottom: 3pt; }
+.d-p.open { text-align: left; }
+.blank { display: inline-block; border-bottom: 1px solid var(--sheet-ink); height: 1em; vertical-align: -0.15em; }
+.val { font-weight: 700; }
+.d-sign { display: flex; justify-content: space-between; align-items: end; gap: 12pt; margin-top: 16pt; font-weight: 700; }
+.d-sign .r { text-align: right; }
+.d-sign .r .who { font-weight: 400; display: block; }
+.d-place { font-weight: 700; margin: 4pt 0 8pt; }
+.d-attest { font-style: italic; font-size: 0.86em; margin: 0; }
+
+.offscreen { position: fixed; left: -12000px; top: 0; }
+
+.copy { text-align: center; font-size: 0.82rem; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+.privacy { font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; margin: 0; }
+
+@media (max-width: 980px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .pv { position: static; }
+  .picker { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+  .stage { padding: 8px; }
+}
+.rll-bar { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); }
+.rll-bar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.rll-bar a:hover { text-decoration: underline; }
+.rll-home { display: inline-flex; align-items: center; gap: 6px; }
+.rll-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-size: 0.68rem; font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <nav class="rll-bar" aria-label="Site"><a href="../index.html" class="rll-home"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#tools">Tools</a></nav>
+  <header class="top">
+    <div>
+      <h1>Aadhaar DoB Annexure Maker</h1>
+      <p>Fill the affidavit or self-declaration from UIDAI's SOP for date of birth update and get a print-ready A4 page, laid out for ₹10 non-judicial stamp paper.</p>
+    </div>
+    <div class="src">Format per UIDAI E&amp;U-II SOP dated 24.12.2025</div>
+  </header>
+
+  <section aria-labelledby="s1">
+    <p class="step" id="s1">Step 1 · Choose the annexure</p>
+    <div class="picker" id="picker"></div>
+  </section>
+
+  <section class="main">
+    <div class="panel">
+      <p class="step">Step 2 · Enter the details</p>
+      <form id="form" autocomplete="off" novalidate></form>
+      <div class="settings">
+        <legend>Page layout</legend>
+        <div class="f">
+          <label for="gap">Blank space at top for the stamp (inches)</label>
+          <input id="gap" type="number" min="0.5" max="6" step="0.25" value="4" class="tabnum">
+          <div class="chips" id="gapChips">
+            <button type="button" class="chip" data-gap="4" aria-pressed="true">Stamp paper · 4 in</button>
+            <button type="button" class="chip" data-gap="4.5" aria-pressed="false">Large stamp · 4.5 in</button>
+            <button type="button" class="chip" data-gap="1" aria-pressed="false">Plain paper · 1 in</button>
+          </div>
+        </div>
+        <div class="f">
+          <label for="fs">Text size</label>
+          <select id="fs">
+            <option value="auto" selected>Auto – fit on one page (recommended)</option>
+            <option value="10.5">10.5 pt</option>
+            <option value="11">11 pt</option>
+            <option value="11.5">11.5 pt</option>
+            <option value="12">12 pt</option>
+          </select>
+          <div class="hint" id="fsNote"></div>
+        </div>
+        <div class="row2">
+          <button type="button" class="btn ghost" id="clearBtn">Clear all fields</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pv">
+      <p class="step" style="margin:0">Step 3 · Check the page and download</p>
+      <div class="actions">
+        <button type="button" class="btn" id="pdfBtn">Download PDF</button>
+        <button type="button" class="btn" id="docxBtn">Download Word</button>
+        <span class="status" id="status" role="status"></span>
+      </div>
+      <p class="tip">To print on bond paper: open the PDF, choose paper size <b>A4</b> and scale <b>Actual size / 100%</b> (turn off “Fit to page”). Test on plain paper first and hold it against the stamp paper.</p>
+      <div class="overflow" id="overflow" hidden>The text runs past the bottom of the page. Reduce the stamp space or choose a smaller text size.</div>
+      <div class="stage" id="stage">
+        <div class="scaler" id="scaler">
+          <div class="sheet" id="sheet"><div class="band" id="band"></div><div class="body" id="sheetBody"></div></div>
+        </div>
+      </div>
+      <p class="privacy">Your details stay in this browser tab. Nothing you type is saved or sent anywhere; closing the page clears it.</p>
+    </div>
+  </section>
+  <footer class="copy">© 2026 RLL. All rights reserved. · Affidavit wording as prescribed by UIDAI.</footer>
+</div>
+<div class="offscreen" id="offscreen" aria-hidden="true"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script>
+(function () {
+"use strict";
+
+/* ---------------- Fields ---------------- */
+const FIELDS = {
+  dname:   { label: "Deponent's full name", ph: "As in Aadhaar", upper: true, group: "Deponent" },
+  rel:     { label: "Relation", type: "select", group: "Deponent",
+             opts: [["", "S/D/W/o (leave as printed)"], ["S/o", "S/o (son of)"], ["D/o", "D/o (daughter of)"], ["W/o", "W/o (wife of)"]],
+             blank: "S/D/W/o" },
+  relname: { label: "Father's / husband's name", upper: true, group: "Deponent" },
+  addr:    { label: "Full address", type: "textarea", ph: "House no., street, village/town, district, state, PIN", group: "Deponent" },
+  aadhaar: { label: "Deponent's Aadhaar number", type: "aadhaar", group: "Deponent" },
+  child:   { label: "Child's / ward's full name", upper: true, group: "Child" },
+  childAadhaar: { label: "Child's Aadhaar number", type: "aadhaar", group: "Child" },
+  dobCorrect:  { label: "Correct date of birth", type: "date", group: "Date of birth" },
+  dobRecorded: { label: "Date of birth now in Aadhaar", type: "date", group: "Date of birth" },
+  prevDoc:     { label: "Document that recorded DoB was based on", ph: "e.g. SSLC marksheet", group: "Date of birth" },
+  timesUpd:    { label: "DoB updated in Aadhaar before", type: "select", group: "Date of birth",
+                 opts: [["", "Leave blank"], ["never", "Never"], ["once", "Once"], ["more than once", "More than once"]],
+                 blankFn: (w) => [B(w), " (never / once / more than once)"] },
+  supportChoice: { label: "Document being provided now", type: "select", group: "Date of birth",
+                 opts: [["", "Leave both (strike off by hand)"], ["a corrected version of the same document as mentioned in (iii) above", "Corrected version of same document"], ["birth certificate", "Birth certificate"]],
+                 blank: "a corrected version of the same document as mentioned in (iii) above / birth certificate (choose as applicable)" },
+  proofDoc:    { label: "Proof of DoB being submitted", ph: "e.g. Birth certificate", group: "Date of birth" },
+  earlierDoc:  { label: "Document submitted earlier", ph: "e.g. Passport", group: "Earlier submission" },
+  docNo:       { label: "Its number", group: "Earlier submission" },
+  docDate:     { label: "Its date", type: "date", group: "Earlier submission" },
+  eid:         { label: "EID of that enrolment / update", ph: "28 digits incl. date-time", type: "eid", group: "Earlier submission" },
+  dobWrong:    { label: "DoB wrongly recorded in Aadhaar", type: "date", group: "Earlier submission" },
+  dobRight:    { label: "DoB as per that document", type: "date", group: "Earlier submission" },
+  possession:  { label: "Which applies?", type: "select", group: "Earlier submission",
+                 opts: [["", "Leave both (strike off by hand)"],
+                        ["I do not have possession of earlier submitted proof of date of birth document", "I no longer have that document"],
+                        ["the document then submitted is no longer a valid proof of date of birth", "That document is no longer valid proof"]],
+                 blank: "I do not have possession of earlier submitted proof of date of birth document / the document then submitted is no longer a valid proof of date of birth (choose applicable)" },
+  genuineDoc:  { label: "Genuine proof of DoB you will submit", ph: "e.g. Online-verifiable birth certificate", group: "Earlier submission" },
+  date:  { label: "Date of signing", type: "date", group: "Signing" },
+  place: { label: "Place", upper: true, group: "Signing" },
+};
+const B = (n) => "_".repeat(n);
+
+/* ---------------- Templates ---------------- */
+const OPEN = "I, {dname:26} {rel} {relname:22}, resident of {addr:50} holding Aadhaar number {aadhaar:18}, do hereby solemnly affirm and declare as under:-";
+const STAMP_NOTE = "(Applicable for cases where the DoB is verified in Aadhaar. To be printed on non-judicial stamp paper of minimum value of ₹10)";
+const REACT_NOTE = "(To be printed on non-judicial stamp paper of minimum value of ₹10)";
+const ATTEST = "(This affidavit may be signed and attested in presence of a Judicial Magistrate or Executive Magistrate / Notary Public)";
+const SD_TITLE = "Self-Declaration requesting DoB update for correcting operator error / typographical mistake";
+const P = (label, text) => ({ k: "p", lvl: 0, label, text });
+const S = (label, text) => ({ k: "p", lvl: 1, label, text });
+
+const ANNEX = {
+  I: { tag: "Annexure-I – For Adults", short: "I", who: "Adult", group: "dob",
+    fields: ["dname","rel","relname","addr","aadhaar","dobCorrect","dobRecorded","prevDoc","timesUpd","supportChoice","proofDoc","date","place"],
+    body: [
+      { k: "title", text: "Affidavit for Date of Birth Updation" }, { k: "note", text: STAMP_NOTE },
+      P("1.", OPEN),
+      S("i)", "That I am the resident of the above said address."),
+      S("ii)", "That my correct date of birth is {dobCorrect:16}."),
+      S("iii)", "That the earlier recorded date of birth in Aadhaar is {dobRecorded:16} based on {prevDoc:26} document submitted by me."),
+      S("iv)", "That I have {timesUpd:14} updated my date of birth in Aadhaar."),
+      S("v)", "That currently {supportChoice} is being provided in support of DoB update request."),
+      S("vi)", "That I wish to get my date of birth updated in the Aadhaar as {dobCorrect:16}, for which I am submitting {proofDoc:26} as proof of date of birth."),
+      S("vii)", "That I further undertake that I shall not be eligible for any further updation of my date of birth in Aadhaar."),
+      P("2.", "I undertake that if the document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or I was not entitled for the said document, my Aadhaar number may be deactivated as per Regulation 28 of the Aadhaar (Enrolment and Update) Regulations, 2016 and I shall be liable to be prosecuted under provisions of the applicable law."),
+      P("3.", "I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies, the undersigned will be held responsible."),
+      { k: "sign", right: "Name & Signature of Resident (Deponent)" }, { k: "place" }, { k: "attest" },
+    ] },
+  IA: { tag: "Annexure-IA – For Children", short: "IA", who: "Child", group: "dob",
+    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","dobCorrect","dobRecorded","prevDoc","timesUpd","date","place"],
+    body: [
+      { k: "title", text: "Affidavit for Date of Birth Updation" }, { k: "note", text: STAMP_NOTE },
+      P("1.", OPEN),
+      S("i)", "That I am the resident of the above said address."),
+      S("ii)", "That I am parent/legal guardian of {child:26} holding Aadhaar number {childAadhaar:18}."),
+      S("iii)", "That correct date of birth of my child/ward is {dobCorrect:16}."),
+      S("iv)", "That the earlier recorded date of birth in Aadhaar of my child/ward is {dobRecorded:16} based on {prevDoc:26} document submitted by me."),
+      S("v)", "That I have {timesUpd:14} updated my child/ward's date of birth in Aadhaar."),
+      S("vi)", "That birth certificate of my child/ward is being provided in support of DoB update request."),
+      S("vii)", "That I wish to get my child/ward's date of birth updated in the Aadhaar as {dobCorrect:16}, for which I am submitting his/her birth certificate as proof of date of birth."),
+      S("viii)", "That I further undertake that my child/ward shall not be eligible for any further updation of date of birth in Aadhaar."),
+      P("2.", "I undertake that if the document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or my child/ward was not entitled for the said document, the Aadhaar number of my child/ward may be deactivated as per Regulation 28 of the Aadhaar (Enrolment and Update) Regulations, 2016 and I shall be liable to be prosecuted under provisions of the applicable law."),
+      P("3.", "I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies, the undersigned will be held responsible."),
+      { k: "sign", right: "Name & Signature of Parent/Guardian of Minor (Deponent)" }, { k: "place" }, { k: "attest" },
+    ] },
+  II: { tag: "Annexure-II – For Adults", short: "II", who: "Adult", group: "err",
+    fields: ["dname","rel","relname","addr","aadhaar","earlierDoc","docNo","docDate","eid","dobWrong","dobRight","possession","date","place"],
+    body: [
+      { k: "title", text: SD_TITLE }, { k: "spacer" },
+      P("1.", OPEN),
+      S("i)", "That I am the resident of the above said address."),
+      S("ii)", "That I had earlier submitted a valid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} while enrolment / update through EID number {eid:24}, as proof of date of birth for updating my date of birth in Aadhaar."),
+      S("iii)", "That the date of birth was incorrectly mentioned as {dobWrong:14} in Aadhaar, while the date of birth mentioned in the submitted valid document was {dobRight:14} which is indeed my correct date of birth."),
+      S("iv)", "That {possession}."),
+      P("2.", "I request UIDAI to update my date of birth based on previously submitted and then valid proof of date of birth document."),
+      P("3.", "I undertake that if the earlier document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or I was not entitled for the said document, my Aadhaar number may be deactivated as per Regulation 28 of the Aadhaar (Enrolment and Update) Regulations, 2016."),
+      P("4.", "I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies if arises, the undersigned will be held responsible."),
+      { k: "sign", right: "Name & Signature of Resident" }, { k: "place" },
+    ] },
+  IIA: { tag: "Annexure-IIA – For Children", short: "IIA", who: "Child", group: "err",
+    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","earlierDoc","docNo","docDate","eid","dobWrong","dobRight","possession","date","place"],
+    body: [
+      { k: "title", text: SD_TITLE }, { k: "spacer" },
+      P("1.", OPEN),
+      S("i)", "That I am the resident of the above said address."),
+      S("ii)", "That I am parent/legal guardian of {child:26} holding Aadhaar No {childAadhaar:18}."),
+      S("iii)", "That I had earlier submitted a valid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} while enrolment / update through EID number {eid:24}, as proof of date of birth for updating date of birth of my child/ward in Aadhaar."),
+      S("iv)", "That the date of birth of my child/ward was wrongly mentioned as {dobWrong:14} in Aadhaar, while the date of birth mentioned in the submitted valid document was {dobRight:14}, which is indeed the correct date of birth of my child/ward."),
+      S("v)", "That {possession}."),
+      P("2.", "I request UIDAI to update date of birth of my child/ward based on previously submitted and then valid proof of date of birth document."),
+      P("3.", "I undertake that if the earlier document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or my child/ward was not entitled for the said document, Aadhaar number of my child/ward may be deactivated as per Regulation 28 of the Aadhaar (Enrolment and Update) Regulations, 2016."),
+      P("4.", "I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies if arises, the undersigned will be held responsible."),
+      { k: "sign", right: "Name & Signature of Parent/Guardian of Minor" }, { k: "place" },
+    ] },
+  III: { tag: "Annexure-III – For Adults", short: "III", who: "Adult", group: "react",
+    fields: ["dname","rel","relname","addr","aadhaar","earlierDoc","docNo","docDate","eid","genuineDoc","date","place"],
+    body: [
+      { k: "title", text: "Affidavit for Reactivation of Aadhaar" }, { k: "note", text: REACT_NOTE },
+      P("1.", OPEN),
+      S("i)", "That I am resident of the above said address."),
+      S("ii)", "That I had earlier submitted an invalid document- {earlierDoc:24}, bearing number {docNo:18} dated {docDate:12} and provided false information, while enrolment/update through EID number {eid:24}, as proof of date of birth."),
+      S("iii)", "That I understand and accept that submission of such invalid document and false information is a violation of law and legal action may be taken against me for the same under Aadhaar Act and/or any other applicable laws."),
+      S("iv)", "That I sincerely regret this act and tender an unconditional apology and ensure that such mistake shall not be repeated."),
+      S("v)", "That I humbly seek pardon and request UIDAI to kindly reactivate my Aadhaar number {aadhaar:18} to enable its continued usage."),
+      S("vi)", "That I undertake to submit only genuine, correct and verifiable proof of date of birth document {genuineDoc:22} in support of my request to reactivate my Aadhaar."),
+      S("vii)", "That I further undertake that I shall not be eligible for any further updation of my date of birth in Aadhaar."),
+      P("2.", "I undertake that if the document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or I was not entitled for the said document, my Aadhaar number may again be deactivated as per Regulation 28 of the Aadhaar (Enrolment and Update) Regulations, 2016 and I shall be liable to be prosecuted under provisions of the applicable laws."),
+      P("3.", "I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies if arises, the undersigned will be held responsible."),
+      { k: "sign", right: "Name & Signature of Resident (Deponent)" }, { k: "place" }, { k: "attest" },
+    ] },
+  IIIA: { tag: "Annexure-IIIA – For Children", short: "IIIA", who: "Child", group: "react",
+    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","earlierDoc","docNo","docDate","eid","genuineDoc","date","place"],
+    body: [
+      { k: "title", text: "Affidavit for Reactivation of Aadhaar" }, { k: "note", text: REACT_NOTE },
+      P("1.", OPEN),
+      S("i)", "That I am resident of the above said address."),
+      S("ii)", "That I am parent/legal guardian of {child:26} holding Aadhaar No {childAadhaar:18}."),
+      S("iii)", "That I had earlier submitted an invalid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} or provided false information, while enrolment/update through EID number {eid:24} as proof of date of birth of my child/ward."),
+      S("iv)", "That I understand and accept that submission of such invalid document and false information is a violation of law and legal action may be taken against me for the same under Aadhaar Act and/or any other applicable laws."),
+      S("v)", "That I sincerely regret this act and tender an unconditional apology and ensure that such mistake shall not be repeated."),
+      S("vi)", "That I humbly seek pardon and request UIDAI to kindly reactivate my child/ward's Aadhaar number {childAadhaar:18} to enable its continued usage."),
+      S("vii)", "That I undertake to submit only genuine, correct and verifiable proof of date of birth document {genuineDoc:22} in support of my request to reactivate my child/ward's Aadhaar."),
+      S("viii)", "That I further undertake that my child/ward shall not be eligible for any further updation of date of birth in Aadhaar."),
+      P("2.", "I undertake that if the document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or my child/ward was not entitled for the same, Aadhaar number of my child/ward may again be deactivated as per Regulation 28 of the Aadhaar (Enrolment and Update) Regulations, 2016 and I shall be liable to be prosecuted under provisions of the applicable laws."),
+      P("3.", "I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies if arises, the undersigned will be held responsible."),
+      { k: "sign", right: "Name & Signature of Parent/Guardian of Minor (Deponent)" }, { k: "place" }, { k: "attest" },
+    ] },
+};
+const GROUPS = [
+  { id: "dob", name: "Affidavit for DoB update", why: "DoB is already ‘verified’ in Aadhaar and needs correcting (SOP Case 1(b), Case 2)." },
+  { id: "err", name: "Self-declaration: operator error", why: "DoB was typed wrongly at the centre and you no longer have, or can't reuse, the old document." },
+  { id: "react", name: "Affidavit for reactivation", why: "Aadhaar was deactivated over a false DoB document; submit with a verifiable birth certificate." },
+];
+
+/* ---------------- State ---------------- */
+const state = { annex: "IA", v: {}, gap: 4, fs: "auto", fsUsed: 11 };
+try { const t = new Date(); state.v.date = t.toISOString().slice(0, 10); } catch (e) {}
+
+/* ---------------- Value formatting ---------------- */
+function fmtDate(iso) { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d && m && y ? `${d}-${m}-${y}` : iso; }
+function fmtAadhaar(s) { const d = (s || "").replace(/\D/g, ""); return d.replace(/(\d{4})(?=\d)/g, "$1 ").trim(); }
+function valueOf(id) {
+  const f = FIELDS[id], raw = (state.v[id] || "").trim();
+  if (!raw) return "";
+  if (f.type === "date") return fmtDate(raw);
+  if (f.type === "aadhaar") return fmtAadhaar(raw);
+  if (f.type === "textarea") return raw.replace(/\s*\n\s*/g, ", ");
+  if (f.upper) return raw.toUpperCase();
+  return raw;
+}
+/* Turn a template string into segments: {t:"text"} | {v:"value"} | {b:width} */
+function segs(text) {
+  const out = [], re = /\{(\w+)(?::(\d+))?\}/g; let last = 0, m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push({ t: text.slice(last, m.index) });
+    const id = m[1], w = +(m[2] || 16), f = FIELDS[id], val = valueOf(id);
+    if (val) out.push(f.type === "select" || f.plain ? { t: val } : { v: val });
+    else if (f.blankFn) f.blankFn(w).forEach((p) => out.push(p.startsWith("_") ? { b: p.length } : { t: p }));
+    else if (f.blank) out.push({ t: f.blank });
+    else out.push({ b: w });
+    last = re.lastIndex;
+  }
+  if (last < text.length) out.push({ t: text.slice(last) });
+  return out;
+}
+
+/* ---------------- Picker ---------------- */
+const picker = document.getElementById("picker");
+GROUPS.forEach((g) => {
+  const box = document.createElement("div"); box.className = "pgroup";
+  const h = document.createElement("h3"); h.textContent = g.name;
+  const p = document.createElement("p"); p.className = "why"; p.textContent = g.why;
+  const opts = document.createElement("div"); opts.className = "popts";
+  Object.entries(ANNEX).filter(([, a]) => a.group === g.id).forEach(([key, a]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "popt"; b.dataset.key = key; b.id = "pick-" + key;
+    b.innerHTML = `<b>Annexure-${a.short}</b><span>For ${a.who === "Child" ? "a child (by parent/guardian)" : "an adult (self)"}</span>`;
+    b.addEventListener("click", () => { state.annex = key; syncPicker(); buildForm(); render(); });
+    opts.appendChild(b);
+  });
+  box.append(h, p, opts); picker.appendChild(box);
+});
+function syncPicker() { picker.querySelectorAll(".popt").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.key === state.annex))); }
+
+/* ---------------- Form ---------------- */
+const form = document.getElementById("form");
+form.addEventListener("submit", (e) => e.preventDefault());
+function buildForm() {
+  form.innerHTML = "";
+  const a = ANNEX[state.annex], groups = {};
+  a.fields.forEach((id) => { const g = FIELDS[id].group; (groups[g] = groups[g] || []).push(id); });
+  Object.entries(groups).forEach(([gname, ids]) => {
+    const fs = document.createElement("fieldset");
+    const lg = document.createElement("legend"); lg.textContent = gname === "Deponent" && a.who === "Child" ? "Parent / guardian (deponent)" : gname;
+    fs.appendChild(lg);
+    ids.forEach((id) => fs.appendChild(fieldEl(id)));
+    form.appendChild(fs);
+  });
+}
+function fieldEl(id) {
+  const f = FIELDS[id], wrap = document.createElement("div"); wrap.className = "f";
+  const lab = document.createElement("label"); lab.htmlFor = "fld-" + id; lab.textContent = f.label;
+  let el;
+  if (f.type === "select") {
+    el = document.createElement("select");
+    f.opts.forEach(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; el.appendChild(o); });
+  } else if (f.type === "textarea") { el = document.createElement("textarea"); el.rows = 3; }
+  else {
+    el = document.createElement("input");
+    el.type = f.type === "date" ? "date" : "text";
+    if (f.type === "aadhaar") { el.inputMode = "numeric"; el.maxLength = 14; el.classList.add("tabnum"); el.placeholder = "1234 5678 9012"; }
+    if (f.type === "eid") { el.inputMode = "numeric"; el.classList.add("tabnum"); }
+  }
+  el.id = "fld-" + id;
+  if (f.ph && !el.placeholder) el.placeholder = f.ph;
+  if (f.upper) el.classList.add("upper");
+  el.value = state.v[id] || "";
+  const err = document.createElement("div"); err.className = "err"; err.hidden = true;
+  el.addEventListener("input", () => {
+    if (f.type === "aadhaar") { const pos = fmtAadhaar(el.value); if (pos !== el.value) el.value = pos; }
+    state.v[id] = el.value;
+    if (f.type === "aadhaar") { const n = el.value.replace(/\D/g, "").length; err.hidden = n === 0 || n === 12; err.textContent = `Aadhaar has 12 digits; ${n} entered.`; }
+    render();
+  });
+  el.addEventListener("change", () => { state.v[id] = el.value; render(); });
+  wrap.append(lab, el);
+  if (f.type === "eid") { const h = document.createElement("div"); h.className = "hint"; h.textContent = "Printed on the enrolment/update slip, e.g. 0008/12345/00020 28/04/2011 15:50:16"; wrap.appendChild(h); }
+  wrap.appendChild(err);
+  return wrap;
+}
+
+/* ---------------- Sheet rendering (HTML) ---------------- */
+const sheet = document.getElementById("sheet"), body = document.getElementById("sheetBody"), band = document.getElementById("band");
+function segHTML(list) {
+  const frag = document.createDocumentFragment();
+  list.forEach((s) => {
+    if (s.t != null) frag.appendChild(document.createTextNode(s.t));
+    else if (s.v != null) { const sp = document.createElement("span"); sp.className = "val"; sp.textContent = s.v; frag.appendChild(sp); }
+    else { const sp = document.createElement("span"); sp.className = "blank"; sp.style.width = (s.b * 0.5) + "em"; frag.appendChild(sp); }
+  });
+  return frag;
+}
+function buildSheetInto(target) {
+  target.innerHTML = "";
+  const a = ANNEX[state.annex];
+  const tag = document.createElement("p"); tag.className = "d-tag"; tag.textContent = a.tag; target.appendChild(tag);
+  a.body.forEach((blk) => {
+    if (blk.k === "title") { const e = document.createElement("p"); e.className = "d-title"; e.textContent = blk.text; target.appendChild(e); }
+    else if (blk.k === "note") { const e = document.createElement("p"); e.className = "d-note"; e.textContent = blk.text; target.appendChild(e); }
+    else if (blk.k === "spacer") { const e = document.createElement("div"); e.style.height = "8pt"; target.appendChild(e); }
+    else if (blk.k === "p") {
+      const e = document.createElement("div"); e.className = "d-p" + (blk.lvl ? " l1" : "") + (blk.text.startsWith("I, ") ? " open" : "");
+      const l = document.createElement("span"); l.textContent = blk.label;
+      const t = document.createElement("span"); t.appendChild(segHTML(segs(blk.text)));
+      e.append(l, t); target.appendChild(e);
+    } else if (blk.k === "sign") {
+      const e = document.createElement("div"); e.className = "d-sign";
+      const l = document.createElement("span"); l.appendChild(document.createTextNode("Date: ")); l.appendChild(segHTML(segs("{date:14}")));
+      const r = document.createElement("span"); r.className = "r";
+      const nm = valueOf("dname");
+      if (nm) { const w = document.createElement("span"); w.className = "who"; w.textContent = nm; r.appendChild(w); }
+      r.appendChild(document.createTextNode(blk.right));
+      e.append(l, r); target.appendChild(e);
+    } else if (blk.k === "place") {
+      const e = document.createElement("p"); e.className = "d-place"; e.appendChild(document.createTextNode("Place: ")); e.appendChild(segHTML(segs("{place:18}"))); target.appendChild(e);
+    } else if (blk.k === "attest") { const e = document.createElement("p"); e.className = "d-attest"; e.textContent = ATTEST; target.appendChild(e); }
+  });
+}
+function applyLayout(el) { el.style.setProperty("--gap", state.gap + "in"); el.style.setProperty("--fs", state.fsUsed + "pt"); }
+function render() {
+  applyLayout(sheet);
+  band.textContent = state.gap >= 2 ? `Stamp area – kept blank (${state.gap} in). Not printed.` : "";
+  band.classList.toggle("off", state.gap < 2);
+  buildSheetInto(body);
+  if (state.fs === "auto") {
+    for (const sz of [11, 10.5, 10]) { state.fsUsed = sz; applyLayout(sheet); if (body.scrollHeight <= body.clientHeight + 1) break; }
+  } else { state.fsUsed = state.fs; applyLayout(sheet); }
+  document.getElementById("fsNote").textContent = state.fs === "auto" ? `Using ${state.fsUsed} pt for this page.` : "";
+  requestAnimationFrame(() => {
+    const over = body.scrollHeight > body.clientHeight + 1;
+    document.getElementById("overflow").hidden = !over;
+    fit();
+  });
+}
+
+/* Scale the true-size A4 sheet to the preview column */
+const scaler = document.getElementById("scaler"), stage = document.getElementById("stage");
+function fit() {
+  const w = sheet.offsetWidth, h = sheet.offsetHeight, avail = stage.clientWidth - parseFloat(getComputedStyle(stage).paddingLeft) * 2;
+  const s = Math.min(1, avail / w);
+  sheet.style.transform = `scale(${s})`;
+  scaler.style.width = (w * s) + "px"; scaler.style.height = (h * s) + "px";
+}
+try { new ResizeObserver(fit).observe(stage); } catch (e) { window.addEventListener("resize", fit); }
+
+/* ---------------- Layout controls ---------------- */
+const gapIn = document.getElementById("gap"), chips = document.getElementById("gapChips"), fsSel = document.getElementById("fs");
+function setGap(g) {
+  g = Math.max(0.5, Math.min(6, +g || 4)); state.gap = g; gapIn.value = g;
+  chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(+c.dataset.gap === g)));
+  render();
+}
+gapIn.addEventListener("change", () => setGap(gapIn.value));
+chips.addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (c) setGap(c.dataset.gap); });
+fsSel.addEventListener("change", () => { state.fs = fsSel.value === "auto" ? "auto" : +fsSel.value; render(); });
+document.getElementById("clearBtn").addEventListener("click", () => { state.v = {}; buildForm(); render(); setStatus("Fields cleared."); });
+
+/* ---------------- Downloads ---------------- */
+const statusEl = document.getElementById("status");
+function setStatus(msg, bad) { statusEl.textContent = msg; statusEl.classList.toggle("bad", !!bad); }
+let downloads = null;
+const pdfBtn = document.getElementById("pdfBtn"), docxBtn = document.getElementById("docxBtn");
+(async () => {
+  try { downloads = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch (e) { downloads = null; }
+})();
+function fileBase() {
+  const nm = (valueOf("dname") || "blank").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40) || "blank";
+  return `Annexure-${ANNEX[state.annex].short}_${nm}`;
+}
+function browserSave(filename, data) {
+  try {
+    const url = URL.createObjectURL(data), a = document.createElement("a");
+    a.href = url; a.download = filename; a.rel = "noopener"; a.style.display = "none";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    setStatus(`Saved ${filename}`);
+  } catch (e) { setStatus("The download could not start. Try again.", true); }
+}
+async function save(filename, data) {
+  if (!downloads) { browserSave(filename, data); return; }
+  try { await downloads.save({ filename, data }); setStatus(`Saved ${filename}`); }
+  catch (e) {
+    const c = e && e.code;
+    if (c === "declined") setStatus("Download cancelled.");
+    else if (c === "rate_limited") setStatus("A download prompt is already open. Finish that one first.", true);
+    else browserSave(filename, data);
+  }
+}
+
+pdfBtn.addEventListener("click", async () => {
+  if (!window.html2canvas || !window.jspdf) { setStatus("The PDF tools didn't load. Reload the page and try again.", true); return; }
+  pdfBtn.disabled = true; setStatus("Building PDF…");
+  const off = document.getElementById("offscreen");
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    off.innerHTML = "";
+    const clone = document.createElement("div"); clone.className = "sheet"; applyLayout(clone);
+    const b = document.createElement("div"); b.className = "body"; clone.appendChild(b);
+    off.appendChild(clone); buildSheetInto(b);
+    const canvas = await html2canvas(clone, { scale: 3, backgroundColor: "#ffffff", useCORS: true, logging: false });
+    const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
+    pdf.setProperties({ title: ANNEX[state.annex].tag });
+    await save(fileBase() + ".pdf", pdf.output("blob"));
+  } catch (e) { setStatus("Couldn't build the PDF. Try again.", true); }
+  finally { off.innerHTML = ""; pdfBtn.disabled = false; }
+});
+
+docxBtn.addEventListener("click", async () => {
+  if (!window.docx) { setStatus("The Word tools didn't load. Reload the page and try again.", true); return; }
+  docxBtn.disabled = true; setStatus("Building Word file…");
+  try { await save(fileBase() + ".docx", await buildDocx()); }
+  catch (e) { setStatus("Couldn't build the Word file. Try again.", true); }
+  finally { docxBtn.disabled = false; }
+});
+
+/* ---------------- Word (.docx) — same layout as the preview ---------------- */
+async function buildDocx() {
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, TabStopType } = window.docx;
+  const FONT = "Times New Roman", SZ = Math.round(state.fsUsed * 2), LINE = 264;
+  const PAGE = { width: 11906, height: 16838 };
+  const MARGIN = { top: Math.round(state.gap * 1440), bottom: 720, left: 1134, right: 1021 };
+  const textW = PAGE.width - MARGIN.left - MARGIN.right;
+  const runsOf = (list, base = {}) => list.map((s) =>
+    s.t != null ? new TextRun({ text: s.t, font: FONT, size: SZ, ...base })
+    : s.v != null ? new TextRun({ text: s.v, bold: true, font: FONT, size: SZ, ...base })
+    : new TextRun({ text: B(s.b), font: FONT, size: SZ, ...base }));
+  const a = ANNEX[state.annex], kids = [];
+  kids.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 160 }, children: [new TextRun({ text: a.tag, bold: true, font: FONT, size: SZ + 1 })] }));
+  a.body.forEach((blk) => {
+    if (blk.k === "title") kids.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [new TextRun({ text: blk.text, bold: true, underline: {}, font: FONT, size: SZ + 4 })] }));
+    else if (blk.k === "note") kids.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: blk.text, italics: true, font: FONT, size: SZ - 2 })] }));
+    else if (blk.k === "spacer") kids.push(new Paragraph({ spacing: { before: 100 }, children: [] }));
+    else if (blk.k === "p") {
+      const left = blk.lvl ? 1000 : 400, hang = blk.lvl ? 500 : 400;
+      kids.push(new Paragraph({
+        alignment: blk.text.startsWith("I, ") ? AlignmentType.LEFT : AlignmentType.JUSTIFIED,
+        spacing: { after: blk.lvl ? 60 : 100, line: LINE }, indent: { left, hanging: hang },
+        tabStops: [{ type: TabStopType.LEFT, position: left }],
+        children: [new TextRun({ text: blk.label + "\t", font: FONT, size: SZ }), ...runsOf(segs(blk.text))],
+      }));
+    } else if (blk.k === "sign") {
+      const nm = valueOf("dname");
+      if (nm) kids.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 380 }, children: [new TextRun({ text: nm, font: FONT, size: SZ })] }));
+      kids.push(new Paragraph({ spacing: { before: nm ? 40 : 440, after: 60 }, tabStops: [{ type: TabStopType.RIGHT, position: textW }],
+        children: [new TextRun({ text: "Date: ", bold: true, font: FONT, size: SZ }), ...runsOf(segs("{date:14}"), { bold: true }),
+                   new TextRun({ text: "\t" + blk.right, bold: true, font: FONT, size: SZ })] }));
+    } else if (blk.k === "place") kids.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: "Place: ", bold: true, font: FONT, size: SZ }), ...runsOf(segs("{place:18}"), { bold: true })] }));
+    else if (blk.k === "attest") kids.push(new Paragraph({ spacing: { before: 100 }, children: [new TextRun({ text: ATTEST, italics: true, font: FONT, size: SZ - 3 })] }));
+  });
+  const doc = new Document({
+    title: a.tag, styles: { default: { document: { run: { font: FONT, size: SZ } } } },
+    sections: [{ properties: { page: { size: PAGE, margin: MARGIN } }, children: kids }],
+  });
+  return await Packer.toBlob(doc);
+}
+
+/* ---------------- Start ---------------- */
+syncPicker(); buildForm(); render();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+})();
+</script>
+
+</body></html>
