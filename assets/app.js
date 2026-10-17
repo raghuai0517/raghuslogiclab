@@ -254,6 +254,7 @@
     el.innerHTML = '<div class="wrap">' +
       "<span>&copy; " + new Date().getFullYear() + " " + esc(site.name || "RaghusLogicLab") + ". Built one day at a time.</span>" +
       "<span>" + (last ? "Last lab update: " + esc(last) + " &middot; " : "") + '<a href="admin.html">Project Studio</a></span>' +
+      '<nav class="policy-links" aria-label="Policies"><a href="terms.html">Terms &amp; Conditions</a><a href="privacy.html">Privacy Policy</a><a href="refund.html">Refund &amp; Cancellation</a><a href="shipping.html">Shipping &amp; Delivery</a><a href="contact.html">Contact Us</a></nav>' +
       "</div>";
   }
 
