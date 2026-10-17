@@ -22,10 +22,23 @@
         <p class="lead" id="hero-intro"></p>
         <div class="btn-row" style="margin-top:24px">
           <a class="btn btn-primary" href="#projects">Explore projects</a>
-          <a class="btn" href="#tools">Free tools</a>
+          <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
           <a class="btn" href="#lab-log">Today in the lab</a>
         </div>
         <div class="stats" id="stats"></div>
+      </div>
+    </section>
+
+    <!-- AADHAAR RELATED (free tools) -->
+    <section class="section tools-section" id="tools" style="padding-top:8px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-blue">// free tools</span>
+            <p class="muted" style="margin:0">Fill in and preview free in your browser. Download the print-ready A4 PDF for &#8377;10 by UPI (PhonePe, Google Pay, Paytm).</p>
+          </div>
+        </div>
+        <div id="tool-groups"></div>
       </div>
     </section>
 
@@ -44,19 +57,6 @@
       </div>
     </section>
 
-    <!-- TOOLS -->
-    <section class="section" id="tools" style="padding-top:24px">
-      <div class="wrap">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">// tools</span>
-            <h2>Free tools</h2>
-            <p class="muted" style="margin:0">Open in your browser, fill in, download. Nothing you type is saved or sent anywhere.</p>
-          </div>
-        </div>
-        <div class="grid" id="tool-grid"></div>
-      </div>
-    </section>
 
     <!-- LAB LOG (daily updates) -->
     <section class="section" id="lab-log">
@@ -184,17 +184,24 @@
     }
     drawFilters(); drawGrid();
 
-    /* Tools */
-    var tools = RLL.publicTools(data);
-    document.getElementById("tool-grid").innerHTML = tools.length ? tools.map(function (t) {
-      return '<a class="card tool-card" href="' + esc(t.url) + '">' +
-        '<div class="card-top">' + RLL.iconHtml(t) + '<span class="badge s-live">Free</span></div>' +
-        "<h3 style=\"margin:4px 0 0\">" + esc(t.name) + "</h3>" +
-        "<p>" + esc(t.tagline || "") + "</p>" +
-        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
-        '<div class="meta">' + (t.category ? '<span class="tag">' + esc(t.category) + "</span>" : "") +
-        '<span class="tool-open">Open tool &rarr;</span></div>' +
-        "</a>";
+    /* Tools, grouped by category: "Aadhaar" -> "AADHAAR RELATED" (blue) */
+    var tools = RLL.publicTools(data), groups = [], byCat = {};
+    tools.forEach(function (t) {
+      var c = t.category || "Other";
+      if (!byCat[c]) { byCat[c] = []; groups.push(c); }
+      byCat[c].push(t);
+    });
+    document.getElementById("tool-groups").innerHTML = groups.length ? groups.map(function (c) {
+      return '<div class="tool-group"><h2 class="tool-group-title">' + esc((c + " related").toUpperCase()) + '</h2>' +
+        '<div class="grid">' + byCat[c].map(function (t) {
+          return '<a class="card tool-card blue" href="' + esc(t.url) + '">' +
+            '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-blue">Free to fill &middot; &#8377;10 PDF</span></div>' +
+            '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
+            "<p>" + esc(t.tagline || "") + "</p>" +
+            (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+            '<div class="meta"><span class="tag">' + esc(c) + '</span><span class="tool-open">Open tool &rarr;</span></div>' +
+            "</a>";
+        }).join("") + "</div></div>";
     }).join("") : '<p class="muted">Tools are on the way.</p>';
 
     /* Timeline */

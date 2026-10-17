@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-aadhaar-paid-pdf",
+      "date": "2026-10-17",
+      "type": "feature",
+      "title": "Aadhaar Related tools on the home page; PDF download ₹10 by UPI",
+      "body": "The Aadhaar tools now sit at the top of the home page under AADHAAR RELATED. Filling and previewing stay free; the print-ready PDF is ₹10 per download by UPI (PhonePe, Google Pay, Paytm). The Word download has been removed.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-launch",
       "date": "2026-09-30",
       "type": "launch",
@@ -70,7 +78,7 @@ window.RLL_DATA = {
       "slug": "aadhaar-dob-annexure",
       "name": "Aadhaar DoB Annexure Maker",
       "tagline": "Affidavit or self-declaration for a date of birth update, ready for ₹10 stamp paper.",
-      "description": "Covers UIDAI Annexure I, IA, II, IIA, III and IIIA (DoB update, operator error, reactivation). Fill the form, check the A4 preview, download PDF or Word.",
+      "description": "Covers UIDAI Annexure I, IA, II, IIA, III and IIIA (DoB update, operator error, reactivation). Fill the form and check the A4 preview free; download the PDF for ₹10 by UPI.",
       "category": "Aadhaar",
       "url": "tools/aadhaar-dob-annexure.html",
       "color": "#34d399",
@@ -82,7 +90,7 @@ window.RLL_DATA = {
       "slug": "aadhaar-name-affidavit",
       "name": "Aadhaar Name Update Affidavit Maker",
       "tagline": "Affidavit for a name correction, surname change or removing urf/alias.",
-      "description": "Covers UIDAI Annexure B to F, with a quick guide on when no affidavit is needed. Fill the form, check the A4 preview, download PDF or Word.",
+      "description": "Covers UIDAI Annexure B to F, with a quick guide on when no affidavit is needed. Fill the form and check the A4 preview free; download the PDF for ₹10 by UPI.",
       "category": "Aadhaar",
       "url": "tools/aadhaar-name-affidavit.html",
       "color": "#fbbf24",

@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <title>Aadhaar Name Update Affidavits · RaghusLogicLab</title>
-<meta name="description" content="Free tool: fill UIDAI's name update affidavit (Annexure B to F) and download a print-ready A4 PDF or Word file for stamp paper."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="description" content="Free tool: fill UIDAI's name update affidavit (Annexure B to F) and download a print-ready A4 PDF for stamp paper (₹10 per PDF via UPI)."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap">
@@ -217,8 +217,7 @@ input.upper { text-transform: uppercase; }
     <div class="pv">
       <p class="step" style="margin:0">Step 3 · Check the page and download</p>
       <div class="actions">
-        <button type="button" class="btn" id="pdfBtn">Download PDF</button>
-        <button type="button" class="btn" id="docxBtn">Download Word</button>
+        <button type="button" class="btn" id="pdfBtn">Download PDF · ₹10</button>
         <span class="status" id="status" role="status"></span>
       </div>
       <p class="tip">To print on bond paper: open the PDF, choose paper size <b>A4</b> and scale <b>Actual size / 100%</b> (turn off “Fit to page”). Test on plain paper first and hold it against the stamp paper.</p>
@@ -237,7 +236,9 @@ input.upper { text-transform: uppercase; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+<script src="../assets/qrcode.js"></script>
+<script src="../assets/pay-config.js"></script>
+<script src="../assets/pay.js"></script>
 <script>
 (function () {
 "use strict";
@@ -544,10 +545,13 @@ async function save(filename, data) {
     else browserSave(filename, data);
   }
 }
-const pdfBtn = document.getElementById("pdfBtn"), docxBtn = document.getElementById("docxBtn");
+const pdfBtn = document.getElementById("pdfBtn");
 pdfBtn.addEventListener("click", async () => {
   if (!window.html2canvas || !window.jspdf) { setStatus("The PDF tools didn't load. Reload the page and try again.", true); return; }
-  pdfBtn.disabled = true; setStatus("Building PDF…");
+  let paid = null;
+  try { paid = window.RLLPay ? await window.RLLPay.request({ item: ANNEX[state.annex].short ? "Annexure " + ANNEX[state.annex].short : "Aadhaar PDF" }) : null; } catch (e) { paid = null; }
+  if (!paid) { setStatus(window.RLLPay ? "Payment not completed, so the PDF was not downloaded." : "The payment step didn't load. Reload the page and try again.", !window.RLLPay); return; }
+  pdfBtn.disabled = true; setStatus("Payment reference noted. Building PDF…");
   const off = document.getElementById("offscreen");
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -557,51 +561,11 @@ pdfBtn.addEventListener("click", async () => {
     const canvas = await html2canvas(clone, { scale: 3, backgroundColor: "#ffffff", logging: false });
     const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
-    pdf.setProperties({ title: ANNEX[state.annex].tag });
+    pdf.setProperties({ title: ANNEX[state.annex].tag, subject: "UPI ref " + paid.utr, creator: "RaghusLogicLab" });
     await save(fileBase() + ".pdf", pdf.output("blob"));
   } catch (e) { setStatus("Couldn't build the PDF. Try again.", true); }
   finally { off.innerHTML = ""; pdfBtn.disabled = false; }
 });
-docxBtn.addEventListener("click", async () => {
-  if (!window.docx) { setStatus("The Word tools didn't load. Reload the page and try again.", true); return; }
-  docxBtn.disabled = true; setStatus("Building Word file…");
-  try { await save(fileBase() + ".docx", await window.docx.Packer.toBlob(buildDocx())); }
-  catch (e) { setStatus("Couldn't build the Word file. Try again.", true); }
-  finally { docxBtn.disabled = false; }
-});
-
-/* ---------------- Word (.docx) ---------------- */
-function buildDocx() {
-  const { Document, Paragraph, TextRun, AlignmentType, TabStopType } = window.docx;
-  const FONT = "Times New Roman", SZ = Math.round(state.fsUsed * 2), LINE = 264;
-  const PAGE = { width: 11906, height: 16838 };
-  const MARGIN = { top: Math.round(state.gap * 1440), bottom: 720, left: 1134, right: 1021 };
-  const R = (text, o = {}) => new TextRun({ text, font: FONT, size: SZ, ...o });
-  const runsOf = (list) => list.map((s) => s.t != null ? R(s.t) : s.v != null ? R(s.v, { bold: true }) : R(B(s.b)));
-  const a = ANNEX[state.annex], kids = [];
-  kids.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 160 }, children: [R(a.tag, { bold: true })] }));
-  const dep = (withName) => {
-    const nm = valueOf("dname");
-    return [
-      ...(withName && nm ? [new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: 280 }, children: [R(nm, { bold: true })] })] : []),
-      new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { before: withName && nm ? 0 : 360, after: 120 }, children: [R("Deponent")] }),
-    ];
-  };
-  a.body.forEach((blk) => {
-    if (blk.k === "title") kids.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [R("AFFIDAVIT", { bold: true, size: SZ + 4 })] }));
-    else if (blk.k === "sub") kids.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: blk.last ? 200 : 60 }, children: [R(blk.text)] }));
-    else if (blk.k === "open") kids.push(new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 120, line: LINE }, children: runsOf(segs(blk.text)) }));
-    else if (blk.k === "p") kids.push(new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 100, line: LINE }, indent: { left: 400, hanging: 400 },
-      tabStops: [{ type: TabStopType.LEFT, position: 400 }], children: [R(blk.label + "\t"), ...runsOf(segs(blk.text))] }));
-    else if (blk.k === "dep") kids.push(...dep(true));
-    else if (blk.k === "dep2") kids.push(...dep(false));
-    else if (blk.k === "vh") kids.push(new Paragraph({ spacing: { before: 80, after: 40 }, children: [R("Verification:", { bold: true })] }));
-    else if (blk.k === "verif") kids.push(new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { line: LINE }, children: runsOf(segs(VERIF)) }));
-    else if (blk.k === "attest") kids.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [R(ATTEST, { size: SZ - 2 })] }));
-  });
-  return new Document({ title: a.tag, styles: { default: { document: { run: { font: FONT, size: SZ } } } },
-    sections: [{ properties: { page: { size: PAGE, margin: MARGIN } }, children: kids }] });
-}
 
 syncPicker(); buildForm(); render();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
