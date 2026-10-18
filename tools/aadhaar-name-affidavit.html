@@ -561,7 +561,7 @@ pdfBtn.addEventListener("click", async () => {
     const canvas = await html2canvas(clone, { scale: 3, backgroundColor: "#ffffff", logging: false });
     const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
-    pdf.setProperties({ title: ANNEX[state.annex].tag, subject: "UPI ref " + paid.utr, creator: "RaghusLogicLab" });
+    pdf.setProperties({ title: ANNEX[state.annex].tag, subject: (paid.method === "razorpay" ? "Razorpay " : "UPI ref ") + paid.utr, creator: "RaghusLogicLab" });
     await save(fileBase() + ".pdf", pdf.output("blob"));
   } catch (e) { setStatus("Couldn't build the PDF. Try again.", true); }
   finally { off.innerHTML = ""; pdfBtn.disabled = false; }

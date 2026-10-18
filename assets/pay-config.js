@@ -11,5 +11,5 @@ window.RLL_PAY_CONFIG = {
   upiId: "9491157078hdfc@ybl",
   payeeName: "RaghusLogicLab",
   amount: 10,
-  razorpayUrl: ""
+  razorpayUrl: "https://rzp.io/rzp/raghuslogiclab-pdf"
 };

@@ -88,15 +88,6 @@
     ta.remove(); done();
   }
 
-  /* Remember the reference for 30 minutes so a failed download can be retried without paying again */
-  var KEY = "rllpay_recent";
-  function recent() {
-    try { var r = JSON.parse(sessionStorage.getItem(KEY) || "null"); if (r && Date.now() - r.t < 30 * 60 * 1000) return r; } catch (e) {}
-    return null;
-  }
-  function remember(utr, item) { try { sessionStorage.setItem(KEY, JSON.stringify({ utr: utr, item: item, t: Date.now() })); } catch (e) {} }
-  function forget() { try { sessionStorage.removeItem(KEY); } catch (e) {} }
-
   function request(opts) {
     opts = opts || {};
     var c = cfg();
@@ -112,7 +103,6 @@
 
       var note = ("RLL PDF " + item).slice(0, 40);
       var price = "₹" + c.amount;
-      var last = recent();
       var html = '<div class="rllpay"><div class="rllpay-head"><h2 id="rllpay-title">Download PDF</h2><span class="rllpay-price">' + esc(price) + '</span></div><div class="rllpay-body">';
 
       if (!c.upiId && !c.razorpayUrl) {
@@ -133,11 +123,11 @@
             '<p class="rllpay-note" style="margin-top:0">On a phone, the buttons open your UPI app with ' + esc(price) + ' filled in.</p>';
         }
         if (c.razorpayUrl) {
-          html += '<div class="rllpay-row" style="margin-top:8px"><a class="rllpay-btn" href="' + esc(c.razorpayUrl) + '" target="_blank" rel="noopener">Pay by card / net banking (Razorpay)</a></div>';
+          html += (c.upiId ? '<p class="rllpay-hint" style="margin:10px 0 6px">or</p>' : '') + '<div class="rllpay-row"><a class="rllpay-btn solid" style="background:#0b72e7;border-color:#0b72e7" href="' + esc(c.razorpayUrl) + '" target="_blank" rel="noopener">Pay ' + esc(price) + ' with Razorpay (UPI, card, net banking, wallet)</a></div>' + '<p class="rllpay-note" style="margin-top:0">Razorpay opens in a new tab. After paying, copy the Payment ID (starts with pay_) from the receipt and come back here.</p>';
         }
         html += '<hr><p class="rllpay-step">Step 2 · Enter your payment reference</p>' +
-          '<label for="rllpay-utr">12-digit UPI reference number (UTR / UPI Ref No.)</label>' +
-          '<input id="rllpay-utr" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="e.g. 428812345678" value="' + (last ? esc(last.utr) : "") + '">' +
+          '<label for="rllpay-utr">' + (c.razorpayUrl ? '12-digit UPI reference (UTR) or Razorpay Payment ID (pay_\u2026)' : '12-digit UPI reference number (UTR / UPI Ref No.)') + '</label>' +
+          '<input id="rllpay-utr" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="24" placeholder="e.g. 428812345678 or pay_Abc123\u2026">' +
           '<div class="rllpay-err" id="rllpay-err" role="alert"></div>' +
           '<div class="rllpay-row"><button type="button" class="rllpay-btn solid" data-act="ok">I’ve paid — Download PDF</button></div>' +
           '<div class="rllpay-row"><button type="button" class="rllpay-btn" data-act="cancel">Cancel</button></div>' +
@@ -164,12 +154,12 @@
       }
       function submit() {
         var utr = (input.value || "").replace(/\s+/g, "");
-        if (!/^\d{12}$/.test(utr)) {
-          err.textContent = "Enter the 12-digit UPI reference number from your payment (numbers only).";
+        var okUtr = /^\d{12}$/.test(utr), okRzp = !!c.razorpayUrl && /^pay_[A-Za-z0-9]{14}$/.test(utr);
+        if (!okUtr && !okRzp) {
+          err.textContent = c.razorpayUrl ? "Enter the 12-digit UPI reference, or the Razorpay Payment ID that starts with pay_." : "Enter the 12-digit UPI reference number from your payment (numbers only).";
           input.focus(); return;
         }
-        remember(utr, item);
-        close({ utr: utr, amount: c.amount, item: item, at: new Date().toISOString() });
+        close({ utr: utr, method: okRzp ? "razorpay" : "upi", amount: c.amount, item: item, at: new Date().toISOString() });
       }
       document.addEventListener("keydown", onKey);
       back.addEventListener("click", function (e) {
@@ -181,9 +171,9 @@
         if (act === "ok") submit();
         if (act === "copy") copyText(c.upiId, b);
       });
-      if (input) input.addEventListener("input", function () { err.textContent = ""; input.value = input.value.replace(/[^\d\s]/g, ""); });
+      if (input) input.addEventListener("input", function () { err.textContent = ""; input.value = input.value.replace(/[^A-Za-z0-9_\s]/g, ""); });
     });
   }
 
-  window.RLLPay = { request: request, forget: forget, config: cfg };
+  window.RLLPay = { request: request, config: cfg };
 })();
