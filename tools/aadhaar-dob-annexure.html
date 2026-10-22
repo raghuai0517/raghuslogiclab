@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <title>Aadhaar DoB Annexure Maker · RaghusLogicLab</title>
-<meta name="description" content="Free tool: fill UIDAI's date of birth update affidavit or self-declaration (Annexure I, IA, II, IIA, III, IIIA) and download a print-ready A4 PDF for stamp paper (₹10 per PDF via UPI)."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="description" content="Tool: fill UIDAI's date of birth update affidavit or self-declaration (Annexure I, IA, II, IIA, III, IIIA) and download a print-ready A4 PDF for stamp paper (₹10 per PDF via UPI)."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap">
@@ -148,7 +148,7 @@ input.upper { text-transform: uppercase; }
       <h1>Aadhaar DoB Annexure Maker</h1>
       <p>Fill the affidavit or self-declaration from UIDAI's SOP for date of birth update and get a print-ready A4 page, laid out for ₹10 non-judicial stamp paper.</p>
     </div>
-    <div class="src">Format per UIDAI E&amp;U-II SOP dated 24.12.2025</div>
+    <div class="src">Format per UIDAI E&amp;U-II SOP dated 24.12.2025, as amended by Corrigendum I/58955/2026</div>
   </header>
 
   <section aria-labelledby="s1">
@@ -235,8 +235,8 @@ const FIELDS = {
                  opts: [["", "Leave blank"], ["never", "Never"], ["once", "Once"], ["more than once", "More than once"]],
                  blankFn: (w) => [B(w), " (never / once / more than once)"] },
   supportChoice: { label: "Document being provided now", type: "select", group: "Date of birth",
-                 opts: [["", "Leave both (strike off by hand)"], ["a corrected version of the same document as mentioned in (iii) above", "Corrected version of same document"], ["birth certificate", "Birth certificate"]],
-                 blank: "a corrected version of the same document as mentioned in (iii) above / birth certificate (choose as applicable)" },
+                 opts: [["", "Leave both (strike off by hand)"], ["a birth certificate", "Birth certificate"], ["a corrected version of the earlier submitted document (document must be a part of existing list of valid PDB documents)", "Corrected version of earlier document"]],
+                 blank: "a birth certificate/ corrected version of the earlier submitted document (document must be a part of existing list of valid PDB documents) (choose as applicable)" },
   proofDoc:    { label: "Proof of DoB being submitted", ph: "e.g. Birth certificate", group: "Date of birth" },
   earlierDoc:  { label: "Document submitted earlier", ph: "e.g. Passport", group: "Earlier submission" },
   docNo:       { label: "Its number", group: "Earlier submission" },
@@ -266,13 +266,13 @@ const S = (label, text) => ({ k: "p", lvl: 1, label, text });
 
 const ANNEX = {
   I: { tag: "Annexure-I – For Adults", short: "I", who: "Adult", group: "dob",
-    fields: ["dname","rel","relname","addr","aadhaar","dobCorrect","dobRecorded","prevDoc","timesUpd","supportChoice","proofDoc","date","place"],
+    fields: ["dname","rel","relname","addr","aadhaar","dobCorrect","dobRecorded","timesUpd","supportChoice","proofDoc","date","place"],
     body: [
       { k: "title", text: "Affidavit for Date of Birth Updation" }, { k: "note", text: STAMP_NOTE },
       P("1.", OPEN),
       S("i)", "That I am the resident of the above said address."),
       S("ii)", "That my correct date of birth is {dobCorrect:16}."),
-      S("iii)", "That the earlier recorded date of birth in Aadhaar is {dobRecorded:16} based on {prevDoc:26} document submitted by me."),
+      S("iii)", "That the earlier recorded date of birth in Aadhaar is {dobRecorded:16}."),
       S("iv)", "That I have {timesUpd:14} updated my date of birth in Aadhaar."),
       S("v)", "That currently {supportChoice} is being provided in support of DoB update request."),
       S("vi)", "That I wish to get my date of birth updated in the Aadhaar as {dobCorrect:16}, for which I am submitting {proofDoc:26} as proof of date of birth."),
@@ -282,14 +282,14 @@ const ANNEX = {
       { k: "sign", right: "Name & Signature of Resident (Deponent)" }, { k: "place" }, { k: "attest" },
     ] },
   IA: { tag: "Annexure-IA – For Children", short: "IA", who: "Child", group: "dob",
-    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","dobCorrect","dobRecorded","prevDoc","timesUpd","date","place"],
+    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","dobCorrect","dobRecorded","timesUpd","date","place"],
     body: [
       { k: "title", text: "Affidavit for Date of Birth Updation" }, { k: "note", text: STAMP_NOTE },
       P("1.", OPEN),
       S("i)", "That I am the resident of the above said address."),
       S("ii)", "That I am parent/legal guardian of {child:26} holding Aadhaar number {childAadhaar:18}."),
       S("iii)", "That correct date of birth of my child/ward is {dobCorrect:16}."),
-      S("iv)", "That the earlier recorded date of birth in Aadhaar of my child/ward is {dobRecorded:16} based on {prevDoc:26} document submitted by me."),
+      S("iv)", "That the earlier recorded date of birth in Aadhaar of my child/ward is {dobRecorded:16}."),
       S("v)", "That I have {timesUpd:14} updated my child/ward's date of birth in Aadhaar."),
       S("vi)", "That birth certificate of my child/ward is being provided in support of DoB update request."),
       S("vii)", "That I wish to get my child/ward's date of birth updated in the Aadhaar as {dobCorrect:16}, for which I am submitting his/her birth certificate as proof of date of birth."),
@@ -299,12 +299,12 @@ const ANNEX = {
       { k: "sign", right: "Name & Signature of Parent/Guardian of Minor (Deponent)" }, { k: "place" }, { k: "attest" },
     ] },
   II: { tag: "Annexure-II – For Adults", short: "II", who: "Adult", group: "err",
-    fields: ["dname","rel","relname","addr","aadhaar","earlierDoc","docNo","docDate","eid","dobWrong","dobRight","possession","date","place"],
+    fields: ["dname","rel","relname","addr","aadhaar","earlierDoc","docNo","docDate","dobWrong","dobRight","possession","date","place"],
     body: [
       { k: "title", text: SD_TITLE }, { k: "spacer" },
       P("1.", OPEN),
       S("i)", "That I am the resident of the above said address."),
-      S("ii)", "That I had earlier submitted a valid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} while enrolment / update through EID number {eid:24}, as proof of date of birth for updating my date of birth in Aadhaar."),
+      S("ii)", "That I had earlier submitted a valid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} during enrolment / update, as proof of date of birth for updating my date of birth in Aadhaar."),
       S("iii)", "That the date of birth was incorrectly mentioned as {dobWrong:14} in Aadhaar, while the date of birth mentioned in the submitted valid document was {dobRight:14} which is indeed my correct date of birth."),
       S("iv)", "That {possession}."),
       P("2.", "I request UIDAI to update my date of birth based on previously submitted and then valid proof of date of birth document."),
@@ -313,13 +313,13 @@ const ANNEX = {
       { k: "sign", right: "Name & Signature of Resident" }, { k: "place" },
     ] },
   IIA: { tag: "Annexure-IIA – For Children", short: "IIA", who: "Child", group: "err",
-    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","earlierDoc","docNo","docDate","eid","dobWrong","dobRight","possession","date","place"],
+    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","earlierDoc","docNo","docDate","dobWrong","dobRight","possession","date","place"],
     body: [
       { k: "title", text: SD_TITLE }, { k: "spacer" },
       P("1.", OPEN),
       S("i)", "That I am the resident of the above said address."),
       S("ii)", "That I am parent/legal guardian of {child:26} holding Aadhaar No {childAadhaar:18}."),
-      S("iii)", "That I had earlier submitted a valid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} while enrolment / update through EID number {eid:24}, as proof of date of birth for updating date of birth of my child/ward in Aadhaar."),
+      S("iii)", "That I had earlier submitted a valid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} during enrolment / update, as proof of date of birth for updating date of birth of my child/ward in Aadhaar."),
       S("iv)", "That the date of birth of my child/ward was wrongly mentioned as {dobWrong:14} in Aadhaar, while the date of birth mentioned in the submitted valid document was {dobRight:14}, which is indeed the correct date of birth of my child/ward."),
       S("v)", "That {possession}."),
       P("2.", "I request UIDAI to update date of birth of my child/ward based on previously submitted and then valid proof of date of birth document."),
@@ -328,12 +328,12 @@ const ANNEX = {
       { k: "sign", right: "Name & Signature of Parent/Guardian of Minor" }, { k: "place" },
     ] },
   III: { tag: "Annexure-III – For Adults", short: "III", who: "Adult", group: "react",
-    fields: ["dname","rel","relname","addr","aadhaar","earlierDoc","docNo","docDate","eid","genuineDoc","date","place"],
+    fields: ["dname","rel","relname","addr","aadhaar","genuineDoc","date","place"],
     body: [
       { k: "title", text: "Affidavit for Reactivation of Aadhaar" }, { k: "note", text: REACT_NOTE },
       P("1.", OPEN),
       S("i)", "That I am resident of the above said address."),
-      S("ii)", "That I had earlier submitted an invalid document- {earlierDoc:24}, bearing number {docNo:18} dated {docDate:12} and provided false information, while enrolment/update through EID number {eid:24}, as proof of date of birth."),
+      S("ii)", "That I had earlier submitted an invalid document, as proof of date of birth or provided false information regarding my date of birth, during enrolment/update."),
       S("iii)", "That I understand and accept that submission of such invalid document and false information is a violation of law and legal action may be taken against me for the same under Aadhaar Act and/or any other applicable laws."),
       S("iv)", "That I sincerely regret this act and tender an unconditional apology and ensure that such mistake shall not be repeated."),
       S("v)", "That I humbly seek pardon and request UIDAI to kindly reactivate my Aadhaar number {aadhaar:18} to enable its continued usage."),
@@ -344,13 +344,13 @@ const ANNEX = {
       { k: "sign", right: "Name & Signature of Resident (Deponent)" }, { k: "place" }, { k: "attest" },
     ] },
   IIIA: { tag: "Annexure-IIIA – For Children", short: "IIIA", who: "Child", group: "react",
-    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","earlierDoc","docNo","docDate","eid","genuineDoc","date","place"],
+    fields: ["dname","rel","relname","addr","aadhaar","child","childAadhaar","genuineDoc","date","place"],
     body: [
       { k: "title", text: "Affidavit for Reactivation of Aadhaar" }, { k: "note", text: REACT_NOTE },
       P("1.", OPEN),
       S("i)", "That I am resident of the above said address."),
       S("ii)", "That I am parent/legal guardian of {child:26} holding Aadhaar No {childAadhaar:18}."),
-      S("iii)", "That I had earlier submitted an invalid document- {earlierDoc:24}, bearing number {docNo:18}, dated {docDate:12} or provided false information, while enrolment/update through EID number {eid:24} as proof of date of birth of my child/ward."),
+      S("iii)", "That I had earlier submitted an invalid document, as proof of date of birth or provided false information regarding date of birth of my child/ward, during enrolment/update of my child/ward."),
       S("iv)", "That I understand and accept that submission of such invalid document and false information is a violation of law and legal action may be taken against me for the same under Aadhaar Act and/or any other applicable laws."),
       S("v)", "That I sincerely regret this act and tender an unconditional apology and ensure that such mistake shall not be repeated."),
       S("vi)", "That I humbly seek pardon and request UIDAI to kindly reactivate my child/ward's Aadhaar number {childAadhaar:18} to enable its continued usage."),
@@ -364,7 +364,7 @@ const ANNEX = {
 const GROUPS = [
   { id: "dob", name: "Affidavit for DoB update", why: "DoB is already ‘verified’ in Aadhaar and needs correcting (SOP Case 1(b), Case 2)." },
   { id: "err", name: "Self-declaration: operator error", why: "DoB was typed wrongly at the centre and you no longer have, or can't reuse, the old document." },
-  { id: "react", name: "Affidavit for reactivation", why: "Aadhaar was deactivated over a false DoB document; submit with a verifiable birth certificate." },
+  { id: "react", name: "Affidavit for reactivation", why: "Aadhaar was deactivated over a false DoB document. One-time chance, only at an Aadhaar Seva Kendra, with full biometrics and an online-verifiable birth certificate." },
 ];
 
 /* ---------------- State ---------------- */
@@ -558,16 +558,17 @@ function browserSave(filename, data) {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     setStatus(`Saved ${filename}`);
-  } catch (e) { setStatus("The download could not start. Try again.", true); }
+    return true;
+  } catch (e) { setStatus("The download could not start. Click Download PDF again (you won't be charged again).", true); return false; }
 }
 async function save(filename, data) {
-  if (!downloads) { browserSave(filename, data); return; }
-  try { await downloads.save({ filename, data }); setStatus(`Saved ${filename}`); }
+  if (!downloads) return browserSave(filename, data);
+  try { await downloads.save({ filename, data }); setStatus(`Saved ${filename}`); return true; }
   catch (e) {
     const c = e && e.code;
-    if (c === "declined") setStatus("Download cancelled.");
-    else if (c === "rate_limited") setStatus("A download prompt is already open. Finish that one first.", true);
-    else browserSave(filename, data);
+    if (c === "declined") { setStatus("Download cancelled. Click Download PDF again to save it (you won't be charged again)."); return false; }
+    if (c === "rate_limited") { setStatus("A download prompt is already open. Finish that one first.", true); return false; }
+    return browserSave(filename, data);
   }
 }
 
@@ -576,7 +577,7 @@ pdfBtn.addEventListener("click", async () => {
   let paid = null;
   try { paid = window.RLLPay ? await window.RLLPay.request({ item: ANNEX[state.annex].short ? "Annexure " + ANNEX[state.annex].short : "Aadhaar PDF" }) : null; } catch (e) { paid = null; }
   if (!paid) { setStatus(window.RLLPay ? "Payment not completed, so the PDF was not downloaded." : "The payment step didn't load. Reload the page and try again.", !window.RLLPay); return; }
-  pdfBtn.disabled = true; setStatus("Payment reference noted. Building PDF…");
+  pdfBtn.disabled = true; setStatus(paid.resumed ? "Using your earlier payment (" + paid.utr + "). Building PDF…" : "Payment ID accepted. Building PDF…");
   const off = document.getElementById("offscreen");
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -588,8 +589,8 @@ pdfBtn.addEventListener("click", async () => {
     const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
     pdf.setProperties({ title: ANNEX[state.annex].tag, subject: (paid.method === "razorpay" ? "Razorpay " : "UPI ref ") + paid.utr, creator: "RaghusLogicLab" });
-    await save(fileBase() + ".pdf", pdf.output("blob"));
-  } catch (e) { setStatus("Couldn't build the PDF. Try again.", true); }
+    if (await save(fileBase() + ".pdf", pdf.output("blob")) && window.RLLPay.complete) window.RLLPay.complete();
+  } catch (e) { setStatus("Couldn't build the PDF. Click Download PDF again (you won't be charged again).", true); }
   finally { off.innerHTML = ""; pdfBtn.disabled = false; }
 });
 

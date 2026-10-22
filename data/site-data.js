@@ -2,7 +2,7 @@
   RaghusLogicLab — site data
   ------------------------------------------------------------
   This ONE file holds your site settings, every project, every daily update
-  and the list of free tools ("tools" at the bottom).
+  and the list of tools ("tools" at the bottom).
   Easiest way to edit: open admin.html in your browser, make changes, then click
   "Download site-data.js" and replace this file on your host.
   (You can also edit it by hand — keep the format exactly as below.)
@@ -48,6 +48,22 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-dob-corrigendum",
+      "date": "2026-10-22",
+      "type": "feature",
+      "title": "DoB Annexure Maker updated to UIDAI Corrigendum",
+      "body": "The Aadhaar DoB Annexure Maker now follows the UIDAI SOP as amended by Corrigendum I/58955/2026: new birth-certificate / corrected-document choice in Annexure I, EID and earlier-document lines removed from Annexure I, IA, II and IIA, and revised invalid-document wording in Annexure III and IIIA.",
+      "project": "raghuslogiclab-main"
+    },
+    {
+      "id": "u-pay-once",
+      "date": "2026-10-18",
+      "type": "fix",
+      "title": "One payment ID = one PDF",
+      "body": "Each UPI reference or Razorpay payment ID now unlocks only one PDF. Entering the same ID again shows \"This payment ID has already been used\". If a PDF fails to save after paying, the next click re-uses that payment instead of asking again.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-aadhaar-paid-pdf",
       "date": "2026-10-17",
       "type": "feature",
@@ -68,7 +84,7 @@ window.RLL_DATA = {
       "date": "2026-10-16",
       "type": "feature",
       "title": "New: Tools section with two Aadhaar affidavit makers",
-      "body": "Added a Tools menu and section. First two free tools: the Aadhaar DoB Annexure Maker and the Aadhaar Name Update Affidavit Maker. Both fill UIDAI's prescribed wording and download a print-ready A4 PDF or Word file for stamp paper.",
+      "body": "Added a Tools menu and section. First two tools: the Aadhaar DoB Annexure Maker and the Aadhaar Name Update Affidavit Maker. Both fill UIDAI's prescribed wording and download a print-ready A4 PDF or Word file for stamp paper.",
       "project": "raghuslogiclab-main"
     }
   ],

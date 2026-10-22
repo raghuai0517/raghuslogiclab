@@ -200,7 +200,7 @@
           '<li class="dropdown" id="tools-dd">' +
             '<button type="button" aria-haspopup="true" aria-expanded="false" class="' + (active === "tools" ? "active" : "") + '">Tools <span class="caret">&#9660;</span></button>' +
             '<div class="dropdown-menu" role="menu">' +
-              '<div class="dd-label">Free tools</div>' + toolItems +
+              '<div class="dd-label">Tools</div>' + toolItems +
               '<div class="dd-sep"></div>' +
               '<a href="index.html#tools">View all tools &rarr;</a>' +
             "</div>" +

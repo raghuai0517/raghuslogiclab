@@ -11,7 +11,7 @@ A simple static website (no server, no database) that you can host on any domain
 | `admin.html` | **Project Studio** — Create Project, Manage Projects, Daily Update, Settings & Publish |
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
-| `tools/` | Free tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker) |
+| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker) |
 
 ## Try it now
 Double-click `index.html` — it opens in your browser and works offline.
@@ -26,7 +26,7 @@ Double-click `index.html` — it opens in your browser and works offline.
 Changes are saved in your browser as a **draft** and appear on your pages in *Preview mode* (only you see them).
 
 ## Tools
-The **Tools ▾** menu and the *Free tools* section on the home page list everything in the `tools` array at the bottom of `data/site-data.js`.
+The **Tools ▾** menu and the *Tools* section on the home page list everything in the `tools` array at the bottom of `data/site-data.js`.
 To add a tool:
 1. Put its page in the `tools/` folder (one self-contained HTML file).
 2. Add an entry to `"tools"` in `data/site-data.js` (copy an existing one and change `id`, `slug`, `name`, `tagline`, `description`, `url`, `color`, `added`).

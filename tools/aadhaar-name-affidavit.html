@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <title>Aadhaar Name Update Affidavits · RaghusLogicLab</title>
-<meta name="description" content="Free tool: fill UIDAI's name update affidavit (Annexure B to F) and download a print-ready A4 PDF for stamp paper (₹10 per PDF via UPI)."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="description" content="Tool: fill UIDAI's name update affidavit (Annexure B to F) and download a print-ready A4 PDF for stamp paper (₹10 per PDF via UPI)."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap">
@@ -533,16 +533,17 @@ function browserSave(filename, data) {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     setStatus(`Saved ${filename}`);
-  } catch (e) { setStatus("The download could not start. Try again.", true); }
+    return true;
+  } catch (e) { setStatus("The download could not start. Click Download PDF again (you won't be charged again).", true); return false; }
 }
 async function save(filename, data) {
-  if (!downloads) { browserSave(filename, data); return; }
-  try { await downloads.save({ filename, data }); setStatus(`Saved ${filename}`); }
+  if (!downloads) return browserSave(filename, data);
+  try { await downloads.save({ filename, data }); setStatus(`Saved ${filename}`); return true; }
   catch (e) {
     const c = e && e.code;
-    if (c === "declined") setStatus("Download cancelled.");
-    else if (c === "rate_limited") setStatus("A download prompt is already open. Finish that one first.", true);
-    else browserSave(filename, data);
+    if (c === "declined") { setStatus("Download cancelled. Click Download PDF again to save it (you won't be charged again)."); return false; }
+    if (c === "rate_limited") { setStatus("A download prompt is already open. Finish that one first.", true); return false; }
+    return browserSave(filename, data);
   }
 }
 const pdfBtn = document.getElementById("pdfBtn");
@@ -551,7 +552,7 @@ pdfBtn.addEventListener("click", async () => {
   let paid = null;
   try { paid = window.RLLPay ? await window.RLLPay.request({ item: ANNEX[state.annex].short ? "Annexure " + ANNEX[state.annex].short : "Aadhaar PDF" }) : null; } catch (e) { paid = null; }
   if (!paid) { setStatus(window.RLLPay ? "Payment not completed, so the PDF was not downloaded." : "The payment step didn't load. Reload the page and try again.", !window.RLLPay); return; }
-  pdfBtn.disabled = true; setStatus("Payment reference noted. Building PDF…");
+  pdfBtn.disabled = true; setStatus(paid.resumed ? "Using your earlier payment (" + paid.utr + "). Building PDF…" : "Payment ID accepted. Building PDF…");
   const off = document.getElementById("offscreen");
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -562,8 +563,8 @@ pdfBtn.addEventListener("click", async () => {
     const pdf = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
     pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, 210, 297, undefined, "FAST");
     pdf.setProperties({ title: ANNEX[state.annex].tag, subject: (paid.method === "razorpay" ? "Razorpay " : "UPI ref ") + paid.utr, creator: "RaghusLogicLab" });
-    await save(fileBase() + ".pdf", pdf.output("blob"));
-  } catch (e) { setStatus("Couldn't build the PDF. Try again.", true); }
+    if (await save(fileBase() + ".pdf", pdf.output("blob")) && window.RLLPay.complete) window.RLLPay.complete();
+  } catch (e) { setStatus("Couldn't build the PDF. Click Download PDF again (you won't be charged again).", true); }
   finally { off.innerHTML = ""; pdfBtn.disabled = false; }
 });
 
