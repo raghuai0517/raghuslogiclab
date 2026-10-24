@@ -47,8 +47,17 @@ Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes
   npm install --no-save react@18 react-dom@18 esbuild
   npx esbuild main.jsx --bundle --minify --jsx=automatic --define:process.env.NODE_ENV='"production"' --target=es2018 --outfile=../app.js
   ```
-- **OTP by SMS:** paste your Firebase web config into `FIREBASE_CONFIG` at the top of the source and rebuild. Until then it runs in demo mode (the OTP is shown on screen, no SMS is sent).
-- **Data is saved per device** (in that phone's or computer's browser). A shared online database is needed before residents and the committee see each other's payments and complaints.
+- **Firebase (real SMS OTP + shared data):** paste your Firebase web config into `FIREBASE_CONFIG` at the top of `src/sunshine-homes.jsx` and rebuild. The app then sends OTPs by SMS and stores everything in Firestore (collection `sunshine`), updating live on every phone.
+  Firebase console checklist: Blaze plan · Authentication → Sign-in method → Phone ON · Authentication → Settings → SMS region policy: allow India · Authorized domains: `raghuslogiclab.com` (and `www.`) · Firestore database (asia-south1) with rules:
+  ```
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      match /sunshine/{key} { allow read, write: if request.auth != null; }
+    }
+  }
+  ```
+- **Without Firebase** it runs in demo mode: the OTP is shown on screen and data is saved only in that browser, so residents and the committee don't see each other's data.
 
 To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `data/site-data.js` (copy the Sunshine Homes one and change `id`, `slug`, `name`, `tagline`, `description`, `icon`, `url`, `color`, `added`).
 

@@ -6,15 +6,17 @@ import { useState, useEffect } from "react";
 /*  Amenities · Admin                                                   */
 /* ================================================================== */
 
-/* ------------------------- OTP / SMS SETUP ------------------------ */
-/*  Real SMS OTPs are sent through Firebase Phone Authentication.       */
-/*  1. Create a Firebase project → Authentication → enable "Phone".     */
-/*  2. Upgrade to the Blaze plan (needed for SMS) and add the domain    */
-/*     you host this app on under Authentication → Settings →           */
-/*     Authorized domains.                                              */
-/*  3. Paste your web app config below.                                 */
+/* ---------------------- FIREBASE (OTP + DATA) --------------------- */
+/*  With FIREBASE_CONFIG filled in, the app:                            */
+/*   • sends real OTPs by SMS (Firebase Phone Authentication), and      */
+/*   • keeps all society data in Firestore, shared live between every   */
+/*     resident's phone and the committee.                             */
+/*  Firebase console setup: Blaze plan · Authentication → Phone ON ·    */
+/*  Settings → SMS region policy: allow India · Authorized domains: add */
+/*  your website · Firestore database with these rules:                 */
+/*    match /sunshine/{key} { allow read, write: if request.auth != null; } */
 /*  While FIREBASE_CONFIG is null the app runs in DEMO mode: no SMS is  */
-/*  sent and the OTP is shown on screen so you can try the flow.        */
+/*  sent (the OTP is shown on screen) and data stays in this browser.   */
 const FIREBASE_CONFIG = null;
 /* e.g.
 const FIREBASE_CONFIG = {
@@ -24,7 +26,7 @@ const FIREBASE_CONFIG = {
   appId: "1:1234567890:web:abcdef",
 };
 */
-const FIREBASE_VERSION = "10.12.2";
+const FIREBASE_VERSION = "13.1.0";
 const OTP_LEN = 6;
 const OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_SECS = 30;
@@ -60,34 +62,49 @@ const DEFAULTS = { upiId: "sunshinehomes@okicici", adminPin: "2468", monthlyAmou
 
 /* localStorage keys are prefixed so they never clash with other pages on the same website */
 const LS_PREFIX = "sunshine-homes:";
+const OTP_MODE = FIREBASE_CONFIG ? "sms" : "demo";   // sms = Firebase: real OTP by SMS + shared online data
+const COLL = "sunshine";                              // Firestore collection that holds the app's data
+const hasClaudeStorage = () => typeof window !== "undefined" && !!window.storage;
+let onSaveError = () => {};
 
-/* storage: shared=true → visible to every resident; shared=false → this device/user only */
+const local = {
+  key: (k, shared) => LS_PREFIX + (shared ? "s:" : "p:") + k,
+  get(k, shared) { try { const v = localStorage.getItem(local.key(k, shared)); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(k, v, shared) { try { localStorage.setItem(local.key(k, shared), JSON.stringify(v)); } catch (e) {} },
+  del(k, shared) { try { localStorage.removeItem(local.key(k, shared)); } catch (e) {} },
+};
+
+/* storage: shared=true → visible to every resident (Firestore when Firebase is set up);
+   shared=false → this device only (the login session). */
 const store = {
-  async get(k, shared = true) {
-    try {
-      if (window?.storage) { const r = await window.storage.get(k, shared); return r ? JSON.parse(r.value) : null; }
-      const v = localStorage.getItem(LS_PREFIX + (shared ? "s:" : "p:") + k); return v ? JSON.parse(v) : null;
-    } catch (e) {}
-    return null;
+  // Returns null when a key doesn't exist yet. With strict=true, connection or
+  // permission errors are thrown instead of being treated as "no data".
+  async get(k, shared = true, strict = false) {
+    if (shared && OTP_MODE === "sms") {
+      try { return await remoteGet(k); } catch (e) { if (strict) throw e; return null; }
+    }
+    if (hasClaudeStorage()) {
+      try { const r = await window.storage.get(k, shared); return r ? JSON.parse(r.value) : null; } catch (e) { return null; }
+    }
+    return local.get(k, shared);
   },
   async set(k, v, shared = true) {
-    try {
-      if (window?.storage) await window.storage.set(k, JSON.stringify(v), shared);
-      else localStorage.setItem(LS_PREFIX + (shared ? "s:" : "p:") + k, JSON.stringify(v));
-    } catch (e) {}
+    if (shared && OTP_MODE === "sms") {
+      try { await remoteSet(k, v); } catch (e) { onSaveError(e); }
+      return;
+    }
+    if (hasClaudeStorage()) { try { await window.storage.set(k, JSON.stringify(v), shared); } catch (e) {} return; }
+    local.set(k, v, shared);
   },
   async del(k, shared = true) {
-    try {
-      if (window?.storage) await window.storage.delete(k, shared);
-      else localStorage.removeItem(LS_PREFIX + (shared ? "s:" : "p:") + k);
-    } catch (e) {}
+    if (hasClaudeStorage()) { try { await window.storage.delete(k, shared); } catch (e) {} return; }
+    local.del(k, shared);
   },
 };
 
-/* --------------------------- OTP SERVICE -------------------------- */
-const OTP_MODE = FIREBASE_CONFIG ? "sms" : "demo";
+/* ------------------------ FIREBASE + OTP SERVICE ------------------- */
 let demoOtp = null;            // { phone, code, exp, tries }
-let fb = null;                 // { auth, mod }
+let fb = null;                 // { auth, mod, fs, db }
 let confirmation = null;       // Firebase ConfirmationResult
 const dynImport = (u) => new Function("u", "return import(u)")(u);
 const FB_ERR = {
@@ -98,18 +115,46 @@ const FB_ERR = {
   "auth/quota-exceeded": "SMS limit reached. Please contact the admin.",
   "auth/captcha-check-failed": "Security check failed. Reload and try again.",
   "auth/network-request-failed": "Network error. Check your connection.",
+  "auth/operation-not-allowed": "SMS login isn't switched on yet. Please contact the admin.",
+  "auth/unauthorized-domain": "This website isn't authorised for login yet. Please contact the admin.",
 };
 
 async function loadFirebase() {
   if (fb) return fb;
   const base = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}`;
-  const appMod = await dynImport(`${base}/firebase-app.js`);
-  const mod = await dynImport(`${base}/firebase-auth.js`);
+  const [appMod, mod, fs] = await Promise.all([
+    dynImport(`${base}/firebase-app.js`), dynImport(`${base}/firebase-auth.js`), dynImport(`${base}/firebase-firestore.js`),
+  ]);
   const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
   const auth = mod.getAuth(app);
   auth.languageCode = "en";
-  fb = { auth, mod };
+  fb = { auth, mod, fs, db: fs.getFirestore(app) };
   return fb;
+}
+
+/* Each key (payments, notices, users…) is one Firestore document: sunshine/<key> = { v: "<json>" } */
+async function remoteGet(k) {
+  const { fs, db } = await loadFirebase();
+  const snap = await fs.getDoc(fs.doc(db, COLL, k));
+  return snap.exists() ? JSON.parse(snap.data().v) : null;
+}
+async function remoteSet(k, v) {
+  const { fs, db } = await loadFirebase();
+  await fs.setDoc(fs.doc(db, COLL, k), { v: JSON.stringify(v), at: Date.now() });
+}
+async function remoteWatch(k, cb) {
+  const { fs, db } = await loadFirebase();
+  return fs.onSnapshot(fs.doc(db, COLL, k), (snap) => {
+    try { cb(snap.exists() ? JSON.parse(snap.data().v) : null); } catch (e) {}
+  }, () => {});
+}
+async function firebaseUser() {
+  const { auth, mod } = await loadFirebase();
+  await new Promise((resolve) => {
+    let un = null;
+    un = mod.onAuthStateChanged(auth, () => { setTimeout(() => un && un(), 0); resolve(); });
+  });
+  return auth.currentUser;
 }
 
 async function sendOtp(phone) {
@@ -346,14 +391,16 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState("home");
   const [toast, setToast] = useState("");
+  const [loadErr, setLoadErr] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const [c, p, n, t, v, b, u, sess] = await Promise.all([
-        store.get("config"), store.get("payments"), store.get("notices"),
-        store.get("tickets"), store.get("visitors"), store.get("bookings"),
-        store.get("users"), store.get("session", false),
-      ]);
+  const flash = (m) => { setToast(m); setTimeout(() => setToast(""), 2200); };
+  onSaveError = () => flash("Couldn't save — check your internet connection");
+
+  // Loads all shared data. Returns the users map, or null if the database couldn't be reached.
+  const loadShared = async () => {
+    try {
+      const keys = ["config", "payments", "notices", "tickets", "visitors", "bookings", "users"];
+      const [c, p, n, t, v, b, u] = await Promise.all(keys.map((k) => store.get(k, true, true)));
       if (c) setCfg({ ...DEFAULTS, ...c });
       if (p) setPayments(p);
       if (n) setNotices(n); else seedNotices(setNotices);
@@ -362,13 +409,53 @@ export default function App() {
       if (b) setBookings(b);
       const us = u || {};
       setUsers(us);
-      if (sess && sess.exp > Date.now() && us[sess.phone]) setUser(us[sess.phone]);
-      else if (sess) store.del("session", false);
-      setLoaded(true);
-    })();
-  }, []);
+      setLoadErr(false);
+      return us;
+    } catch (e) {
+      setLoadErr(true);
+      return null;
+    }
+  };
 
-  const flash = (m) => { setToast(m); setTimeout(() => setToast(""), 2200); };
+  const boot = async () => {
+    setLoaded(false);
+    const sess = await store.get("session", false);
+    let valid = !!(sess && sess.exp > Date.now());
+    if (valid && OTP_MODE === "sms") {
+      // the Firebase login must still be active and belong to the same number
+      try { const fu = await firebaseUser(); valid = !!fu && fu.phoneNumber === "+91" + sess.phone; }
+      catch (e) { valid = false; }
+    }
+    if (OTP_MODE === "demo" || valid) {
+      const us = await loadShared();
+      if (valid && us && us[sess.phone]) setUser(us[sess.phone]);
+      else if (sess && us) store.del("session", false);
+    } else if (sess) {
+      store.del("session", false);
+    }
+    setLoaded(true);
+  };
+  useEffect(() => { boot(); }, []);
+
+  // Firebase mode: keep everything in sync live while signed in
+  useEffect(() => {
+    if (OTP_MODE !== "sms" || !user) return;
+    const handlers = {
+      config: (v) => v && setCfg({ ...DEFAULTS, ...v }),
+      payments: (v) => v && setPayments(v),
+      notices: (v) => v && setNotices(v),
+      tickets: (v) => v && setTickets(v),
+      visitors: (v) => v && setVisitors(v),
+      bookings: (v) => v && setBookings(v),
+      users: (v) => { if (!v) return; setUsers(v); if (!v[user.phone]) signOut(true); },
+    };
+    let alive = true;
+    const unsubs = [];
+    Object.entries(handlers).forEach(([k, h]) => {
+      remoteWatch(k, h).then((un) => { if (alive) unsubs.push(un); else un(); }).catch(() => {});
+    });
+    return () => { alive = false; unsubs.forEach((un) => un()); };
+  }, [user?.phone]);
   const mk = (setter, key) => (next) => { setter(next); store.set(key, next); };
   const saveCfg = mk(setCfg, "config");
   const savePayments = mk(setPayments, "payments");
@@ -379,21 +466,26 @@ export default function App() {
   const saveUsers = mk(setUsers, "users");
 
   // called after OTP is verified (and registration done, for new numbers)
+  // returns false if the database couldn't be reached
   const signIn = async (u, isNew) => {
-    const latest = (await store.get("users")) || {};
+    let latest;
+    try { latest = (await store.get("users", true, true)) || {}; }
+    catch (e) { flash("Couldn't reach the server — please try again"); return false; }
     const me = { ...(latest[u.phone] || u), lastLogin: Date.now() };
     const next = { ...latest, [u.phone]: me };
     setUsers(next);
     await store.set("users", next);
     await store.set("session", { phone: u.phone, exp: Date.now() + SESSION_DAYS * 86400000 }, false);
+    if (OTP_MODE === "sms") await loadShared();
     setUser(me); setTab("home");
     flash(isNew ? "Welcome to Sunshine Homes, " + me.name.split(" ")[0] + "!" : "Logged in");
+    return true;
   };
-  const signOut = async () => {
+  const signOut = async (removed) => {
     await store.del("session", false);
     await otpSignOut();
     setUser(null); setTab("home");
-    flash("Logged out");
+    flash(removed === true ? "Your account was removed by the committee" : "Logged out");
   };
 
   const myFlat = user?.flat;
@@ -419,7 +511,15 @@ export default function App() {
         <div className="content">
           {!loaded && <div className="empty">Loading your community…</div>}
 
-          {loaded && !user && <Auth flash={flash} onDone={signIn} />}
+          {loaded && !user && loadErr && (
+            <div className="card fade" style={{ marginTop: 20, textAlign: "center" }}>
+              <div style={{ fontSize: 34 }}>📶</div>
+              <h3 style={{ margin: "8px 0 4px" }}>Can't reach Sunshine Homes</h3>
+              <p className="note" style={{ marginTop: 0 }}>Check your internet connection and try again.</p>
+              <button className="btn" style={{ marginTop: 12 }} onClick={boot}>Try again</button>
+            </div>
+          )}
+          {loaded && !user && !loadErr && <Auth flash={flash} onDone={signIn} />}
 
           {inApp && tab === "home" && (
             <Home user={user} cfg={cfg} payments={payments} notices={notices} tickets={tickets}
@@ -509,23 +609,38 @@ function Auth({ flash, onDone }) {
     setBusy(true); setErr("");
     const r = await verifyOtp(phone, code);
     if (r.error) { setBusy(false); setOtp(""); return setErr(r.error); }
-    const users = (await store.get("users")) || {};
-    setBusy(false); setDemoCode("");
-    if (users[phone]) onDone(users[phone], false);
-    else setStep("register");
+    setDemoCode("");
+    await lookup();
+  };
+
+  // after the number is verified: existing resident → straight in, new number → register
+  const lookup = async () => {
+    setBusy(true); setErr("");
+    let users;
+    try { users = (await store.get("users", true, true)) || {}; }
+    catch (e) {
+      setBusy(false); setStep("retry");
+      return setErr("Couldn't reach the server. Check your internet and tap Try again.");
+    }
+    if (users[phone]) {
+      const ok = await onDone(users[phone], false);
+      if (ok === false) { setBusy(false); setStep("retry"); }
+    } else { setBusy(false); setStep("register"); }
   };
 
   const register = async () => {
     if (name.trim().length < 2) return setErr("Enter your full name.");
     if (!flat) return setErr("Select your flat.");
     setErr(""); setBusy(true);
-    await onDone({ phone, name: name.trim(), flat, role, createdAt: Date.now() }, true);
+    const ok = await onDone({ phone, name: name.trim(), flat, role, createdAt: Date.now() }, true);
+    if (ok === false) { setBusy(false); setErr("Couldn't reach the server. Please try again."); }
   };
 
   const head = {
     phone: ["📱", "Login or Register", "Enter your mobile number — we'll send you a one-time password."],
     otp: ["💬", "Verify your number", `Enter the ${OTP_LEN}-digit OTP sent to ${fmtPhone(phone)}.`],
     register: ["📝", "Complete registration", "Number verified ✓  Tell us who you are and which flat you live in."],
+    retry: ["📶", "Almost there", `Number ${fmtPhone(phone)} is verified ✓`],
   }[step];
 
   return (
@@ -580,6 +695,15 @@ function Auth({ flash, onDone }) {
               ? <span>Resend in 0:{String(left).padStart(2, "0")}</span>
               : <button className="linkbtn" disabled={busy} onClick={send}>Resend OTP</button>}
           </div>
+        </div>
+      )}
+
+      {step === "retry" && (
+        <div className="card">
+          {err && <div className="err" style={{ marginTop: 0 }}>{err}</div>}
+          <button className="btn" style={{ marginTop: 14 }} disabled={busy} onClick={lookup}>
+            {busy ? "Connecting…" : "Try again"}
+          </button>
         </div>
       )}
 
@@ -1290,9 +1414,10 @@ function Settings({ cfg, saveCfg, flash }) {
       <div className="card">
         <p className="label">Login / OTP</p>
         <div className="kv"><span>OTP delivery</span><span className={"pill " + (OTP_MODE === "sms" ? "p-ok" : "p-pend")}>● {OTP_MODE === "sms" ? "SMS via Firebase" : "Demo (on-screen)"}</span></div>
+        <div className="kv"><span>Data</span><span className={"pill " + (OTP_MODE === "sms" ? "p-ok" : "p-pend")}>● {OTP_MODE === "sms" ? "Shared online (Firestore)" : "This browser only"}</span></div>
         <p className="note">{OTP_MODE === "sms"
-          ? "OTPs are sent by SMS through Firebase Phone Authentication."
-          : "No SMS provider is configured, so OTPs are shown on screen. Add your Firebase config at the top of the app code (FIREBASE_CONFIG) to send real SMS."}</p>
+          ? "OTPs are sent by SMS, and payments, notices, complaints and residents are stored in Firebase and update live on everyone's phone."
+          : "Firebase isn't connected, so OTPs are shown on screen and data isn't shared between phones. Add your Firebase config at the top of the app code (FIREBASE_CONFIG) to turn on SMS and shared data."}</p>
       </div>
       <div className="card">
         <p className="label">UPI ID (editable by admin only)</p>
