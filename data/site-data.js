@@ -2,7 +2,7 @@
   RaghusLogicLab — site data
   ------------------------------------------------------------
   This ONE file holds your site settings, every project, every daily update
-  and the list of tools ("tools" at the bottom).
+  the list of tools ("tools") and the list of apps ("apps" at the bottom).
   Easiest way to edit: open admin.html in your browser, make changes, then click
   "Download site-data.js" and replace this file on your host.
   (You can also edit it by hand — keep the format exactly as below.)
@@ -47,6 +47,14 @@ window.RLL_DATA = {
     }
   ],
   "updates": [
+    {
+      "id": "u-apps-sunshine",
+      "date": "2026-10-24",
+      "type": "launch",
+      "title": "New: APPS section with the Sunshine Homes community app",
+      "body": "Added an Apps menu and an APPS section on the home page. First app: Sunshine Homes, an apartment community app where residents log in with their mobile number and OTP, pay maintenance by UPI, raise complaints, pre-approve visitors and book amenities; the committee approves payments and tracks every flat.",
+      "project": "raghuslogiclab-main"
+    },
     {
       "id": "u-dob-corrigendum",
       "date": "2026-10-22",
@@ -112,6 +120,21 @@ window.RLL_DATA = {
       "color": "#fbbf24",
       "visibility": "public",
       "added": "2026-10-16"
+    }
+  ],
+  "apps": [
+    {
+      "id": "a-sunshine-homes",
+      "slug": "sunshine-homes",
+      "name": "Sunshine Homes",
+      "tagline": "Apartment community app: maintenance by UPI, notices, helpdesk, visitors and amenities.",
+      "description": "Residents log in with their mobile number and OTP, pay monthly maintenance by UPI and track dues. The management committee approves payments, tracks every flat and posts notices.",
+      "category": "Community",
+      "icon": "🌇",
+      "url": "apps/sunshine-homes/",
+      "color": "#0FB5A6",
+      "visibility": "public",
+      "added": "2026-10-24"
     }
   ]
 };

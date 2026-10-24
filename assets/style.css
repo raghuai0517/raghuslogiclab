@@ -261,3 +261,15 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: up
 .policy-links { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 18px; padding-top: 10px; border-top: 1px solid var(--line); }
 .policy-links a { color: var(--muted); }
 .policy-links a:hover { color: var(--text); }
+
+/* ---------- Apps (teal app cards) ---------- */
+:root { --teal: #0FB5A6; --teal-dark: #0A8C80; --teal-light: #5EEAD4; }
+.eyebrow-teal { color: var(--teal-light); }
+.app-group-title { color: var(--teal-light); letter-spacing: .06em; font-size: clamp(1.5rem, 3.4vw, 2.2rem); margin: 0 0 6px; }
+.app-card { background: linear-gradient(180deg, rgba(15,181,166,.20), rgba(15,181,166,.06)); border-color: rgba(94,234,212,.45); }
+.app-card:hover { border-color: var(--teal-light); }
+.app-card .p-icon { background: var(--teal); color: #fff; font-size: 1.35rem; }
+.app-card .tool-open { color: var(--teal-light); }
+.badge-teal { color: var(--teal-light); }
+.btn-teal { background: var(--teal-dark); border-color: var(--teal-dark); color: #fff; }
+.btn-teal:hover { background: var(--teal); border-color: var(--teal); }

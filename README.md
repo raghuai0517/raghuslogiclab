@@ -12,6 +12,7 @@ A simple static website (no server, no database) that you can host on any domain
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
 | `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker) |
+| `apps/` | Apps, one folder each (Sunshine Homes community app) |
 
 ## Try it now
 Double-click `index.html` — it opens in your browser and works offline.
@@ -33,6 +34,23 @@ To add a tool:
 3. Set `"visibility": "unlisted"` to hide a tool from the menu without deleting it.
 
 Tool pages download PDF/Word files straight from the browser. They need internet for the PDF/Word libraries (loaded from cdnjs/unpkg).
+
+## Apps
+The **Apps ▾** menu and the **APPS** section on the home page list everything in the `apps` array at the bottom of `data/site-data.js`.
+Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes/`).
+
+**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app: mobile number + OTP login, maintenance dues by UPI, notices, helpdesk, visitor passes, amenity booking and an admin panel (default PIN 2468).
+- `index.html` + `app.js` are what the website serves. `app.js` is a built file — don't edit it by hand.
+- `src/sunshine-homes.jsx` is the source. To rebuild `app.js` after editing it (needs Node.js):
+  ```
+  cd apps/sunshine-homes/src
+  npm install --no-save react@18 react-dom@18 esbuild
+  npx esbuild main.jsx --bundle --minify --jsx=automatic --define:process.env.NODE_ENV='"production"' --target=es2018 --outfile=../app.js
+  ```
+- **OTP by SMS:** paste your Firebase web config into `FIREBASE_CONFIG` at the top of the source and rebuild. Until then it runs in demo mode (the OTP is shown on screen, no SMS is sent).
+- **Data is saved per device** (in that phone's or computer's browser). A shared online database is needed before residents and the committee see each other's payments and complaints.
+
+To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `data/site-data.js` (copy the Sunshine Homes one and change `id`, `slug`, `name`, `tagline`, `description`, `icon`, `url`, `color`, `added`).
 
 ## Daily update routine
 1. `admin.html` → **Daily Update** → write what changed → **Add to Lab Log**.

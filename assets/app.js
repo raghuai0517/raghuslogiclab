@@ -24,6 +24,8 @@
       var d = raw ? JSON.parse(raw) : null;
       /* Drafts saved before the Tools section existed: keep the published tools list */
       if (d && !d.tools) d.tools = (window.RLL_DATA && window.RLL_DATA.tools) ? clone(window.RLL_DATA.tools) : [];
+      /* ...and the same for drafts saved before the Apps section existed */
+      if (d && !d.apps) d.apps = (window.RLL_DATA && window.RLL_DATA.apps) ? clone(window.RLL_DATA.apps) : [];
       return d;
     } catch (e) { return null; }
   }
@@ -41,6 +43,7 @@
     d.projects = d.projects || [];
     d.updates = d.updates || [];
     d.tools = d.tools || [];
+    d.apps = d.apps || [];
     return clone(d);
   }
 
@@ -99,6 +102,10 @@
 
   function publicTools(data) {
     return (data.tools || []).filter(function (t) { return t.visibility !== "unlisted"; });
+  }
+
+  function publicApps(data) {
+    return (data.apps || []).filter(function (a) { return a.visibility !== "unlisted"; });
   }
 
   function sortedUpdates(data) {
@@ -176,6 +183,12 @@
         '<span>' + esc(t.name) + '</span></a>';
     }).join("") : '<div class="dd-empty">No tools yet</div>';
 
+    var apps = publicApps(data);
+    var appItems = apps.length ? apps.map(function (a) {
+      return '<a href="' + esc(a.url) + '"><span class="dot" style="background:' + esc(a.color || "#0FB5A6") + '"></span>' +
+        '<span>' + esc(a.name) + '</span></a>';
+    }).join("") : '<div class="dd-empty">No apps yet</div>';
+
     var name = esc(site.name || "RaghusLogicLab");
     var styledName = name.replace(/Logic/, "<b>Logic</b>");
 
@@ -203,6 +216,14 @@
               '<div class="dd-label">Tools</div>' + toolItems +
               '<div class="dd-sep"></div>' +
               '<a href="index.html#tools">View all tools &rarr;</a>' +
+            "</div>" +
+          "</li>" +
+          '<li class="dropdown" id="apps-dd">' +
+            '<button type="button" aria-haspopup="true" aria-expanded="false" class="' + (active === "apps" ? "active" : "") + '">Apps <span class="caret">&#9660;</span></button>' +
+            '<div class="dropdown-menu" role="menu">' +
+              '<div class="dd-label">Apps</div>' + appItems +
+              '<div class="dd-sep"></div>' +
+              '<a href="index.html#apps">View all apps &rarr;</a>' +
             "</div>" +
           "</li>" +
           '<li><a href="index.html#lab-log">Lab Log</a></li>' +
@@ -262,7 +283,7 @@
     STATUS: STATUS, UPDATE_TYPES: UPDATE_TYPES,
     load: load, published: published, readDraft: readDraft, saveDraft: saveDraft, clearDraft: clearDraft,
     esc: esc, slugify: slugify, initials: initials, fmtDate: fmtDate, today: today,
-    statusBadge: statusBadge, projectLink: projectLink, publicProjects: publicProjects, publicTools: publicTools,
+    statusBadge: statusBadge, projectLink: projectLink, publicProjects: publicProjects, publicTools: publicTools, publicApps: publicApps,
     sortedUpdates: sortedUpdates, iconHtml: iconHtml, toast: toast, copy: copy,
     renderHeader: renderHeader, renderFooter: renderFooter, clone: clone,
     confirmClick: confirmClick, currentSlug: currentSlug

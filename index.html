@@ -23,6 +23,7 @@
         <div class="btn-row" style="margin-top:24px">
           <a class="btn btn-primary" href="#projects">Explore projects</a>
           <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
+          <a class="btn btn-teal" href="#apps">Apps</a>
           <a class="btn" href="#lab-log">Today in the lab</a>
         </div>
         <div class="stats" id="stats"></div>
@@ -39,6 +40,20 @@
           </div>
         </div>
         <div id="tool-groups"></div>
+      </div>
+    </section>
+
+    <!-- APPS -->
+    <section class="section apps-section" id="apps" style="padding-top:24px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-teal">// apps</span>
+            <h2 class="app-group-title">APPS</h2>
+            <p class="muted" style="margin:0">Full apps that run in your browser, on phone or computer. Open one and add it to your home screen.</p>
+          </div>
+        </div>
+        <div class="grid" id="app-grid"></div>
       </div>
     </section>
 
@@ -203,6 +218,18 @@
             "</a>";
         }).join("") + "</div></div>";
     }).join("") : '<p class="muted">Tools are on the way.</p>';
+
+    /* Apps */
+    var apps = RLL.publicApps(data);
+    document.getElementById("app-grid").innerHTML = apps.length ? apps.map(function (a) {
+      return '<a class="card tool-card app-card" href="' + esc(a.url) + '">' +
+        '<div class="card-top"><div class="p-icon">' + esc(a.icon || RLL.initials(a.name)) + '</div><span class="badge badge-teal">Free app</span></div>' +
+        '<h3 style="margin:4px 0 0">' + esc(a.name) + "</h3>" +
+        "<p>" + esc(a.tagline || "") + "</p>" +
+        (a.description ? '<p class="tool-desc">' + esc(a.description) + "</p>" : "") +
+        '<div class="meta">' + (a.category ? '<span class="tag">' + esc(a.category) + "</span>" : "") + '<span class="tool-open">Open app &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">Apps are on the way.</p>';
 
     /* Timeline */
     var shown = 6;
