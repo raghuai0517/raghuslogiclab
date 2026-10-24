@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-sunshine-backup",
+      "date": "2026-10-24",
+      "type": "feature",
+      "title": "Sunshine Homes: download backups",
+      "body": "The committee can now download a backup from Admin → Settings: an Excel file with residents, dues by flat, payments, complaints, notices, visitors and bookings, plus a full data copy. Settings shows when the last backup was taken.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-sunshine-committee",
       "date": "2026-10-24",
       "type": "feature",

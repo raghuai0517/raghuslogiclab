@@ -182,6 +182,66 @@ async function firebaseSignOut() {
   try { if (fb) await fb.mod.signOut(fb.auth); } catch (e) {}
 }
 
+/* ------------------------------ BACKUP ----------------------------- */
+const SHEETJS_URL = "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";   // loaded only when a backup is downloaded
+const pad2 = (n) => String(n).padStart(2, "0");
+const stamp = (t) => { if (!t) return ""; const d = new Date(t); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const today = () => stamp(Date.now()).slice(0, 10);
+const monthName = (key) => (key ? MONTHS[+key.slice(5) - 1] + " " + key.slice(0, 4) : "");
+const STATUS_LABEL = { approved: "Paid", pending: "Pending", rejected: "Rejected", none: "Unpaid", open: "Open", "in-progress": "In progress", resolved: "Resolved" };
+
+function downloadBlob(blob, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+// One sheet per kind of data, in plain words the committee can read.
+function backupSheets(d) {
+  const users = Object.values(d.users || {}).sort((a, b) => ALL_FLATS.indexOf(a.flat) - ALL_FLATS.indexOf(b.flat));
+  const byFlat = {};
+  (d.payments || []).forEach((p) => { (byFlat[p.flat] = byFlat[p.flat] || []).push(p); });
+  const dues = ALL_FLATS.map((f) => {
+    const row = { Flat: f, Residents: users.filter((u) => u.flat === f).map((u) => u.name).join(", ") };
+    let owed = 0;
+    MONTHS.forEach((m, i) => {
+      const s = statusOf(d.payments || [], f, monthKey(i));
+      row[m] = i > NOW_MONTH && s === "none" ? "" : STATUS_LABEL[s] || s;
+      if (i <= NOW_MONTH && s !== "approved") owed += d.cfg.monthlyAmount;
+    });
+    row["Outstanding (₹)"] = owed;
+    return row;
+  });
+  return [
+    ["Residents", users.map((u) => ({ Flat: u.flat, Name: u.name, Mobile: u.phone, Role: u.role, Joined: stamp(u.createdAt), "Last login": stamp(u.lastLogin) }))],
+    [`Dues ${YEAR}`, dues],
+    ["Payments", (d.payments || []).slice().sort((a, b) => a.submittedAt - b.submittedAt).map((p) => ({ Flat: p.flat, Month: monthName(p.month), "Amount (₹)": p.amount, Payer: p.payer, Mobile: p.phone || "", "UPI ref": p.ref, Submitted: stamp(p.submittedAt), Status: STATUS_LABEL[p.status] || p.status, Decided: stamp(p.decidedAt) }))],
+    ["Complaints", (d.tickets || []).slice().sort((a, b) => a.at - b.at).map((t) => ({ Flat: t.flat, "Raised by": t.by || "", Mobile: t.phone || "", Category: t.cat, Title: t.title, Details: t.desc || "", Raised: stamp(t.at), Status: STATUS_LABEL[t.status] || t.status }))],
+    ["Notices", (d.notices || []).slice().sort((a, b) => a.at - b.at).map((n) => ({ Date: stamp(n.at), Category: n.cat, Title: n.title, Message: n.body }))],
+    ["Visitors", (d.visitors || []).slice().sort((a, b) => a.at - b.at).map((v) => ({ Flat: v.flat, Visitor: v.name, Purpose: v.purpose, "Gate code": v.code, Status: v.status === "arrived" ? "Arrived" : "Expected", Created: stamp(v.at) }))],
+    ["Bookings", (d.bookings || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1)).map((b) => ({ Flat: b.flat, Facility: b.fac, Date: b.date, Slot: b.slot, "Booked on": stamp(b.at) }))],
+    ["Settings", [{ "UPI ID": d.cfg.upiId, "Monthly maintenance (₹)": d.cfg.monthlyAmount, "Backup taken": stamp(Date.now()) }]],
+  ];
+}
+
+async function downloadExcelBackup(d) {
+  const XLSX = await dynImport(SHEETJS_URL);
+  const wb = XLSX.utils.book_new();
+  backupSheets(d).forEach(([name, rows]) => {
+    const ws = rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([["(no entries yet)"]]);
+    const cols = rows.length ? Object.keys(rows[0]) : ["x"];
+    ws["!cols"] = cols.map((c) => ({ wch: Math.min(48, Math.max(c.length, ...rows.map((r) => String(r[c] ?? "").length)) + 2) }));
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  });
+  XLSX.writeFile(wb, `sunshine-homes-backup-${today()}.xlsx`);
+}
+
+function downloadJsonBackup(raw) {
+  const data = { app: "sunshine-homes", format: 1, exportedAt: new Date().toISOString(), data: raw };
+  downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `sunshine-homes-backup-${today()}.json`);
+}
+
 /* ------------------------------ styles ---------------------------- */
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -453,6 +513,11 @@ export default function App() {
   const decide = (entries) => { const next = { ...approvals }; entries.forEach(({ id, status }) => { next[id] = { status, at: Date.now() }; }); setApprovals(next); store.set("approvals", next); };
   const setTicketStatus = (id, status) => { const next = { ...ticketStatus, [id]: status }; setTicketStatusMap(next); store.set("ticketStatus", next); };
   const saveNotices = mk(setNotices, "notices");
+  // everything for backups: readable copy (with statuses) and the exact stored data
+  const backupData = () => ({
+    readable: { cfg, users, payments, tickets, notices, visitors, bookings },
+    raw: { config: cfg, users, payments: payRaw, approvals, notices, tickets: tixRaw, ticketStatus, visitors, bookings },
+  });
   const saveVisitors = mk(setVisitors, "visitors");
   const saveBookings = mk(setBookings, "bookings");
   const saveUsers = mk(setUsers, "users");
@@ -526,7 +591,7 @@ export default function App() {
           {inAdmin && (
             <AdminPanel cfg={cfg} saveCfg={saveCfg} payments={payments} savePayments={savePayments} decide={decide}
               notices={notices} saveNotices={saveNotices} tickets={tickets} setTicketStatus={setTicketStatus}
-              users={users} saveUsers={saveUsers} flash={flash} signOut={signOut} />
+              users={users} saveUsers={saveUsers} flash={flash} signOut={signOut} backupData={backupData} />
           )}
 
           {inApp && tab === "home" && (
@@ -1077,7 +1142,7 @@ function Directory() {
 }
 
 /* ------------------------------ ADMIN ----------------------------- */
-function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, saveNotices, tickets, setTicketStatus, users, saveUsers, flash, signOut }) {
+function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, saveNotices, tickets, setTicketStatus, users, saveUsers, flash, signOut, backupData }) {
   const [tab, setTab] = useState("overview");
   const approved = payments.filter((p) => p.status === "approved");
   const pending = payments.filter((p) => p.status === "pending").sort((a, b) => a.submittedAt - b.submittedAt);
@@ -1143,7 +1208,7 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, sav
       {tab === "reports" && <Reports payments={payments} cfg={cfg} />}
       {tab === "help" && <AdminHelp tickets={tickets} setTicketStatus={setTicketStatus} flash={flash} />}
       {tab === "notice" && <AdminNotices notices={notices} save={saveNotices} flash={flash} />}
-      {tab === "settings" && <Settings cfg={cfg} saveCfg={saveCfg} flash={flash} />}
+      {tab === "settings" && <Settings cfg={cfg} saveCfg={saveCfg} flash={flash} backupData={backupData} />}
     </div>
   );
 }
@@ -1344,11 +1409,32 @@ function AdminNotices({ notices, save, flash }) {
 }
 
 /* ---------------------------- SETTINGS ---------------------------- */
-function Settings({ cfg, saveCfg, flash }) {
+function Settings({ cfg, saveCfg, flash, backupData }) {
   const [upi, setUpi] = useState(cfg.upiId);
   const [amt, setAmt] = useState(String(cfg.monthlyAmount));
+  const [busy, setBusy] = useState("");
+  const markBackup = () => saveCfg({ ...cfg, lastBackupAt: Date.now() });
+  const excel = async () => {
+    setBusy("excel");
+    try { await downloadExcelBackup(backupData().readable); markBackup(); flash("Excel backup downloaded"); }
+    catch (e) { flash("Couldn't make the Excel file — check your internet, or use the full backup"); }
+    setBusy("");
+  };
+  const json = () => {
+    try { downloadJsonBackup(backupData().raw); markBackup(); flash("Full backup downloaded"); }
+    catch (e) { flash("Couldn't make the backup file"); }
+  };
+  const daysSince = cfg.lastBackupAt ? Math.floor((Date.now() - cfg.lastBackupAt) / 86400000) : null;
   return (
     <div>
+      <div className="card">
+        <p className="label">Backup</p>
+        <div className="kv"><span>Last backup</span>
+          <span className={"pill " + (daysSince !== null && daysSince <= 31 ? "p-ok" : "p-pend")}>● {cfg.lastBackupAt ? fmtDate(cfg.lastBackupAt) + (daysSince === 0 ? " (today)" : ` (${daysSince} day${daysSince === 1 ? "" : "s"} ago)`) : "Never"}</span></div>
+        <button className="btn" style={{ marginTop: 12 }} disabled={!!busy} onClick={excel}>{busy === "excel" ? "Preparing Excel file…" : "⬇ Download Excel backup (.xlsx)"}</button>
+        <button className="btn ghost" style={{ marginTop: 9 }} disabled={!!busy} onClick={json}>⬇ Download full backup (.json)</button>
+        <p className="note">Download a backup at least once a month and keep it safe (e.g. Google Drive or email it to yourself). The Excel file has a sheet each for residents, dues by flat, payments, complaints, notices, visitors, bookings and settings. The full backup is an exact copy of everything, for restoring if ever needed.</p>
+      </div>
       <div className="card">
         <p className="label">Login</p>
         <div className="kv"><span>Login</span><span className={"pill " + (MODE === "online" ? "p-ok" : "p-pend")}>● {MODE === "online" ? "Society password (Firebase)" : "Demo (any password)"}</span></div>

@@ -71,6 +71,7 @@ Firebase (project `sunshine-homes-d5e7b`, console: https://console.firebase.goog
     }
   }
   ```
+- **Backups:** the free Firebase plan has no automatic backups. Committee login → Admin → Settings → **Backup** downloads an Excel file (residents, dues by flat, payments, complaints, notices, visitors, bookings, settings) and a full `.json` copy of all data. Settings shows when the last backup was taken; download one at least monthly. The Excel library (SheetJS) loads from cdn.sheetjs.com only when that button is pressed.
 - **Without Firebase** (`FIREBASE_CONFIG = null`) it runs in demo mode: any password works and data is saved only in that browser.
 
 To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `data/site-data.js` (copy the Sunshine Homes one and change `id`, `slug`, `name`, `tagline`, `description`, `icon`, `url`, `color`, `added`).
