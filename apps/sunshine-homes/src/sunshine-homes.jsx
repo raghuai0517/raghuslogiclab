@@ -15,17 +15,19 @@ import { useState, useEffect } from "react";
 /*  Settings → SMS region policy: allow India · Authorized domains: add */
 /*  your website · Firestore database with these rules:                 */
 /*    match /sunshine/{key} { allow read, write: if request.auth != null; } */
-/*  While FIREBASE_CONFIG is null the app runs in DEMO mode: no SMS is  */
+/*  If FIREBASE_CONFIG is null the app runs in DEMO mode: no SMS is  */
 /*  sent (the OTP is shown on screen) and data stays in this browser.   */
-const FIREBASE_CONFIG = null;
-/* e.g.
 const FIREBASE_CONFIG = {
-  apiKey: "AIza...",
-  authDomain: "sunshine-homes.firebaseapp.com",
-  projectId: "sunshine-homes",
-  appId: "1:1234567890:web:abcdef",
+  // Firebase project "sunshine-homes" (web app "Sunshine Homes web"). These values are public by design;
+  // access is protected by Firestore rules + phone sign-in, not by keeping this secret.
+  apiKey: "AIzaSyA9x-wSqK9vvU647mgezMayfs3BbkTfUIk",
+  authDomain: "sunshine-homes-d5e7b.firebaseapp.com",
+  projectId: "sunshine-homes-d5e7b",
+  storageBucket: "sunshine-homes-d5e7b.firebasestorage.app",
+  messagingSenderId: "730379536822",
+  appId: "1:730379536822:web:f9e19f374f0c947579d917",
 };
-*/
+/* Set FIREBASE_CONFIG = null to switch back to DEMO mode. */
 const FIREBASE_VERSION = "13.1.0";
 const OTP_LEN = 6;
 const OTP_TTL_MS = 5 * 60 * 1000;
