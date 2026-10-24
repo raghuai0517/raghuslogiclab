@@ -39,7 +39,7 @@ Tool pages download PDF/Word files straight from the browser. They need internet
 The **Apps ▾** menu and the **APPS** section on the home page list everything in the `apps` array at the bottom of `data/site-data.js`.
 Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes/`).
 
-**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app: login with mobile number + society password, maintenance dues by UPI, notices, helpdesk, visitor passes, amenity booking and an admin panel (default PIN 2468 — change it in Admin → Settings).
+**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app: login with mobile number + society password, maintenance dues by UPI, notices, helpdesk, visitor passes, amenity booking and an admin panel protected by a PIN that only the committee knows (change it in Admin → Settings; it is stored only as a salted hash, never as plain text).
 - `index.html` + `app.js` are what the website serves. `app.js` is a built file — don't edit it by hand.
 - `src/sunshine-homes.jsx` is the source. To rebuild `app.js` after editing it (needs Node.js):
   ```

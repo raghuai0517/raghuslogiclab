@@ -61,7 +61,22 @@ const fmtPhone = (p) => "+91 " + p.slice(0, 5) + " " + p.slice(5);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
-const DEFAULTS = { upiId: "sunshinehomes@okicici", adminPin: "2468", monthlyAmount: 2000 };
+/* The admin PIN is never stored as plain text: only a salted SHA-256 hash of it.
+   To change it, use Admin → Settings → Change admin PIN in the app. */
+const DEFAULTS = { upiId: "sunshinehomes@okicici", adminPinHash: "5fcdf12a5d60a36eb3ee9665daf4b1a9d92729eb7e38657c22b036d151104e66", monthlyAmount: 2000 };
+const PIN_SALT = "sunshine-homes-admin-pin:";
+async function hashPin(pin) {
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(PIN_SALT + pin));
+    return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return null; }
+}
+async function pinMatches(cfg, pin) {
+  if (cfg.adminPinHash) { const h = await hashPin(pin); return !!h && h === cfg.adminPinHash; }
+  return !!cfg.adminPin && pin === cfg.adminPin;   // older saved settings (plain PIN)
+}
+// merge saved settings over the defaults; an older plain-text PIN keeps working until it's changed
+const withDefaults = (c) => { const m = { ...DEFAULTS, ...c }; if (c && c.adminPin && !c.adminPinHash) delete m.adminPinHash; return m; };
 
 /* localStorage keys are prefixed so they never clash with other pages on the same website */
 const LS_PREFIX = "sunshine-homes:";
@@ -374,7 +389,7 @@ export default function App() {
     try {
       const keys = ["config", "payments", "notices", "tickets", "visitors", "bookings", "users"];
       const [c, p, n, t, v, b, u] = await Promise.all(keys.map((k) => store.get(k, true, true)));
-      if (c) setCfg({ ...DEFAULTS, ...c });
+      if (c) setCfg(withDefaults(c));
       if (p) setPayments(p);
       if (n) setNotices(n); else seedNotices(setNotices);
       if (t) setTickets(t);
@@ -414,7 +429,7 @@ export default function App() {
   useEffect(() => {
     if (MODE !== "online" || !user) return;
     const handlers = {
-      config: (v) => v && setCfg({ ...DEFAULTS, ...v }),
+      config: (v) => v && setCfg(withDefaults(v)),
       payments: (v) => v && setPayments(v),
       notices: (v) => v && setNotices(v),
       tickets: (v) => v && setTickets(v),
@@ -1044,7 +1059,7 @@ function PinGate({ cfg, onOk }) {
     if (k === "del") return setPin((p) => p.slice(0, -1));
     if (pin.length >= 4) return;
     const next = pin + k; setPin(next);
-    if (next.length === 4) setTimeout(() => { if (next === cfg.adminPin) onOk(); else { setErr(true); setPin(""); } }, 150);
+    if (next.length === 4) setTimeout(async () => { if (await pinMatches(cfg, next)) onOk(); else { setErr(true); setPin(""); } }, 150);
   };
   return (
     <div className="fade">
@@ -1061,7 +1076,7 @@ function PinGate({ cfg, onOk }) {
           <div className="key" onClick={() => press("0")}>0</div>
           <div className="key fn" onClick={() => press("del")}>⌫</div>
         </div>
-        <p className="note">Default PIN: <b>2468</b> — change it in Settings.</p>
+        <p className="note">Forgot the PIN? Ask the management committee.</p>
       </div>
     </div>
   );
@@ -1364,7 +1379,7 @@ function Settings({ cfg, saveCfg, flash }) {
         <p className="label">Change admin PIN</p>
         <input className="input" type="tel" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} placeholder="New 4-digit PIN" />
         <input className="input" type="tel" maxLength={4} style={{ marginTop: 10 }} value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))} placeholder="Confirm PIN" />
-        <button className="btn" style={{ marginTop: 11 }} onClick={() => { if (pin.length !== 4) return flash("PIN must be 4 digits"); if (pin !== pin2) return flash("PINs don't match"); saveCfg({ ...cfg, adminPin: pin }); setPin(""); setPin2(""); flash("PIN changed"); }}>Update PIN</button>
+        <button className="btn" style={{ marginTop: 11 }} onClick={() => { if (pin.length !== 4) return flash("PIN must be 4 digits"); if (pin !== pin2) return flash("PINs don't match"); hashPin(pin).then((h) => { if (!h) return flash("Couldn't change the PIN on this browser"); const { adminPin, ...rest } = cfg; saveCfg({ ...rest, adminPinHash: h }); setPin(""); setPin2(""); flash("PIN changed"); }); }}>Update PIN</button>
       </div>
     </div>
   );
