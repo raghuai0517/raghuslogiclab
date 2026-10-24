@@ -47,6 +47,7 @@ Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes
   npm install --no-save react@18 react-dom@18 esbuild
   npx esbuild main.jsx --bundle --minify --jsx=automatic --define:process.env.NODE_ENV='"production"' --target=es2018 --outfile=../app.js
   ```
+  Then change the `?v=` value on the `app.js` line in `apps/sunshine-homes/index.html` (any new text) so phones load the new version immediately.
 - **Firebase** (project `sunshine-homes-d5e7b`, console: https://console.firebase.google.com/project/sunshine-homes-d5e7b) checks the password and stores all data in Firestore (collection `sunshine`, Mumbai), updating live on every phone.
   - **Login:** residents enter their mobile number + the society password. Firebase checks the password against one account, `residents@sunshine-homes-d5e7b.firebaseapp.com` (Authentication → Users). The password is not stored in this website's code.
   - **Change the password:** Authentication → Users → delete `residents@sunshine-homes-d5e7b.firebaseapp.com`, then **Add user** with the same email and the new password. Data isn't affected; everyone logs in again.
