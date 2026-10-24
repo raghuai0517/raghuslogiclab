@@ -39,7 +39,11 @@ Tool pages download PDF/Word files straight from the browser. They need internet
 The **Apps ▾** menu and the **APPS** section on the home page list everything in the `apps` array at the bottom of `data/site-data.js`.
 Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes/`).
 
-**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app: login with mobile number + society password, maintenance dues by UPI, notices, helpdesk, visitor passes, amenity booking and an admin panel protected by a PIN that only the committee knows (change it in Admin → Settings; it is stored only as a salted hash, never as plain text).
+**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app with two logins:
+- **Resident** — mobile number + the society password. Pay maintenance by UPI, see dues, notices, raise complaints, visitor passes, amenity booking.
+- **Committee** — its own password, no mobile number. Opens the admin panel: payment approvals, mark paid, residents, accounts, reports, complaints, notices, settings.
+
+Files:
 - `index.html` + `app.js` are what the website serves. `app.js` is a built file — don't edit it by hand.
 - `src/sunshine-homes.jsx` is the source. To rebuild `app.js` after editing it (needs Node.js):
   ```
@@ -48,17 +52,21 @@ Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes
   npx esbuild main.jsx --bundle --minify --jsx=automatic --define:process.env.NODE_ENV='"production"' --target=es2018 --outfile=../app.js
   ```
   Then change the `?v=` value on the `app.js` line in `apps/sunshine-homes/index.html` (any new text) so phones load the new version immediately.
-- **Firebase** (project `sunshine-homes-d5e7b`, console: https://console.firebase.google.com/project/sunshine-homes-d5e7b) checks the password and stores all data in Firestore (collection `sunshine`, Mumbai), updating live on every phone.
-  - **Login:** residents enter their mobile number + the society password. Firebase checks the password against one account, `residents@sunshine-homes-d5e7b.firebaseapp.com` (Authentication → Users). The password is not stored in this website's code.
-  - **Change the password:** Authentication → Users → delete `residents@sunshine-homes-d5e7b.firebaseapp.com`, then **Add user** with the same email and the new password. Data isn't affected; everyone logs in again.
-  - Firebase settings in use: Email/Password sign-in ON, Phone OFF, user sign-up and delete OFF (Authentication → Settings → User actions). Firestore rules:
+
+Firebase (project `sunshine-homes-d5e7b`, console: https://console.firebase.google.com/project/sunshine-homes-d5e7b) checks both passwords and stores all data in Firestore (collection `sunshine`, Mumbai), updating live on every phone. Neither password is stored in this website's code.
+- Accounts (Authentication → Users): `residents@sunshine-homes-d5e7b.firebaseapp.com` (society password) and `admin@sunshine-homes-d5e7b.firebaseapp.com` (committee password).
+- **Change a password:** Authentication → Users → delete that account, then **Add user** with the same email and the new password. Data isn't affected; people using that login sign in again.
+- Settings in use: Email/Password sign-in ON, Phone OFF, user sign-up and delete OFF (Authentication → Settings → User actions).
+- Payment approvals and complaint status live in their own documents (`approvals`, `ticketStatus`) that only the committee can write, so a resident can't mark their own payment as paid. Firestore rules:
   ```
   rules_version = '2';
   service cloud.firestore {
     match /databases/{database}/documents {
       match /sunshine/{key} {
-        allow read, write: if request.auth != null
-          && request.auth.token.email == "residents@sunshine-homes-d5e7b.firebaseapp.com";
+        function isResident() { return request.auth != null && request.auth.token.email == "residents@sunshine-homes-d5e7b.firebaseapp.com"; }
+        function isAdmin() { return request.auth != null && request.auth.token.email == "admin@sunshine-homes-d5e7b.firebaseapp.com"; }
+        allow read: if isResident() || isAdmin();
+        allow write: if isAdmin() || (isResident() && !(key in ["config", "notices", "approvals", "ticketStatus"]));
       }
     }
   }

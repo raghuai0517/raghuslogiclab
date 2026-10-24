@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 /* ================================================================== */
 /*  Sunshine Homes — Community Super App (ADDA-style)                   */
-/*  Password login · Maintenance · Notices · Helpdesk · Visitors        */
+/*  Resident + Committee login · Maintenance · Notices · Helpdesk       */
 /*  Amenities · Admin                                                   */
 /* ================================================================== */
 
@@ -15,10 +15,11 @@ import { useState, useEffect } from "react";
 /*     then Add user again with the same email and the new password.    */
 /*   • keeps all society data in Firestore, shared live between every   */
 /*     resident's phone and the committee.                             */
-/*  Firebase console setup: Authentication → Email/Password ON, a user  */
-/*  with SOCIETY_LOGIN_EMAIL and the society password · Firestore rules:*/
-/*    match /sunshine/{key} { allow read, write:                        */
-/*      if request.auth != null && request.auth.token.email == "<SOCIETY_LOGIN_EMAIL>"; } */
+/*   • gives the committee its own login (ADMIN_LOGIN_EMAIL + its own   */
+/*     password). Only that login sees and runs the admin panel.        */
+/*  Firebase console setup: Authentication → Email/Password ON, users   */
+/*  for SOCIETY_LOGIN_EMAIL and ADMIN_LOGIN_EMAIL · Firestore rules: see */
+/*  the README (residents: read all, write submissions; committee: all).*/
 /*  If FIREBASE_CONFIG is null the app runs in DEMO mode: any password  */
 /*  of 4+ characters works and data stays in this browser.             */
 const FIREBASE_CONFIG = {
@@ -35,6 +36,10 @@ const FIREBASE_CONFIG = {
 const FIREBASE_VERSION = "13.1.0";
 /* The one Firebase account every resident logs in through (its password = the society password). */
 const SOCIETY_LOGIN_EMAIL = "residents@sunshine-homes-d5e7b.firebaseapp.com";
+/* The committee's separate login (its own password). Only this account can approve payments,
+   update complaints, post notices, change settings and remove residents. */
+const ADMIN_LOGIN_EMAIL = "admin@sunshine-homes-d5e7b.firebaseapp.com";
+const ADMIN_USER = { role: "admin", phone: "admin", name: "Committee", flat: "Committee" };
 const SESSION_DAYS = 30;
 
 const YEAR = new Date().getFullYear();
@@ -61,22 +66,8 @@ const fmtPhone = (p) => "+91 " + p.slice(0, 5) + " " + p.slice(5);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
-/* The admin PIN is never stored as plain text: only a salted SHA-256 hash of it.
-   To change it, use Admin → Settings → Change admin PIN in the app. */
-const DEFAULTS = { upiId: "sunshinehomes@okicici", adminPinHash: "5fcdf12a5d60a36eb3ee9665daf4b1a9d92729eb7e38657c22b036d151104e66", monthlyAmount: 2000 };
-const PIN_SALT = "sunshine-homes-admin-pin:";
-async function hashPin(pin) {
-  try {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(PIN_SALT + pin));
-    return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
-  } catch (e) { return null; }
-}
-async function pinMatches(cfg, pin) {
-  if (cfg.adminPinHash) { const h = await hashPin(pin); return !!h && h === cfg.adminPinHash; }
-  return !!cfg.adminPin && pin === cfg.adminPin;   // older saved settings (plain PIN)
-}
-// merge saved settings over the defaults; an older plain-text PIN keeps working until it's changed
-const withDefaults = (c) => { const m = { ...DEFAULTS, ...c }; if (c && c.adminPin && !c.adminPinHash) delete m.adminPinHash; return m; };
+const DEFAULTS = { upiId: "sunshinehomes@okicici", monthlyAmount: 2000 };
+const withDefaults = (c) => { const { adminPin, adminPinHash, ...rest } = c || {}; return { ...DEFAULTS, ...rest }; };
 
 /* localStorage keys are prefixed so they never clash with other pages on the same website */
 const LS_PREFIX = "sunshine-homes:";
@@ -127,7 +118,7 @@ const FB_ERR = {
   "auth/invalid-credential": "Incorrect password.",
   "auth/invalid-login-credentials": "Incorrect password.",
   "auth/wrong-password": "Incorrect password.",
-  "auth/user-not-found": "The society login isn't set up yet. Please contact the committee.",
+  "auth/user-not-found": "This login isn't set up yet. Please contact the committee.",
   "auth/too-many-requests": "Too many wrong attempts. Please wait a few minutes and try again.",
   "auth/network-request-failed": "Network error. Check your internet connection.",
   "auth/operation-not-allowed": "Password login isn't switched on yet. Please contact the committee.",
@@ -172,15 +163,15 @@ async function firebaseUser() {
   return auth.currentUser;
 }
 
-// Checks the society password. Firebase verifies it — the password itself is never stored in this code.
-async function checkPassword(password) {
+// Checks a password with Firebase (who = "resident" or "admin"). The passwords are never stored in this code.
+async function checkPassword(password, who = "resident") {
   if (MODE === "demo") {
     await sleep(400);
     return password.length >= 4 ? { ok: true } : { error: "Incorrect password." };
   }
   try {
     const { auth, mod } = await loadFirebase();
-    await mod.signInWithEmailAndPassword(auth, SOCIETY_LOGIN_EMAIL, password);
+    await mod.signInWithEmailAndPassword(auth, who === "admin" ? ADMIN_LOGIN_EMAIL : SOCIETY_LOGIN_EMAIL, password);
     return { ok: true };
   } catch (e) {
     return { error: FB_ERR[e?.code] || "Couldn't log in. Please try again." };
@@ -369,9 +360,11 @@ function Pill({ s }) {
 /* ============================== APP =============================== */
 export default function App() {
   const [cfg, setCfg] = useState(DEFAULTS);
-  const [payments, setPayments] = useState([]);
+  const [payRaw, setPayRaw] = useState([]);          // submissions (residents can write)
+  const [approvals, setApprovals] = useState({});    // paymentId → { status, at }   (committee only)
   const [notices, setNotices] = useState([]);
-  const [tickets, setTickets] = useState([]);
+  const [tixRaw, setTixRaw] = useState([]);          // complaints (residents can write)
+  const [ticketStatus, setTicketStatusMap] = useState({}); // ticketId → status        (committee only)
   const [visitors, setVisitors] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState({});
@@ -385,14 +378,16 @@ export default function App() {
   onSaveError = () => flash("Couldn't save — check your internet connection");
 
   // Loads all shared data. Returns the users map, or null if the database couldn't be reached.
-  const loadShared = async () => {
+  const loadShared = async (role) => {
     try {
-      const keys = ["config", "payments", "notices", "tickets", "visitors", "bookings", "users"];
-      const [c, p, n, t, v, b, u] = await Promise.all(keys.map((k) => store.get(k, true, true)));
+      const keys = ["config", "payments", "approvals", "notices", "tickets", "ticketStatus", "visitors", "bookings", "users"];
+      const [c, p, ap, n, t, ts, v, b, u] = await Promise.all(keys.map((k) => store.get(k, true, true)));
       if (c) setCfg(withDefaults(c));
-      if (p) setPayments(p);
-      if (n) setNotices(n); else seedNotices(setNotices);
-      if (t) setTickets(t);
+      if (p) setPayRaw(p);
+      if (ap) setApprovals(ap);
+      if (n) setNotices(n); else if (MODE === "demo" || role === "admin") seedNotices(setNotices);
+      if (t) setTixRaw(t);
+      if (ts) setTicketStatusMap(ts);
       if (v) setVisitors(v);
       if (b) setBookings(b);
       const us = u || {};
@@ -408,15 +403,17 @@ export default function App() {
   const boot = async () => {
     setLoaded(false);
     const sess = await store.get("session", false);
+    const asAdmin = !!(sess && sess.admin);
     let valid = !!(sess && sess.exp > Date.now());
     if (valid && MODE === "online") {
-      // the Firebase society login must still be active on this device
-      try { const fu = await firebaseUser(); valid = !!fu && fu.email === SOCIETY_LOGIN_EMAIL; }
+      // the matching Firebase login must still be active on this device
+      try { const fu = await firebaseUser(); valid = !!fu && fu.email === (asAdmin ? ADMIN_LOGIN_EMAIL : SOCIETY_LOGIN_EMAIL); }
       catch (e) { valid = false; }
     }
     if (MODE === "demo" || valid) {
-      const us = await loadShared();
-      if (valid && us && us[sess.phone]) setUser(us[sess.phone]);
+      const us = await loadShared(asAdmin ? "admin" : "resident");
+      if (valid && us && asAdmin) setUser(ADMIN_USER);
+      else if (valid && us && us[sess.phone]) setUser(us[sess.phone]);
       else if (sess && us) store.del("session", false);
     } else if (sess) {
       store.del("session", false);
@@ -430,12 +427,14 @@ export default function App() {
     if (MODE !== "online" || !user) return;
     const handlers = {
       config: (v) => v && setCfg(withDefaults(v)),
-      payments: (v) => v && setPayments(v),
+      payments: (v) => v && setPayRaw(v),
+      approvals: (v) => v && setApprovals(v),
       notices: (v) => v && setNotices(v),
-      tickets: (v) => v && setTickets(v),
+      tickets: (v) => v && setTixRaw(v),
+      ticketStatus: (v) => v && setTicketStatusMap(v),
       visitors: (v) => v && setVisitors(v),
       bookings: (v) => v && setBookings(v),
-      users: (v) => { if (!v) return; setUsers(v); if (!v[user.phone]) signOut(true); },
+      users: (v) => { if (!v) return; setUsers(v); if (user.role !== "admin" && !v[user.phone]) signOut(true); },
     };
     let alive = true;
     const unsubs = [];
@@ -446,9 +445,14 @@ export default function App() {
   }, [user?.phone]);
   const mk = (setter, key) => (next) => { setter(next); store.set(key, next); };
   const saveCfg = mk(setCfg, "config");
-  const savePayments = mk(setPayments, "payments");
+  // Status comes only from the committee's approvals / ticketStatus documents, never from what a resident submitted.
+  const payments = payRaw.map((p) => ({ ...p, status: (approvals[p.id] && approvals[p.id].status) || (MODE === "demo" && p.status) || "pending", decidedAt: approvals[p.id] && approvals[p.id].at }));
+  const tickets = tixRaw.map((t) => ({ ...t, status: ticketStatus[t.id] || (MODE === "demo" && t.status) || "open" }));
+  const savePayments = (next) => { const clean = next.map(({ status, decidedAt, ...p }) => p); setPayRaw(clean); store.set("payments", clean); };
+  const saveTickets = (next) => { const clean = next.map(({ status, ...t }) => t); setTixRaw(clean); store.set("tickets", clean); };
+  const decide = (entries) => { const next = { ...approvals }; entries.forEach(({ id, status }) => { next[id] = { status, at: Date.now() }; }); setApprovals(next); store.set("approvals", next); };
+  const setTicketStatus = (id, status) => { const next = { ...ticketStatus, [id]: status }; setTicketStatusMap(next); store.set("ticketStatus", next); };
   const saveNotices = mk(setNotices, "notices");
-  const saveTickets = mk(setTickets, "tickets");
   const saveVisitors = mk(setVisitors, "visitors");
   const saveBookings = mk(setBookings, "bookings");
   const saveUsers = mk(setUsers, "users");
@@ -464,9 +468,17 @@ export default function App() {
     setUsers(next);
     await store.set("users", next);
     await store.set("session", { phone: u.phone, exp: Date.now() + SESSION_DAYS * 86400000 }, false);
-    if (MODE === "online") await loadShared();
+    if (MODE === "online") await loadShared("resident");
     setUser(me); setTab("home");
     flash(isNew ? "Welcome to Sunshine Homes, " + me.name.split(" ")[0] + "!" : "Logged in");
+    return true;
+  };
+  // committee login (after its password is accepted)
+  const signInAdmin = async () => {
+    await store.set("session", { admin: true, exp: Date.now() + SESSION_DAYS * 86400000 }, false);
+    await loadShared("admin");
+    setUser(ADMIN_USER); setTab("home");
+    flash("Logged in as committee");
     return true;
   };
   const signOut = async (removed) => {
@@ -477,9 +489,10 @@ export default function App() {
   };
 
   const myFlat = user?.flat;
-  const pendingAppr = payments.filter((p) => p.status === "pending").length;
-  const openTix = tickets.filter((t) => t.status !== "resolved").length;
-  const inApp = loaded && user;
+  const isAdmin = user?.role === "admin";
+  const myOpenTix = tickets.filter((t) => t.flat === myFlat && t.status !== "resolved").length;
+  const inApp = loaded && user && !isAdmin;     // resident screens
+  const inAdmin = loaded && user && isAdmin;    // committee screens
 
   return (
     <div className="wrap">
@@ -493,6 +506,7 @@ export default function App() {
               <div className="bsub">Community Super App</div>
             </div>
             {inApp && <button className="flatchip" onClick={() => setTab("profile")}>🏠 {myFlat} ▾</button>}
+            {inAdmin && <span className="flatchip" style={{ cursor: "default" }}>🛡️ Committee</span>}
           </div>
         </div>
 
@@ -507,11 +521,17 @@ export default function App() {
               <button className="btn" style={{ marginTop: 12 }} onClick={boot}>Try again</button>
             </div>
           )}
-          {loaded && !user && !loadErr && <Auth flash={flash} onDone={signIn} />}
+          {loaded && !user && !loadErr && <Auth flash={flash} onDone={signIn} onAdmin={signInAdmin} />}
+
+          {inAdmin && (
+            <AdminPanel cfg={cfg} saveCfg={saveCfg} payments={payments} savePayments={savePayments} decide={decide}
+              notices={notices} saveNotices={saveNotices} tickets={tickets} setTicketStatus={setTicketStatus}
+              users={users} saveUsers={saveUsers} flash={flash} signOut={signOut} />
+          )}
 
           {inApp && tab === "home" && (
             <Home user={user} cfg={cfg} payments={payments} notices={notices} tickets={tickets}
-              visitors={visitors} go={setTab} pendingAppr={pendingAppr} />
+              visitors={visitors} go={setTab} />
           )}
           {inApp && tab === "profile" && <Profile user={user} logout={signOut} />}
           {inApp && tab === "dues" && (
@@ -528,17 +548,12 @@ export default function App() {
             <Amenities flat={myFlat} bookings={bookings} save={saveBookings} flash={flash} />
           )}
           {inApp && tab === "directory" && <Directory />}
-          {inApp && tab === "admin" && (
-            <Admin cfg={cfg} saveCfg={saveCfg} payments={payments} savePayments={savePayments}
-              notices={notices} saveNotices={saveNotices} tickets={tickets} saveTickets={saveTickets}
-              users={users} saveUsers={saveUsers} flash={flash} />
-          )}
         </div>
 
         {inApp && (
           <div className="nav">
             {[["home", "🏠", "Home"], ["dues", "💳", "Dues"], ["notices", "📢", "Notices"],
-              ["help", "🛠️", "Helpdesk", openTix], ["admin", "🔐", "Admin", pendingAppr]].map(([id, ic, lb, bd]) => (
+              ["help", "🛠️", "Helpdesk", myOpenTix], ["profile", "👤", "Profile"]].map(([id, ic, lb, bd]) => (
               <button key={id} className={"navb" + (tab === id ? " on" : "")} onClick={() => setTab(id)}>
                 {bd > 0 && <span className="nbadge">{bd}</span>}
                 <span className="ni">{ic}</span><span className="nl">{lb}</span>
@@ -562,7 +577,8 @@ function seedNotices(setNotices) {
 }
 
 /* ---------------------- AUTH (MOBILE + PASSWORD) ------------------- */
-function Auth({ flash, onDone }) {
+function Auth({ flash, onDone, onAdmin }) {
+  const [who, setWho] = useState("resident"); // resident | admin
   const [step, setStep] = useState("login"); // login → (register | retry)
   const [phone, setPhone] = useState("");
   const [pw, setPw] = useState("");
@@ -576,14 +592,16 @@ function Auth({ flash, onDone }) {
   const validPhone = /^[6-9]\d{9}$/.test(phone);
 
   const login = async () => {
-    if (!validPhone) return setErr("Enter a valid 10-digit mobile number.");
+    if (who === "resident" && !validPhone) return setErr("Enter a valid 10-digit mobile number.");
     if (!pw) return setErr("Enter the password.");
     setBusy(true); setErr("");
-    const r = await checkPassword(pw);
+    const r = await checkPassword(pw, who);
     if (r.error) { setBusy(false); return setErr(r.error); }
     setPw("");
+    if (who === "admin") return onAdmin();
     await lookup();
   };
+  const switchWho = (w) => { setWho(w); setErr(""); setPw(""); setShowPw(false); };
 
   // after the password is accepted: existing resident → straight in, new number → register
   const lookup = async () => {
@@ -609,7 +627,9 @@ function Auth({ flash, onDone }) {
   };
 
   const head = {
-    login: ["🔐", "Login or Register", "Enter your mobile number and the Sunshine Homes password."],
+    login: who === "admin"
+      ? ["🛡️", "Committee login", "For the management committee only — enter the committee password."]
+      : ["🔐", "Login or Register", "Enter your mobile number and the Sunshine Homes password."],
     register: ["📝", "Complete registration", "Tell us who you are and which flat you live in."],
     retry: ["📶", "Almost there", "Password accepted ✓"],
   }[step];
@@ -622,7 +642,15 @@ function Auth({ flash, onDone }) {
       </div>
 
       {step === "login" && (
+        <div className="tabs" role="tablist" style={{ marginBottom: 12 }}>
+          <button type="button" role="tab" className={"tab" + (who === "resident" ? " on" : "")} style={{ flex: 1 }} onClick={() => switchWho("resident")}>🏠 Resident</button>
+          <button type="button" role="tab" className={"tab" + (who === "admin" ? " on" : "")} style={{ flex: 1 }} onClick={() => switchWho("admin")}>🛡️ Committee</button>
+        </div>
+      )}
+
+      {step === "login" && (
         <form className="card" onSubmit={(e) => { e.preventDefault(); if (!busy) login(); }}>
+          {who === "resident" && (<>
           <p className="label">Mobile number</p>
           <div className="phone-row">
             <span className="cc">🇮🇳 +91</span>
@@ -630,18 +658,22 @@ function Auth({ flash, onDone }) {
               value={phone} placeholder="98765 43210" autoFocus name="mobile"
               onChange={(e) => { setErr(""); setPhone(e.target.value.replace(/\D/g, "").slice(0, 10)); }} />
           </div>
-          <p className="label" style={{ marginTop: 13 }}>Password</p>
+          </>)}
+          {who === "admin" && <input type="hidden" name="username" autoComplete="username" value="committee" readOnly />}
+          <p className="label" style={{ marginTop: who === "resident" ? 13 : 0 }}>{who === "admin" ? "Committee password" : "Password"}</p>
           <div className="pw-row">
             <input className="input" type={showPw ? "text" : "password"} autoComplete="current-password" name="password"
-              value={pw} placeholder="Society password"
+              value={pw} placeholder={who === "admin" ? "Committee password" : "Society password"} autoFocus={who === "admin"}
               onChange={(e) => { setErr(""); setPw(e.target.value); }} />
             <button type="button" className="linkbtn" onClick={() => setShowPw((v) => !v)}>{showPw ? "Hide" : "Show"}</button>
           </div>
           {err && <div className="err">{err}</div>}
-          <button type="submit" className="btn" style={{ marginTop: 15 }} disabled={busy || !validPhone || !pw}>
-            {busy ? "Checking…" : "Login"}
+          <button type="submit" className="btn" style={{ marginTop: 15 }} disabled={busy || (who === "resident" && !validPhone) || !pw}>
+            {busy ? "Checking…" : who === "admin" ? "Login as committee" : "Login"}
           </button>
-          <p className="note">New to the app? Enter your number and the password shared by the committee — you'll then be asked for your name and flat. Existing residents go straight in.</p>
+          {who === "resident"
+            ? <p className="note">New to the app? Enter your number and the password shared by the committee — you'll then be asked for your name and flat. Existing residents go straight in.</p>
+            : <p className="note">The committee login opens the admin panel: payment approvals, accounts, reports, notices, complaints, residents and settings.</p>}
           {MODE === "demo" && <div className="demo-note"><b>Demo mode:</b> any password with 4 or more characters works.</div>}
         </form>
       )}
@@ -708,7 +740,7 @@ function Profile({ user, logout }) {
 }
 
 /* ------------------------------ HOME ------------------------------ */
-function Home({ user, cfg, payments, notices, tickets, visitors, go, pendingAppr }) {
+function Home({ user, cfg, payments, notices, tickets, visitors, go }) {
   const myFlat = user.flat;
   const owed = MONTHS.reduce((s, _, i) => (i > NOW_MONTH ? s : statusOf(payments, myFlat, monthKey(i)) === "approved" ? s : s + cfg.monthlyAmount), 0);
   const myTix = tickets.filter((t) => t.flat === myFlat && t.status !== "resolved").length;
@@ -723,7 +755,7 @@ function Home({ user, cfg, payments, notices, tickets, visitors, go, pendingAppr
     ["amenities", "🏊", "Amenities", "var(--green-bg)", 0],
     ["directory", "📇", "Directory", "var(--teal-bg)", 0],
     ["notices", "🗳️", "Events", "var(--amber-bg)", 0],
-    ["admin", "🔐", "Admin", "#EEF2F4", pendingAppr],
+    ["profile", "👤", "Profile", "#EEF2F4", 0],
   ];
 
   return (
@@ -1045,49 +1077,12 @@ function Directory() {
 }
 
 /* ------------------------------ ADMIN ----------------------------- */
-function Admin(props) {
-  const [authed, setAuthed] = useState(false);
-  if (!authed) return <PinGate cfg={props.cfg} onOk={() => setAuthed(true)} />;
-  return <AdminPanel {...props} signOut={() => setAuthed(false)} />;
-}
-
-function PinGate({ cfg, onOk }) {
-  const [pin, setPin] = useState("");
-  const [err, setErr] = useState(false);
-  const press = (k) => {
-    setErr(false);
-    if (k === "del") return setPin((p) => p.slice(0, -1));
-    if (pin.length >= 4) return;
-    const next = pin + k; setPin(next);
-    if (next.length === 4) setTimeout(async () => { if (await pinMatches(cfg, next)) onOk(); else { setErr(true); setPin(""); } }, 150);
-  };
-  return (
-    <div className="fade">
-      <div className="greet">Management Committee<small>Admin access for Sunshine Homes.</small></div>
-      <div className="card" style={{ textAlign: "center", marginTop: 12 }}>
-        <div style={{ fontSize: 32 }}>🔐</div>
-        <h3 style={{ margin: "8px 0 2px" }}>Enter admin PIN</h3>
-        <p className="note" style={{ marginTop: 2 }}>Required to approve payments, manage notices, complaints, residents & accounts.</p>
-        <div className="pindots">{[0, 1, 2, 3].map((i) => <div key={i} className={"pindot" + (i < pin.length ? " f" : "")} />)}</div>
-        {err && <div style={{ color: "var(--red)", fontSize: 13, fontWeight: 700 }}>Wrong PIN, try again</div>}
-        <div className="keypad">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((k) => <div key={k} className="key" onClick={() => press(k)}>{k}</div>)}
-          <div className="key fn" onClick={() => setPin("")}>clear</div>
-          <div className="key" onClick={() => press("0")}>0</div>
-          <div className="key fn" onClick={() => press("del")}>⌫</div>
-        </div>
-        <p className="note">Forgot the PIN? Ask the management committee.</p>
-      </div>
-    </div>
-  );
-}
-
-function AdminPanel({ cfg, saveCfg, payments, savePayments, notices, saveNotices, tickets, saveTickets, users, saveUsers, flash, signOut }) {
+function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, saveNotices, tickets, setTicketStatus, users, saveUsers, flash, signOut }) {
   const [tab, setTab] = useState("overview");
   const approved = payments.filter((p) => p.status === "approved");
   const pending = payments.filter((p) => p.status === "pending").sort((a, b) => a.submittedAt - b.submittedAt);
   const openTix = tickets.filter((t) => t.status !== "resolved");
-  const act = (id, status) => savePayments(payments.map((p) => (p.id === id ? { ...p, status, decidedAt: Date.now() } : p)));
+  const act = (id, status) => decide([{ id, status }]);
   const collected = approved.reduce((s, p) => s + p.amount, 0);
   const expectedSoFar = ALL_FLATS.length * (NOW_MONTH + 1) * cfg.monthlyAmount;
   const rate = expectedSoFar ? Math.round((collected / expectedSoFar) * 100) : 0;
@@ -1097,8 +1092,8 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, notices, saveNotices
   return (
     <div className="fade">
       <div className="greet" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>Admin · MC</span>
-        <button className="btn ghost sm" onClick={signOut}>Lock admin</button>
+        <span>Committee · Admin</span>
+        <button className="btn ghost sm" onClick={signOut}>Log out</button>
       </div>
       <div className="tabs" style={{ marginTop: 12 }}>
         {[["overview", "Overview"], ["approvals", `Approvals${pending.length ? " (" + pending.length + ")" : ""}`], ["markpaid", "Mark Paid"],
@@ -1142,11 +1137,11 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, notices, saveNotices
         </div>
       )}
 
-      {tab === "markpaid" && <MarkPaid cfg={cfg} payments={payments} save={savePayments} flash={flash} />}
+      {tab === "markpaid" && <MarkPaid cfg={cfg} payments={payments} save={savePayments} decide={decide} flash={flash} />}
       {tab === "residents" && <Residents users={users} save={saveUsers} flash={flash} />}
       {tab === "accounts" && <Accounts payments={payments} />}
       {tab === "reports" && <Reports payments={payments} cfg={cfg} />}
-      {tab === "help" && <AdminHelp tickets={tickets} save={saveTickets} flash={flash} />}
+      {tab === "help" && <AdminHelp tickets={tickets} setTicketStatus={setTicketStatus} flash={flash} />}
       {tab === "notice" && <AdminNotices notices={notices} save={saveNotices} flash={flash} />}
       {tab === "settings" && <Settings cfg={cfg} saveCfg={saveCfg} flash={flash} />}
     </div>
@@ -1186,7 +1181,7 @@ function Residents({ users, save, flash }) {
 }
 
 /* --------------------------- MARK PAID ---------------------------- */
-function MarkPaid({ cfg, payments, save, flash }) {
+function MarkPaid({ cfg, payments, save, decide, flash }) {
   const [target, setTarget] = useState("ALL");
   const [sel, setSel] = useState(() => { const s = {}; MONTHS.forEach((_, i) => { if (i <= NOW_MONTH) s[i] = true; }); return s; });
   const [amt, setAmt] = useState(String(cfg.monthlyAmount));
@@ -1200,8 +1195,8 @@ function MarkPaid({ cfg, payments, save, flash }) {
     if (!amt || +amt <= 0) return flash("Enter a valid amount");
     if (toCreate.length === 0) return flash("Nothing to mark — already paid");
     const stamp = Date.now();
-    const fresh = toCreate.map(({ f, i }, n) => ({ id: uid(), flat: f, month: monthKey(i), amount: +amt, payer: "Admin entry", ref: "Manual", status: "approved", submittedAt: stamp + n, decidedAt: stamp + n }));
-    save([...payments, ...fresh]); flash(`Marked ${fresh.length} payment(s) as paid`);
+    const fresh = toCreate.map(({ f, i }, n) => ({ id: uid(), flat: f, month: monthKey(i), amount: +amt, payer: "Committee entry", ref: "Manual", submittedAt: stamp + n }));
+    save([...payments, ...fresh]); decide(fresh.map((x) => ({ id: x.id, status: "approved" }))); flash(`Marked ${fresh.length} payment(s) as paid`);
   };
   return (
     <div className="card">
@@ -1292,9 +1287,9 @@ function Reports({ payments, cfg }) {
 }
 
 /* ------------------------ ADMIN: HELPDESK ------------------------- */
-function AdminHelp({ tickets, save, flash }) {
+function AdminHelp({ tickets, setTicketStatus, flash }) {
   const list = [...tickets].sort((a, b) => b.at - a.at);
-  const setStatus = (id, status) => { save(tickets.map((t) => (t.id === id ? { ...t, status } : t))); flash("Ticket " + status); };
+  const setStatus = (id, status) => { setTicketStatus(id, status); flash("Ticket " + status); };
   return (
     <div className="card">
       <p className="label">All complaints</p>
@@ -1352,8 +1347,6 @@ function AdminNotices({ notices, save, flash }) {
 function Settings({ cfg, saveCfg, flash }) {
   const [upi, setUpi] = useState(cfg.upiId);
   const [amt, setAmt] = useState(String(cfg.monthlyAmount));
-  const [pin, setPin] = useState("");
-  const [pin2, setPin2] = useState("");
   return (
     <div>
       <div className="card">
@@ -1376,10 +1369,10 @@ function Settings({ cfg, saveCfg, flash }) {
         <button className="btn" style={{ marginTop: 11 }} onClick={() => { if (!amt || +amt <= 0) return flash("Enter a valid amount"); saveCfg({ ...cfg, monthlyAmount: +amt }); flash("Amount updated"); }}>Save amount</button>
       </div>
       <div className="card">
-        <p className="label">Change admin PIN</p>
-        <input className="input" type="tel" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} placeholder="New 4-digit PIN" />
-        <input className="input" type="tel" maxLength={4} style={{ marginTop: 10 }} value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))} placeholder="Confirm PIN" />
-        <button className="btn" style={{ marginTop: 11 }} onClick={() => { if (pin.length !== 4) return flash("PIN must be 4 digits"); if (pin !== pin2) return flash("PINs don't match"); hashPin(pin).then((h) => { if (!h) return flash("Couldn't change the PIN on this browser"); const { adminPin, ...rest } = cfg; saveCfg({ ...rest, adminPinHash: h }); setPin(""); setPin2(""); flash("PIN changed"); }); }}>Update PIN</button>
+        <p className="label">Committee login</p>
+        <p className="note" style={{ marginTop: 0 }}>{MODE === "online"
+          ? <>Only the committee login (<b>{ADMIN_LOGIN_EMAIL}</b>) can approve payments, update complaints, post notices, change settings and remove residents — Firebase enforces this, not just the app. To change the committee password: Firebase console → Authentication → Users → delete that account, then Add user again with the same email and the new password.</>
+          : "Demo mode: any committee password with 4 or more characters works."}</p>
       </div>
     </div>
   );

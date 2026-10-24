@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-sunshine-committee",
+      "date": "2026-10-24",
+      "type": "feature",
+      "title": "Sunshine Homes: separate Committee login",
+      "body": "The committee now has its own login with its own password and goes straight to the admin panel; residents no longer see Admin at all. Only the committee login can approve payments, update complaints, post notices and change settings — enforced by the database, not just the app.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-sunshine-password",
       "date": "2026-10-24",
       "type": "update",
@@ -136,7 +144,7 @@ window.RLL_DATA = {
       "slug": "sunshine-homes",
       "name": "Sunshine Homes",
       "tagline": "Apartment community app: maintenance by UPI, notices, helpdesk, visitors and amenities.",
-      "description": "Residents log in with their mobile number and the society password, pay monthly maintenance by UPI and track dues. The management committee approves payments, tracks every flat and posts notices.",
+      "description": "Residents log in with their mobile number and the society password, pay monthly maintenance by UPI and track dues. The management committee has its own login to approve payments, track every flat and post notices.",
       "category": "Community",
       "icon": "🌇",
       "url": "apps/sunshine-homes/",
