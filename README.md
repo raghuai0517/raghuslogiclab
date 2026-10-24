@@ -39,7 +39,7 @@ Tool pages download PDF/Word files straight from the browser. They need internet
 The **Apps ▾** menu and the **APPS** section on the home page list everything in the `apps` array at the bottom of `data/site-data.js`.
 Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes/`).
 
-**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app: mobile number + OTP login, maintenance dues by UPI, notices, helpdesk, visitor passes, amenity booking and an admin panel (default PIN 2468).
+**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app: login with mobile number + society password, maintenance dues by UPI, notices, helpdesk, visitor passes, amenity booking and an admin panel (default PIN 2468 — change it in Admin → Settings).
 - `index.html` + `app.js` are what the website serves. `app.js` is a built file — don't edit it by hand.
 - `src/sunshine-homes.jsx` is the source. To rebuild `app.js` after editing it (needs Node.js):
   ```
@@ -47,18 +47,22 @@ Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes
   npm install --no-save react@18 react-dom@18 esbuild
   npx esbuild main.jsx --bundle --minify --jsx=automatic --define:process.env.NODE_ENV='"production"' --target=es2018 --outfile=../app.js
   ```
-- **Firebase is connected** (project `sunshine-homes-d5e7b`, console: https://console.firebase.google.com/project/sunshine-homes-d5e7b). OTPs go out by SMS and everything is stored in Firestore (collection `sunshine`, Mumbai), updating live on every phone. The config is `FIREBASE_CONFIG` at the top of `src/sunshine-homes.jsx`.
-- **SMS limit:** without a billing account Firebase sends at most 10 OTP SMS a day. Upgrade the project to the Blaze plan to lift it (about $0.07 per SMS to India).
-  Firebase console checklist: Blaze plan · Authentication → Sign-in method → Phone ON · Authentication → Settings → SMS region policy: allow India · Authorized domains: `raghuslogiclab.com` (and `www.`) · Firestore database (asia-south1) with rules:
+- **Firebase** (project `sunshine-homes-d5e7b`, console: https://console.firebase.google.com/project/sunshine-homes-d5e7b) checks the password and stores all data in Firestore (collection `sunshine`, Mumbai), updating live on every phone.
+  - **Login:** residents enter their mobile number + the society password. Firebase checks the password against one account, `residents@sunshine-homes-d5e7b.firebaseapp.com` (Authentication → Users). The password is not stored in this website's code.
+  - **Change the password:** Authentication → Users → delete `residents@sunshine-homes-d5e7b.firebaseapp.com`, then **Add user** with the same email and the new password. Data isn't affected; everyone logs in again.
+  - Firebase settings in use: Email/Password sign-in ON, Phone OFF, user sign-up and delete OFF (Authentication → Settings → User actions). Firestore rules:
   ```
   rules_version = '2';
   service cloud.firestore {
     match /databases/{database}/documents {
-      match /sunshine/{key} { allow read, write: if request.auth != null; }
+      match /sunshine/{key} {
+        allow read, write: if request.auth != null
+          && request.auth.token.email == "residents@sunshine-homes-d5e7b.firebaseapp.com";
+      }
     }
   }
   ```
-- **Without Firebase** (`FIREBASE_CONFIG = null`) it runs in demo mode: the OTP is shown on screen and data is saved only in that browser, so residents and the committee don't see each other's data.
+- **Without Firebase** (`FIREBASE_CONFIG = null`) it runs in demo mode: any password works and data is saved only in that browser.
 
 To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `data/site-data.js` (copy the Sunshine Homes one and change `id`, `slug`, `name`, `tagline`, `description`, `icon`, `url`, `color`, `added`).
 

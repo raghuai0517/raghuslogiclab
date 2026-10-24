@@ -2,21 +2,25 @@ import { useState, useEffect } from "react";
 
 /* ================================================================== */
 /*  Sunshine Homes — Community Super App (ADDA-style)                   */
-/*  Phone + OTP login · Maintenance · Notices · Helpdesk · Visitors     */
+/*  Password login · Maintenance · Notices · Helpdesk · Visitors        */
 /*  Amenities · Admin                                                   */
 /* ================================================================== */
 
-/* ---------------------- FIREBASE (OTP + DATA) --------------------- */
+/* --------------------- FIREBASE (LOGIN + DATA) -------------------- */
 /*  With FIREBASE_CONFIG filled in, the app:                            */
-/*   • sends real OTPs by SMS (Firebase Phone Authentication), and      */
+/*   • logs residents in with their mobile number + the society         */
+/*     password. Firebase checks the password against ONE login account */
+/*     (SOCIETY_LOGIN_EMAIL below), so the password is never in this   */
+/*     code. To change it: Authentication → Users → delete that user,  */
+/*     then Add user again with the same email and the new password.    */
 /*   • keeps all society data in Firestore, shared live between every   */
 /*     resident's phone and the committee.                             */
-/*  Firebase console setup: Blaze plan · Authentication → Phone ON ·    */
-/*  Settings → SMS region policy: allow India · Authorized domains: add */
-/*  your website · Firestore database with these rules:                 */
-/*    match /sunshine/{key} { allow read, write: if request.auth != null; } */
-/*  If FIREBASE_CONFIG is null the app runs in DEMO mode: no SMS is  */
-/*  sent (the OTP is shown on screen) and data stays in this browser.   */
+/*  Firebase console setup: Authentication → Email/Password ON, a user  */
+/*  with SOCIETY_LOGIN_EMAIL and the society password · Firestore rules:*/
+/*    match /sunshine/{key} { allow read, write:                        */
+/*      if request.auth != null && request.auth.token.email == "<SOCIETY_LOGIN_EMAIL>"; } */
+/*  If FIREBASE_CONFIG is null the app runs in DEMO mode: any password  */
+/*  of 4+ characters works and data stays in this browser.             */
 const FIREBASE_CONFIG = {
   // Firebase project "sunshine-homes" (web app "Sunshine Homes web"). These values are public by design;
   // access is protected by Firestore rules + phone sign-in, not by keeping this secret.
@@ -29,10 +33,8 @@ const FIREBASE_CONFIG = {
 };
 /* Set FIREBASE_CONFIG = null to switch back to DEMO mode. */
 const FIREBASE_VERSION = "13.1.0";
-const OTP_LEN = 6;
-const OTP_TTL_MS = 5 * 60 * 1000;
-const RESEND_SECS = 30;
-const MAX_TRIES = 5;
+/* The one Firebase account every resident logs in through (its password = the society password). */
+const SOCIETY_LOGIN_EMAIL = "residents@sunshine-homes-d5e7b.firebaseapp.com";
 const SESSION_DAYS = 30;
 
 const YEAR = new Date().getFullYear();
@@ -56,7 +58,6 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const code4 = () => String(Math.floor(1000 + Math.random() * 9000));
 const fmtDate = (t) => new Date(t).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 const fmtPhone = (p) => "+91 " + p.slice(0, 5) + " " + p.slice(5);
-const maskPhone = (p) => "+91 " + p.slice(0, 2) + "•••••" + p.slice(7);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
@@ -64,7 +65,7 @@ const DEFAULTS = { upiId: "sunshinehomes@okicici", adminPin: "2468", monthlyAmou
 
 /* localStorage keys are prefixed so they never clash with other pages on the same website */
 const LS_PREFIX = "sunshine-homes:";
-const OTP_MODE = FIREBASE_CONFIG ? "sms" : "demo";   // sms = Firebase: real OTP by SMS + shared online data
+const MODE = FIREBASE_CONFIG ? "online" : "demo";    // online = Firebase: password check + shared online data
 const COLL = "sunshine";                              // Firestore collection that holds the app's data
 const hasClaudeStorage = () => typeof window !== "undefined" && !!window.storage;
 let onSaveError = () => {};
@@ -82,7 +83,7 @@ const store = {
   // Returns null when a key doesn't exist yet. With strict=true, connection or
   // permission errors are thrown instead of being treated as "no data".
   async get(k, shared = true, strict = false) {
-    if (shared && OTP_MODE === "sms") {
+    if (shared && MODE === "online") {
       try { return await remoteGet(k); } catch (e) { if (strict) throw e; return null; }
     }
     if (hasClaudeStorage()) {
@@ -91,7 +92,7 @@ const store = {
     return local.get(k, shared);
   },
   async set(k, v, shared = true) {
-    if (shared && OTP_MODE === "sms") {
+    if (shared && MODE === "online") {
       try { await remoteSet(k, v); } catch (e) { onSaveError(e); }
       return;
     }
@@ -104,21 +105,18 @@ const store = {
   },
 };
 
-/* ------------------------ FIREBASE + OTP SERVICE ------------------- */
-let demoOtp = null;            // { phone, code, exp, tries }
+/* ------------------------- FIREBASE + LOGIN ------------------------ */
 let fb = null;                 // { auth, mod, fs, db }
-let confirmation = null;       // Firebase ConfirmationResult
 const dynImport = (u) => new Function("u", "return import(u)")(u);
 const FB_ERR = {
-  "auth/invalid-phone-number": "That mobile number looks invalid.",
-  "auth/too-many-requests": "Too many attempts. Please try again later.",
-  "auth/invalid-verification-code": "Incorrect OTP. Please check and retry.",
-  "auth/code-expired": "OTP expired — tap Resend.",
-  "auth/quota-exceeded": "SMS limit reached. Please contact the admin.",
-  "auth/captcha-check-failed": "Security check failed. Reload and try again.",
-  "auth/network-request-failed": "Network error. Check your connection.",
-  "auth/operation-not-allowed": "SMS login isn't switched on yet. Please contact the admin.",
-  "auth/unauthorized-domain": "This website isn't authorised for login yet. Please contact the admin.",
+  "auth/invalid-credential": "Incorrect password.",
+  "auth/invalid-login-credentials": "Incorrect password.",
+  "auth/wrong-password": "Incorrect password.",
+  "auth/user-not-found": "The society login isn't set up yet. Please contact the committee.",
+  "auth/too-many-requests": "Too many wrong attempts. Please wait a few minutes and try again.",
+  "auth/network-request-failed": "Network error. Check your internet connection.",
+  "auth/operation-not-allowed": "Password login isn't switched on yet. Please contact the committee.",
+  "auth/user-disabled": "This login has been turned off. Please contact the committee.",
 };
 
 async function loadFirebase() {
@@ -159,48 +157,22 @@ async function firebaseUser() {
   return auth.currentUser;
 }
 
-async function sendOtp(phone) {
-  if (OTP_MODE === "demo") {
-    await sleep(600);
-    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10 ** OTP_LEN).padStart(OTP_LEN, "0");
-    demoOtp = { phone, code, exp: Date.now() + OTP_TTL_MS, tries: 0 };
-    return { demo: code };
+// Checks the society password. Firebase verifies it — the password itself is never stored in this code.
+async function checkPassword(password) {
+  if (MODE === "demo") {
+    await sleep(400);
+    return password.length >= 4 ? { ok: true } : { error: "Incorrect password." };
   }
   try {
     const { auth, mod } = await loadFirebase();
-    // fresh invisible reCAPTCHA each send (required by Firebase for web SMS)
-    const host = document.getElementById("recaptcha-box");
-    host.innerHTML = "";
-    const el = document.createElement("div");
-    host.appendChild(el);
-    const verifier = new mod.RecaptchaVerifier(auth, el, { size: "invisible" });
-    confirmation = await mod.signInWithPhoneNumber(auth, "+91" + phone, verifier);
-    return {};
-  } catch (e) {
-    return { error: FB_ERR[e?.code] || "Couldn't send OTP. Please try again." };
-  }
-}
-
-async function verifyOtp(phone, code) {
-  if (OTP_MODE === "demo") {
-    await sleep(400);
-    if (!demoOtp || demoOtp.phone !== phone) return { error: "Please request a new OTP." };
-    if (Date.now() > demoOtp.exp) { demoOtp = null; return { error: "OTP expired — tap Resend." }; }
-    demoOtp.tries += 1;
-    if (code !== demoOtp.code) {
-      const left = MAX_TRIES - demoOtp.tries;
-      if (left <= 0) { demoOtp = null; return { error: "Too many wrong attempts — request a new OTP." }; }
-      return { error: `Incorrect OTP · ${left} attempt${left === 1 ? "" : "s"} left` };
-    }
-    demoOtp = null;
+    await mod.signInWithEmailAndPassword(auth, SOCIETY_LOGIN_EMAIL, password);
     return { ok: true };
+  } catch (e) {
+    return { error: FB_ERR[e?.code] || "Couldn't log in. Please try again." };
   }
-  if (!confirmation) return { error: "Please request a new OTP." };
-  try { await confirmation.confirm(code); confirmation = null; return { ok: true }; }
-  catch (e) { return { error: FB_ERR[e?.code] || "Incorrect OTP. Please check and retry." }; }
 }
 
-async function otpSignOut() {
+async function firebaseSignOut() {
   try { if (fb) await fb.mod.signOut(fb.auth); } catch (e) {}
 }
 
@@ -243,15 +215,14 @@ h1,h2,h3,.disp{font-family:'Sora',sans-serif}
 .auth-ic{width:66px;height:66px;border-radius:21px;background:var(--teal-bg);display:grid;place-items:center;font-size:31px;margin:0 auto 12px}
 .auth-hero .greet{margin:0}
 .phone-row{display:flex;gap:8px}
+.pw-row{position:relative}
+.pw-row .input{padding-right:64px}
+.pw-row .linkbtn{position:absolute;right:13px;top:50%;transform:translateY(-50%)}
+.demo-note{background:#FFFBEF;border:1px dashed #E8C976;border-radius:12px;padding:9px 12px;margin-top:12px;font-size:12px;color:#5b4a1d}
 .cc{flex:none;display:flex;align-items:center;gap:5px;padding:0 12px;border:1.5px solid var(--line);border-radius:12px;background:#F7FAFB;font-weight:700;font-size:15px}
-.otp-in{text-align:center;font-family:'Sora';font-size:26px;font-weight:700;letter-spacing:.45em;padding-left:calc(13px + .45em)}
 .err{color:var(--red);font-size:12.5px;font-weight:700;margin-top:10px}
-.sms{background:#FFFBEF;border:1px dashed #E8C976;border-radius:14px;padding:12px 13px;margin-bottom:13px;font-size:13px;line-height:1.5;color:#5b4a1d}
-.sms b{font-family:'Sora';letter-spacing:.12em;font-size:15px;color:var(--ink)}
-.sms .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;background:#F6E2A8;color:#7a5d0f;border-radius:6px;padding:2px 6px;margin-bottom:5px}
 .linkbtn{background:none;border:none;color:var(--teal-d);font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:0}
 .linkbtn:disabled{color:var(--muted);cursor:default}
-.otp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:13px;font-size:13px;color:var(--muted)}
 .avatar{width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;display:grid;place-items:center;font-family:'Sora';font-weight:700;font-size:19px;flex:none}
 .kv{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;font-weight:600}
 .kv:last-child{border-bottom:none;padding-bottom:0}
@@ -423,12 +394,12 @@ export default function App() {
     setLoaded(false);
     const sess = await store.get("session", false);
     let valid = !!(sess && sess.exp > Date.now());
-    if (valid && OTP_MODE === "sms") {
-      // the Firebase login must still be active and belong to the same number
-      try { const fu = await firebaseUser(); valid = !!fu && fu.phoneNumber === "+91" + sess.phone; }
+    if (valid && MODE === "online") {
+      // the Firebase society login must still be active on this device
+      try { const fu = await firebaseUser(); valid = !!fu && fu.email === SOCIETY_LOGIN_EMAIL; }
       catch (e) { valid = false; }
     }
-    if (OTP_MODE === "demo" || valid) {
+    if (MODE === "demo" || valid) {
       const us = await loadShared();
       if (valid && us && us[sess.phone]) setUser(us[sess.phone]);
       else if (sess && us) store.del("session", false);
@@ -441,7 +412,7 @@ export default function App() {
 
   // Firebase mode: keep everything in sync live while signed in
   useEffect(() => {
-    if (OTP_MODE !== "sms" || !user) return;
+    if (MODE !== "online" || !user) return;
     const handlers = {
       config: (v) => v && setCfg({ ...DEFAULTS, ...v }),
       payments: (v) => v && setPayments(v),
@@ -467,7 +438,7 @@ export default function App() {
   const saveBookings = mk(setBookings, "bookings");
   const saveUsers = mk(setUsers, "users");
 
-  // called after OTP is verified (and registration done, for new numbers)
+  // called after the password is accepted (and registration done, for new numbers)
   // returns false if the database couldn't be reached
   const signIn = async (u, isNew) => {
     let latest;
@@ -478,14 +449,14 @@ export default function App() {
     setUsers(next);
     await store.set("users", next);
     await store.set("session", { phone: u.phone, exp: Date.now() + SESSION_DAYS * 86400000 }, false);
-    if (OTP_MODE === "sms") await loadShared();
+    if (MODE === "online") await loadShared();
     setUser(me); setTab("home");
     flash(isNew ? "Welcome to Sunshine Homes, " + me.name.split(" ")[0] + "!" : "Logged in");
     return true;
   };
   const signOut = async (removed) => {
     await store.del("session", false);
-    await otpSignOut();
+    await firebaseSignOut();
     setUser(null); setTab("home");
     flash(removed === true ? "Your account was removed by the committee" : "Logged out");
   };
@@ -575,47 +546,31 @@ function seedNotices(setNotices) {
   setNotices(base); store.set("notices", base);
 }
 
-/* ------------------------- AUTH (PHONE + OTP) --------------------- */
+/* ---------------------- AUTH (MOBILE + PASSWORD) ------------------- */
 function Auth({ flash, onDone }) {
-  const [step, setStep] = useState("phone"); // phone → otp → (register)
+  const [step, setStep] = useState("login"); // login → (register | retry)
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
+  const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [demoCode, setDemoCode] = useState("");
-  const [left, setLeft] = useState(0);
   const [name, setName] = useState("");
   const [flat, setFlat] = useState("");
   const [role, setRole] = useState(ROLES[0]);
 
-  useEffect(() => {
-    if (left <= 0) return;
-    const t = setTimeout(() => setLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [left]);
-
   const validPhone = /^[6-9]\d{9}$/.test(phone);
 
-  const send = async () => {
+  const login = async () => {
     if (!validPhone) return setErr("Enter a valid 10-digit mobile number.");
+    if (!pw) return setErr("Enter the password.");
     setBusy(true); setErr("");
-    const r = await sendOtp(phone);
-    setBusy(false);
-    if (r.error) return setErr(r.error);
-    setDemoCode(r.demo || ""); setOtp(""); setStep("otp"); setLeft(RESEND_SECS);
-    flash("OTP sent to " + maskPhone(phone));
-  };
-
-  const verify = async (code = otp) => {
-    if (code.length !== OTP_LEN) return setErr(`Enter the ${OTP_LEN}-digit OTP.`);
-    setBusy(true); setErr("");
-    const r = await verifyOtp(phone, code);
-    if (r.error) { setBusy(false); setOtp(""); return setErr(r.error); }
-    setDemoCode("");
+    const r = await checkPassword(pw);
+    if (r.error) { setBusy(false); return setErr(r.error); }
+    setPw("");
     await lookup();
   };
 
-  // after the number is verified: existing resident → straight in, new number → register
+  // after the password is accepted: existing resident → straight in, new number → register
   const lookup = async () => {
     setBusy(true); setErr("");
     let users;
@@ -639,10 +594,9 @@ function Auth({ flash, onDone }) {
   };
 
   const head = {
-    phone: ["📱", "Login or Register", "Enter your mobile number — we'll send you a one-time password."],
-    otp: ["💬", "Verify your number", `Enter the ${OTP_LEN}-digit OTP sent to ${fmtPhone(phone)}.`],
-    register: ["📝", "Complete registration", "Number verified ✓  Tell us who you are and which flat you live in."],
-    retry: ["📶", "Almost there", `Number ${fmtPhone(phone)} is verified ✓`],
+    login: ["🔐", "Login or Register", "Enter your mobile number and the Sunshine Homes password."],
+    register: ["📝", "Complete registration", "Tell us who you are and which flat you live in."],
+    retry: ["📶", "Almost there", "Password accepted ✓"],
   }[step];
 
   return (
@@ -652,52 +606,29 @@ function Auth({ flash, onDone }) {
         <div className="greet">{head[1]}<small>{head[2]}</small></div>
       </div>
 
-      {step === "phone" && (
-        <div className="card">
+      {step === "login" && (
+        <form className="card" onSubmit={(e) => { e.preventDefault(); if (!busy) login(); }}>
           <p className="label">Mobile number</p>
           <div className="phone-row">
             <span className="cc">🇮🇳 +91</span>
-            <input className="input" type="tel" inputMode="numeric" autoComplete="tel-national" maxLength={10}
-              value={phone} placeholder="98765 43210" autoFocus
-              onChange={(e) => { setErr(""); setPhone(e.target.value.replace(/\D/g, "").slice(0, 10)); }}
-              onKeyDown={(e) => e.key === "Enter" && validPhone && !busy && send()} />
+            <input className="input" type="tel" inputMode="numeric" autoComplete="username" maxLength={10}
+              value={phone} placeholder="98765 43210" autoFocus name="mobile"
+              onChange={(e) => { setErr(""); setPhone(e.target.value.replace(/\D/g, "").slice(0, 10)); }} />
+          </div>
+          <p className="label" style={{ marginTop: 13 }}>Password</p>
+          <div className="pw-row">
+            <input className="input" type={showPw ? "text" : "password"} autoComplete="current-password" name="password"
+              value={pw} placeholder="Society password"
+              onChange={(e) => { setErr(""); setPw(e.target.value); }} />
+            <button type="button" className="linkbtn" onClick={() => setShowPw((v) => !v)}>{showPw ? "Hide" : "Show"}</button>
           </div>
           {err && <div className="err">{err}</div>}
-          <button className="btn" style={{ marginTop: 15 }} disabled={busy || !validPhone} onClick={send}>
-            {busy ? "Sending OTP…" : "Send OTP"}
+          <button type="submit" className="btn" style={{ marginTop: 15 }} disabled={busy || !validPhone || !pw}>
+            {busy ? "Checking…" : "Login"}
           </button>
-          <p className="note">New to the app? After verifying your number you'll be asked for your name and flat to register. Existing residents go straight in.</p>
-        </div>
-      )}
-
-      {step === "otp" && (
-        <div className="card">
-          {OTP_MODE === "demo" && demoCode && (
-            <div className="sms">
-              <span className="tag">DEMO MODE · NO SMS SENT</span><br />
-              Your Sunshine Homes OTP is <b>{demoCode}</b>. Valid for 5 minutes.
-            </div>
-          )}
-          <p className="label">One-time password</p>
-          <input className="input otp-in" type="tel" inputMode="numeric" autoComplete="one-time-code" maxLength={OTP_LEN}
-            value={otp} placeholder={"•".repeat(OTP_LEN)} autoFocus disabled={busy}
-            onChange={(e) => {
-              setErr("");
-              const v = e.target.value.replace(/\D/g, "").slice(0, OTP_LEN);
-              setOtp(v);
-              if (v.length === OTP_LEN) verify(v);
-            }} />
-          {err && <div className="err">{err}</div>}
-          <button className="btn" style={{ marginTop: 15 }} disabled={busy || otp.length !== OTP_LEN} onClick={() => verify()}>
-            {busy ? "Verifying…" : "Verify & continue"}
-          </button>
-          <div className="otp-foot">
-            <button className="linkbtn" onClick={() => { setStep("phone"); setErr(""); setOtp(""); setDemoCode(""); }}>‹ Change number</button>
-            {left > 0
-              ? <span>Resend in 0:{String(left).padStart(2, "0")}</span>
-              : <button className="linkbtn" disabled={busy} onClick={send}>Resend OTP</button>}
-          </div>
-        </div>
+          <p className="note">New to the app? Enter your number and the password shared by the committee — you'll then be asked for your name and flat. Existing residents go straight in.</p>
+          {MODE === "demo" && <div className="demo-note"><b>Demo mode:</b> any password with 4 or more characters works.</div>}
+        </form>
       )}
 
       {step === "retry" && (
@@ -712,9 +643,7 @@ function Auth({ flash, onDone }) {
       {step === "register" && (
         <div className="card">
           <p className="label">Mobile number</p>
-          <div className="input lock" style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>{fmtPhone(phone)}</span><span className="pill p-ok">✓ Verified</span>
-          </div>
+          <div className="input lock">{fmtPhone(phone)}</div>
           <p className="label" style={{ marginTop: 13 }}>Full name</p>
           <input className="input" value={name} autoFocus placeholder="e.g. Priya Sharma"
             onChange={(e) => { setErr(""); setName(e.target.value); }} />
@@ -738,7 +667,6 @@ function Auth({ flash, onDone }) {
       )}
 
       <div className="secure">🔒 Your number is used only for login and society communication.</div>
-      <div id="recaptcha-box" />
     </div>
   );
 }
@@ -747,14 +675,14 @@ function Auth({ flash, onDone }) {
 function Profile({ user, logout }) {
   return (
     <div className="fade">
-      <div className="greet">My Profile<small>Signed in with your mobile number.</small></div>
+      <div className="greet">My Profile<small>Signed in with your mobile number and the society password.</small></div>
       <div className="card" style={{ marginTop: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 8 }}>
           <div className="avatar">{initials(user.name)}</div>
           <div><div className="lc-title" style={{ fontSize: 17 }}>{user.name}</div>
             <div className="lc-meta">{user.role} · Flat {user.flat}</div></div>
         </div>
-        <div className="kv"><span>Mobile</span><span>{fmtPhone(user.phone)} <span className="pill p-ok" style={{ marginLeft: 6 }}>✓</span></span></div>
+        <div className="kv"><span>Mobile</span><span>{fmtPhone(user.phone)}</span></div>
         <div className="kv"><span>Flat</span><span>{user.flat}</span></div>
         <div className="kv"><span>Member since</span><span>{new Date(user.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span></div>
       </div>
@@ -1220,7 +1148,7 @@ function Residents({ users, save, flash }) {
   const remove = (ph) => { const next = { ...users }; delete next[ph]; save(next); setConfirm(null); flash("Resident removed"); };
   return (
     <div className="card">
-      <p className="label">Registered residents · verified by OTP</p>
+      <p className="label">Registered residents</p>
       <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, flat or mobile" />
       <div style={{ marginTop: 6 }}>
         {shown.length === 0 && <div className="empty">{list.length ? "No match." : "No residents have registered yet."}</div>}
@@ -1237,7 +1165,7 @@ function Residents({ users, save, flash }) {
           </div>
         ))}
       </div>
-      <p className="note">Removing a resident signs them out; they'll need to verify their number by OTP and register again.</p>
+      <p className="note">Removing a resident signs them out of the app; they'll need to log in and register again.</p>
     </div>
   );
 }
@@ -1414,12 +1342,12 @@ function Settings({ cfg, saveCfg, flash }) {
   return (
     <div>
       <div className="card">
-        <p className="label">Login / OTP</p>
-        <div className="kv"><span>OTP delivery</span><span className={"pill " + (OTP_MODE === "sms" ? "p-ok" : "p-pend")}>● {OTP_MODE === "sms" ? "SMS via Firebase" : "Demo (on-screen)"}</span></div>
-        <div className="kv"><span>Data</span><span className={"pill " + (OTP_MODE === "sms" ? "p-ok" : "p-pend")}>● {OTP_MODE === "sms" ? "Shared online (Firestore)" : "This browser only"}</span></div>
-        <p className="note">{OTP_MODE === "sms"
-          ? "OTPs are sent by SMS, and payments, notices, complaints and residents are stored in Firebase and update live on everyone's phone."
-          : "Firebase isn't connected, so OTPs are shown on screen and data isn't shared between phones. Add your Firebase config at the top of the app code (FIREBASE_CONFIG) to turn on SMS and shared data."}</p>
+        <p className="label">Login</p>
+        <div className="kv"><span>Login</span><span className={"pill " + (MODE === "online" ? "p-ok" : "p-pend")}>● {MODE === "online" ? "Society password (Firebase)" : "Demo (any password)"}</span></div>
+        <div className="kv"><span>Data</span><span className={"pill " + (MODE === "online" ? "p-ok" : "p-pend")}>● {MODE === "online" ? "Shared online (Firestore)" : "This browser only"}</span></div>
+        <p className="note">{MODE === "online"
+          ? <>Residents log in with their mobile number and the society password, which Firebase checks. To change the password: Firebase console → Authentication → Users → delete <b>{SOCIETY_LOGIN_EMAIL}</b>, then Add user with the same email and the new password. Residents' data isn't affected; everyone logs in again with the new password.</>
+          : "Firebase isn't connected, so any password works and data isn't shared between phones. Add your Firebase config at the top of the app code (FIREBASE_CONFIG) to turn on the real password check and shared data."}</p>
       </div>
       <div className="card">
         <p className="label">UPI ID (editable by admin only)</p>

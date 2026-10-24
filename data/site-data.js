@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-sunshine-password",
+      "date": "2026-10-24",
+      "type": "update",
+      "title": "Sunshine Homes: login with mobile number and society password",
+      "body": "OTP login has been replaced: residents now log in with their mobile number and the password shared by the committee. All data stays shared live between residents and the committee.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-apps-sunshine",
       "date": "2026-10-24",
       "type": "launch",
@@ -128,7 +136,7 @@ window.RLL_DATA = {
       "slug": "sunshine-homes",
       "name": "Sunshine Homes",
       "tagline": "Apartment community app: maintenance by UPI, notices, helpdesk, visitors and amenities.",
-      "description": "Residents log in with their mobile number and OTP, pay monthly maintenance by UPI and track dues. The management committee approves payments, tracks every flat and posts notices.",
+      "description": "Residents log in with their mobile number and the society password, pay monthly maintenance by UPI and track dues. The management committee approves payments, tracks every flat and posts notices.",
       "category": "Community",
       "icon": "🌇",
       "url": "apps/sunshine-homes/",
