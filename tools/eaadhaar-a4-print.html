@@ -1,0 +1,458 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>e-Aadhaar A4 Print Maker · RaghusLogicLab</title>
+<meta name="description" content="Free tool: upload the e-Aadhaar PDF and get one A4 page with the full Aadhaar letter plus the cut-out card at real ID-card size, with the photo enhanced. Download a 300 dpi JPEG or PDF for glossy photo paper.">
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Same palette and shell as the other Aadhaar tools (stamp-paper green, light + dark). */
+:root {
+  --bg: #eef1ef; --panel: #ffffff; --fg: #16232a; --muted: #5a6b68; --line: #d3dbd8;
+  --accent: #1f6b57; --accent-ink: #ffffff; --accent-soft: #dcebe5;
+  --warn: #b23a2e; --warn-soft: #f7e3e0; --ok: #1f7a3f; --sheet: #ffffff;
+  --ui: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111a19; --panel: #18231f; --fg: #e4ece8; --muted: #9aaea7; --line: #2c3b36;
+    --accent: #5fbf9d; --accent-ink: #0c1714; --accent-soft: #1f3a31;
+    --warn: #f08a7c; --warn-soft: #3a1f1b; --ok: #6fd39a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111a19; --panel: #18231f; --fg: #e4ece8; --muted: #9aaea7; --line: #2c3b36;
+  --accent: #5fbf9d; --accent-ink: #0c1714; --accent-soft: #1f3a31;
+  --warn: #f08a7c; --warn-soft: #3a1f1b; --ok: #6fd39a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.5;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 18px; }
+.hide { display: none !important; }
+
+.rll-bar { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); }
+.rll-bar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.rll-bar a:hover { text-decoration: underline; }
+.rll-home { display: inline-flex; align-items: center; gap: 6px; }
+.rll-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-size: 0.68rem; font-weight: 800; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+header.top h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.01em; text-wrap: balance; }
+header.top p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.src { font-size: 0.8rem; color: var(--muted); }
+.step { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+
+.drop { border: 2px dashed var(--line); border-radius: 10px; padding: 26px 16px; text-align: center; cursor: pointer; background: var(--bg); transition: border-color .15s, background .15s; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop strong { display: block; font-size: 1.02rem; margin-bottom: 4px; }
+.drop span { color: var(--muted); font-size: 0.84rem; }
+.files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center; }
+.chip { background: var(--accent-soft); color: var(--fg); border-radius: 999px; padding: 3px 10px; font-size: 0.8rem; }
+.chip.err { background: var(--warn-soft); color: var(--warn); }
+.privacy { font-size: 0.8rem; color: var(--muted); margin: 10px 0 0; }
+.pw { margin-top: 14px; padding: 12px; border-radius: 8px; background: var(--accent-soft); }
+.pw p { margin: 0 0 8px; font-size: 0.86rem; }
+.pw .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pw input { flex: 1 1 200px; }
+
+label { display: block; font-size: 0.84rem; font-weight: 600; margin-bottom: 4px; }
+input[type=text], input[type=password], select { font: inherit; font-size: 0.92rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; width: 100%; min-width: 0; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 500; margin: 2px 0 0; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.check.off { opacity: .55; }
+button:focus-visible, input:focus-visible, select:focus-visible, .drop:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; font-weight: 600; font-size: 0.9rem; border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
+button.ghost { background: transparent; color: var(--accent); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.work { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .work { grid-template-columns: 1fr; } }
+.opts { display: grid; gap: 14px; }
+.opt-group { display: grid; gap: 8px; }
+.seg { display: grid; gap: 6px; }
+.seg label.check { font-size: 0.88rem; }
+.hint { font-size: 0.78rem; color: var(--muted); margin: 0; }
+details.adj summary { cursor: pointer; font-weight: 600; font-size: 0.86rem; color: var(--accent); }
+details.adj[open] summary { margin-bottom: 10px; }
+.thumb { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; display: block; margin-bottom: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.74rem; color: var(--muted); margin: 0 0 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+.preview-box { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; justify-items: center; }
+#eap-out { width: 100%; max-width: 560px; height: auto; background: var(--sheet); box-shadow: 0 2px 14px rgba(0,0,0,.18); display: block; }
+.status { font-size: 0.82rem; color: var(--muted); margin: 10px 0 0; text-align: center; }
+.status.err { color: var(--warn); }
+.busy { font-size: 0.86rem; color: var(--muted); padding: 30px; text-align: center; }
+
+.how { font-size: 0.86rem; margin: 0; padding-left: 20px; color: var(--muted); }
+.how li { margin-bottom: 4px; } .how b { color: var(--fg); }
+.copy { text-align: center; font-size: 0.82rem; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+.copy a { color: var(--accent); }
+@media (max-width: 600px) { header.top h1 { font-size: 1.3rem; } .panel { padding: 14px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style></head><body>
+
+<div class="wrap" id="eap-app">
+  <nav class="rll-bar" aria-label="Site"><a href="../index.html" class="rll-home"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#tools">Tools</a></nav>
+  <header class="top">
+    <div>
+      <h1>e-Aadhaar A4 Print Maker</h1>
+      <p>Upload the e-Aadhaar PDF and get one A4 page with the <b>full Aadhaar letter</b> on top and the <b>cut-out card (front and back) at real ID-card size</b> below. The photo is brightened and sharpened so it prints clearly on glossy photo paper. Download a 300 dpi JPEG or PDF, or print directly.</p>
+    </div>
+    <div class="src">Free · no login · nothing is uploaded</div>
+  </header>
+
+  <section class="panel" aria-labelledby="s1">
+    <p class="step" id="s1">Step 1 · Upload the e-Aadhaar</p>
+    <div class="drop" id="eap-drop" tabindex="0" role="button" aria-label="Choose the e-Aadhaar file">
+      <strong>Click to choose the e-Aadhaar PDF, or drop it here</strong>
+      <span>The PDF downloaded from myAadhaar / UIDAI works best (a JPG or PNG scan also works, without photo enhancement).</span>
+      <input type="file" id="eap-file" accept=".pdf,application/pdf,image/jpeg,image/png" class="hide">
+    </div>
+    <div class="files" id="eap-files"></div>
+    <div class="pw hide" id="eap-pw">
+      <p id="eap-pw-msg"><b>This PDF is password protected.</b> The e-Aadhaar password is the <b>first 4 letters of the name in CAPITALS</b> followed by the <b>year of birth</b> — for example <b>RAVI1985</b>.</p>
+      <div class="row"><input type="password" id="eap-pw-in" autocomplete="off" placeholder="e.g. RAVI1985" aria-label="PDF password"><button id="eap-pw-go">Open</button></div>
+    </div>
+    <p class="privacy">🔒 The file is opened only inside your browser. Nothing is uploaded or saved on any server.</p>
+  </section>
+
+  <section class="hide" id="eap-work" aria-labelledby="s2">
+    <div class="work">
+      <div class="panel opts">
+        <p class="step" id="s2" style="margin:0">Step 2 · Layout and photo</p>
+        <div class="opt-group">
+          <label>Page layout</label>
+          <div class="seg" role="radiogroup">
+            <label class="check"><input type="radio" name="eap-mode" value="both" checked> Full Aadhaar + card at real size below</label>
+            <label class="check"><input type="radio" name="eap-mode" value="cards"> Card only (front &amp; back, real size)</label>
+            <label class="check"><input type="radio" name="eap-mode" value="full"> Full Aadhaar only (fit to A4)</label>
+          </div>
+          <div id="eap-copies-wrap" class="hide">
+            <label for="eap-copies">Card copies on the page</label>
+            <select id="eap-copies"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+          </div>
+        </div>
+        <div class="opt-group">
+          <label class="check" id="eap-enh-lab"><input type="checkbox" id="eap-enh" checked> Enhance photo (brighter, sharper)</label>
+          <div id="eap-bright-wrap">
+            <label for="eap-bright">Photo brightness <span id="eap-bright-v" class="hint" style="display:inline">Auto</span></label>
+            <input type="range" id="eap-bright" min="-4" max="4" step="1" value="0">
+          </div>
+          <p class="hint" id="eap-photo-note"></p>
+          <label class="check"><input type="checkbox" id="eap-white" checked> Clean white background (no grey tint on photo paper)</label>
+          <label class="check"><input type="checkbox" id="eap-guides" checked> Dashed cut guides around the card</label>
+        </div>
+        <details class="adj" id="eap-adj">
+          <summary>Check / adjust the card crop</summary>
+          <canvas id="eap-thumb" class="thumb" aria-label="Detected areas"></canvas>
+          <div class="legend"><span><i style="background:#2563eb"></i>Full Aadhaar</span><span><i style="background:#16a34a"></i>Card front</span><span><i style="background:#ea580c"></i>Card back</span><span><i style="background:#dc2626"></i>Photo</span></div>
+          <label for="eap-top">Card top edge</label><input type="range" id="eap-top" min="-40" max="40" step="1" value="0">
+          <label for="eap-bot">Card bottom edge</label><input type="range" id="eap-bot" min="-40" max="40" step="1" value="0">
+          <label for="eap-mid">Middle split (front | back)</label><input type="range" id="eap-mid" min="-40" max="40" step="1" value="0">
+          <p class="hint" style="margin-top:8px">The tool finds the dashed cut line automatically. Move these only if the green or orange box doesn't match the card. <button class="ghost" id="eap-reset" style="padding:2px 8px;font-size:12px">Reset</button></p>
+        </details>
+      </div>
+
+      <div class="panel">
+        <p class="step">Step 3 · Check the A4 page, then download or print</p>
+        <div class="btns" style="margin-bottom:14px">
+          <button id="eap-jpg">Download JPEG (300 dpi)</button>
+          <button class="ghost" id="eap-pdf">Download PDF (A4)</button>
+          <button class="ghost" id="eap-print">Print</button>
+        </div>
+        <div class="preview-box">
+          <canvas id="eap-out" aria-label="A4 page preview"></canvas>
+          <p class="status" id="eap-status"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="s4">
+    <p class="step" id="s4">Printing on glossy photo paper</p>
+    <ul class="how">
+      <li>Paper size <b>A4</b>, paper type <b>Glossy Photo Paper</b>, quality <b>Best / High</b>.</li>
+      <li>Scale <b>100% / Actual size</b> — not "Fit to page" or "Fill", or the card won't come out at the real 85.6 × 54 mm size.</li>
+      <li>Let the ink dry for a few minutes before cutting along the dashed guides.</li>
+      <li>The photo inside an e-Aadhaar is small (about 160 × 200 pixels), so enhancement makes it clearer but it can't become as sharp as a camera photo.</li>
+      <li>A printout of e-Aadhaar is valid as proof of identity, the same as the original letter. Do not alter the printed details.</li>
+    </ul>
+  </section>
+
+  <footer class="copy">© 2026 RLL. All rights reserved. · Not affiliated with UIDAI.<br><a href="../terms.html">Terms</a> · <a href="../privacy.html">Privacy</a> · <a href="../refund.html">Refund &amp; Cancellation</a> · <a href="../shipping.html">Shipping &amp; Delivery</a> · <a href="../contact.html">Contact Us</a></footer>
+</div>
+
+<script>
+(function(){
+  var root=document.getElementById('eap-app'); if(!root) return;
+  var $=function(id){return document.getElementById(id)};
+  var PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  var JSPDF="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+  var DPI=300, MM=DPI/25.4, A4W=Math.round(210*MM), A4H=Math.round(297*MM);
+  var CARD_W=85.6, CARD_H=54;   // ID-1 card size in mm
+
+  var st={name:"",src:null,base:null,det:null,photos:[],bytes:null};
+  var outCanvas=$("eap-out");
+
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function status(msg,err){var s=$("eap-status");s.textContent=msg||"";s.classList.toggle("err",!!err)}
+  function chip(msg,err){$("eap-files").innerHTML='<span class="chip'+(err?' err':'')+'">'+esc(msg)+'</span>'}
+  function loadScript(src){return new Promise(function(ok,bad){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=function(){bad(new Error("Couldn't load "+src.split("/").pop()+" — check the internet connection"))};document.head.appendChild(s)})}
+  async function needPdfJs(){if(window.pdfjsLib)return;await loadScript(PDFJS+"pdf.min.js");window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js"}
+  function canvas(w,h){var c=document.createElement("canvas");c.width=w;c.height=h;return c}
+  function nextFrame(){return new Promise(function(r){setTimeout(r,20)})}
+
+  /* ---------- 1. open the file ---------- */
+  function handle(list){
+    var f=list&&list[0]; if(!f) return;
+    st.name=f.name.replace(/\.[^.]+$/,"")||"eAadhaar";
+    $("eap-pw").classList.add("hide");
+    chip(f.name+" — opening…");
+    var rd=new FileReader();
+    rd.onload=function(){
+      if(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name)){st.bytes=new Uint8Array(rd.result);openPdf("")}
+      else openImage(rd.result,f.type)};
+    rd.readAsArrayBuffer(f)}
+
+  async function openPdf(pw){
+    try{
+      await needPdfJs();
+      var doc=await pdfjsLib.getDocument({data:st.bytes.slice(0),password:pw||undefined}).promise;
+      $("eap-pw").classList.add("hide");
+      var page=await doc.getPage(1);
+      var vp1=page.getViewport({scale:1});
+      // ~300 dpi for the letter after it's fitted to A4, capped for phones
+      var sc=Math.min(4.4,Math.sqrt(12e6/(vp1.width*vp1.height)));
+      var vp=page.getViewport({scale:sc});
+      var c=canvas(Math.round(vp.width),Math.round(vp.height)),ctx=c.getContext("2d");
+      ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);
+      await page.render({canvasContext:ctx,viewport:vp}).promise;
+      st.photos=await findPhotos(page,vp);
+      chip(st.name+".pdf — opened ("+(doc.numPages>1?"page 1 of "+doc.numPages:"1 page")+")");
+      ready(c);
+    }catch(e){
+      if(e&&e.name==="PasswordException"){
+        $("eap-pw").classList.remove("hide");
+        $("eap-pw-msg").innerHTML=(e.code===2?'<b style="color:var(--warn)">That password is not correct.</b> ':'<b>This PDF is password protected.</b> ')+
+          'The e-Aadhaar password is the <b>first 4 letters of the name in CAPITALS</b> followed by the <b>year of birth</b> — for example <b>RAVI1985</b>.';
+        chip(st.name+".pdf — needs password");
+        $("eap-pw-in").focus();return}
+      chip("Couldn't open the PDF: "+(e&&e.message||e),true)}}
+
+  function openImage(buf,type){
+    var url=URL.createObjectURL(new Blob([buf],{type:type||"image/jpeg"})),img=new Image();
+    img.onload=function(){
+      var s=Math.min(1,Math.sqrt(14e6/(img.naturalWidth*img.naturalHeight)));
+      var c=canvas(Math.round(img.naturalWidth*s),Math.round(img.naturalHeight*s)),ctx=c.getContext("2d");
+      ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);st.photos=[];
+      chip(st.name+" — image opened");ready(c)};
+    img.onerror=function(){chip("Couldn't read that image",true)};
+    img.src=url}
+
+  /* Find the holder's photo: a portrait-shaped image placed in the PDF (QR codes are square, banner strips are wide). */
+  async function findPhotos(page,vp){
+    try{
+      var ops=await page.getOperatorList(),O=pdfjsLib.OPS,ctm=[1,0,0,1,0,0],stack=[],out=[];
+      function mul(m,n){return[m[0]*n[0]+m[2]*n[1],m[1]*n[0]+m[3]*n[1],m[0]*n[2]+m[2]*n[3],m[1]*n[2]+m[3]*n[3],m[0]*n[4]+m[2]*n[5]+m[4],m[1]*n[4]+m[3]*n[5]+m[5]]}
+      var pw=vp.width/vp.scale;
+      for(var i=0;i<ops.fnArray.length;i++){var fn=ops.fnArray[i],a=ops.argsArray[i];
+        if(fn===O.save)stack.push(ctm.slice());
+        else if(fn===O.restore)ctm=stack.pop()||[1,0,0,1,0,0];
+        else if(fn===O.transform)ctm=mul(ctm,a);
+        else if(fn===O.paintFormXObjectBegin){stack.push(ctm.slice());if(a&&a[0])ctm=mul(ctm,a[0])}
+        else if(fn===O.paintFormXObjectEnd)ctm=stack.pop()||[1,0,0,1,0,0];
+        else if(fn===O.paintImageXObject||fn===O.paintInlineImageXObject||fn===O.paintJpegXObject){
+          var pts=[[0,0],[1,0],[0,1],[1,1]].map(function(p){return[ctm[0]*p[0]+ctm[2]*p[1]+ctm[4],ctm[1]*p[0]+ctm[3]*p[1]+ctm[5]]});
+          var xs=pts.map(function(p){return p[0]}),ys=pts.map(function(p){return p[1]});
+          var w=Math.max.apply(0,xs)-Math.min.apply(0,xs),h=Math.max.apply(0,ys)-Math.min.apply(0,ys);
+          if(w>pw*0.05&&w<pw*0.3&&h/w>1.08&&h/w<1.55){
+            var r=vp.convertToViewportRectangle([Math.min.apply(0,xs),Math.min.apply(0,ys),Math.max.apply(0,xs),Math.max.apply(0,ys)]);
+            out.push({x:Math.min(r[0],r[2]),y:Math.min(r[1],r[3]),w:Math.abs(r[2]-r[0]),h:Math.abs(r[3]-r[1])})}}}
+      return out}catch(e){return[]}}
+
+  /* ---------- 2. detect the letter, the dashed cut line and the two card faces ---------- */
+  function detect(src){
+    var k=Math.min(1,1200/src.width),w=Math.round(src.width*k),h=Math.round(src.height*k);
+    var c=canvas(w,h),ctx=c.getContext("2d");ctx.drawImage(src,0,0,w,h);
+    var d=ctx.getImageData(0,0,w,h).data,g=new Uint8Array(w*h);
+    for(var i=0,j=0;i<g.length;i++,j+=4)g[i]=(d[j]*299+d[j+1]*587+d[j+2]*114)/1000;
+    var rowInk=new Int32Array(h),colInk=new Int32Array(w);
+    for(var y=0;y<h;y++)for(var x=0;x<w;x++)if(g[y*w+x]<235){rowInk[y]++;colInk[x]++}
+    var x0=0,x1=w-1,y0=0,y1=h-1;
+    while(x0<w-1&&colInk[x0]<=h*0.002)x0++; while(x1>x0&&colInk[x1]<=h*0.002)x1--;
+    while(y0<h-1&&rowInk[y0]<=w*0.002)y0++; while(y1>y0&&rowInk[y1]<=w*0.002)y1--;
+    var cw=x1-x0+1,ch=y1-y0+1;
+    function dark(x,y){return g[y*w+x]<170}
+    function reg(v){v=v.slice().sort(function(a,b){return a-b});var t=Math.floor(v.length/10),m=v.slice(t,v.length-t);return m.length&&m[m.length-1]<=3*Math.max(m[0],1)}
+    // dashed cut line: a long row of short, evenly spaced dashes across the whole width
+    var best=null;
+    for(y=y0+Math.floor(ch*0.35);y<y1-Math.floor(ch*0.08);y++){
+      var n=0,runs=[],gaps=[],inR=false,rs=0,lastE=-1,segHit=new Array(10).fill(0);
+      for(x=x0;x<=x1;x++){var dk=dark(x,y);if(dk){n++;segHit[Math.min(9,Math.floor((x-x0)/cw*10))]++}
+        if(dk&&!inR){inR=true;rs=x;if(lastE>=0)gaps.push(x-lastE)}else if(!dk&&inR){inR=false;runs.push(x-rs);lastE=x}}
+      if(inR)runs.push(x1+1-rs);
+      var f=n/cw; if(f<0.2||f>0.85||runs.length<25||!reg(runs)||!reg(gaps))continue;
+      if(segHit.filter(function(s){return s>cw*0.01}).length<8)continue;
+      if(!best||f>best.f)best={y:y,f:f}}
+    var cutY,found=!!best;
+    if(found)cutY=best.y; else cutY=y1-Math.round((cw/2)/1.586);   // standard card proportion as a fallback
+    // the gap between the two card faces: solid border columns either side of the centre
+    var cy0=cutY+Math.round((y1-cutY)*0.08),cy1=y1-Math.round((y1-cutY)*0.04),cx=(x0+x1)/2,solid=[];
+    for(x=Math.round(x0+cw*0.4);x<=Math.round(x0+cw*0.6);x++){var cnt=0;for(y=cy0;y<=cy1;y++)if(dark(x,y))cnt++;if(cnt>(cy1-cy0+1)*0.85)solid.push(x)}
+    var L=solid.filter(function(x){return x<cx}),R=solid.filter(function(x){return x>cx});
+    var fr=L.length?Math.max.apply(0,L)+1:Math.round(cx-cw*0.006),bl=R.length?Math.min.apply(0,R):Math.round(cx+cw*0.006);
+    var inv=1/k;
+    return {found:found,unit:ch*inv/400,
+      full:{x:(x0-2)*inv,y:(y0-2)*inv,w:(cw+4)*inv,h:(ch+4)*inv},
+      cut:cutY*inv,bottom:(y1+1)*inv,left:x0*inv,right:(x1+1)*inv,frontRight:fr*inv,backLeft:bl*inv}}
+
+  function boxes(){
+    var D=st.det,u=D.unit,top=+$("eap-top").value,bot=+$("eap-bot").value,mid=+$("eap-mid").value;
+    var cardTop=D.cut+(D.bottom-D.cut)*0.016+top*u,cardBot=D.bottom+bot*u;
+    return {full:D.full,
+      front:{x:D.left,y:cardTop,w:D.frontRight+mid*u-D.left,h:cardBot-cardTop},
+      back:{x:D.backLeft+mid*u,y:cardTop,w:D.right-D.backLeft-mid*u,h:cardBot-cardTop}}}
+
+  /* ---------- 3. image clean-up ---------- */
+  function whiten(c){
+    var ctx=c.getContext("2d"),im=ctx.getImageData(0,0,c.width,c.height),p=im.data,lut=new Uint8ClampedArray(256);
+    for(var i=0;i<256;i++)lut[i]=i>=242?255:i<=8?0:Math.round((i-8)/(242-8)*255);
+    for(i=0;i<p.length;i+=4){p[i]=lut[p[i]];p[i+1]=lut[p[i+1]];p[i+2]=lut[p[i+2]]}
+    ctx.putImageData(im,0,0)}
+
+  function boxBlur(src,w,h,r){ // 3-channel separable box blur, run twice ≈ gaussian
+    var a=new Float32Array(src),b=new Float32Array(src.length);
+    for(var pass=0;pass<2;pass++){
+      for(var y=0;y<h;y++)for(var ch=0;ch<3;ch++){var s=0,row=y*w;
+        for(var x=-r;x<=r;x++)s+=a[(row+Math.min(w-1,Math.max(0,x)))*3+ch];
+        for(x=0;x<w;x++){b[(row+x)*3+ch]=s/(2*r+1);s+=a[(row+Math.min(w-1,x+r+1))*3+ch]-a[(row+Math.max(0,x-r))*3+ch]}}
+      for(var x2=0;x2<w;x2++)for(ch=0;ch<3;ch++){var s2=0;
+        for(y=-r;y<=r;y++)s2+=b[(Math.min(h-1,Math.max(0,y))*w+x2)*3+ch];
+        for(y=0;y<h;y++){a[(y*w+x2)*3+ch]=s2/(2*r+1);s2+=b[(Math.min(h-1,y+r+1)*w+x2)*3+ch]-b[(Math.max(0,y-r)*w+x2)*3+ch]}}}
+    return a}
+
+  function enhancePhoto(c,r,bright){
+    var x=Math.round(r.x)+1,y=Math.round(r.y)+1,w=Math.round(r.w)-2,h=Math.round(r.h)-2; if(w<8||h<8)return;
+    var ctx=c.getContext("2d"),im=ctx.getImageData(x,y,w,h),p=im.data,n=w*h,f=new Float32Array(n*3),i,j;
+    for(i=0,j=0;i<n;i++,j+=4){f[i*3]=p[j]/255;f[i*3+1]=p[j+1]/255;f[i*3+2]=p[j+2]/255}
+    // levels: stretch the 0.5%–99.5% luminance range
+    var hist=new Uint32Array(256);for(i=0;i<n;i++)hist[Math.min(255,Math.round((f[i*3]*.299+f[i*3+1]*.587+f[i*3+2]*.114)*255))]++;
+    var acc=0,lo=0,hi=255;for(i=0;i<256;i++){acc+=hist[i];if(acc<n*0.005)lo=i;if(acc<n*0.995)hi=i}
+    lo/=255;hi=Math.max(lo+0.2,hi/255);
+    // neutralise colour cast a little (grey-world, 30%) and measure the centre (face) brightness
+    var sr=0,sg=0,sb=0,cnt=0;
+    for(var yy=Math.floor(h*0.25);yy<h*0.75;yy++)for(var xx=Math.floor(w*0.25);xx<w*0.75;xx++){i=yy*w+xx;sr+=f[i*3];sg+=f[i*3+1];sb+=f[i*3+2];cnt++}
+    sr/=cnt;sg/=cnt;sb/=cnt;var avg=(sr+sg+sb)/3,kr=Math.pow(avg/sr,0.3),kg=Math.pow(avg/sg,0.3),kb=Math.pow(avg/sb,0.3);
+    var faceL=Math.min(0.95,Math.max(0.05,((sr*.299+sg*.587+sb*.114)-lo)/(hi-lo)));
+    var gamma=Math.log(0.52)/Math.log(faceL);gamma=Math.min(1.05,Math.max(0.55,gamma))*Math.pow(0.9,bright);
+    for(i=0;i<n*3;i+=3){
+      var R=Math.max(0,(f[i]*kr-lo)/(hi-lo)),G=Math.max(0,(f[i+1]*kg-lo)/(hi-lo)),B=Math.max(0,(f[i+2]*kb-lo)/(hi-lo));
+      R=Math.pow(Math.min(1,R),gamma);G=Math.pow(Math.min(1,G),gamma);B=Math.pow(Math.min(1,B),gamma);
+      var L=R*.299+G*.587+B*.114;f[i]=L+(R-L)*1.08;f[i+1]=L+(G-L)*1.08;f[i+2]=L+(B-L)*1.08}
+    // smooth JPEG blockiness slightly, then unsharp mask for crisp edges
+    var rad=Math.max(1,Math.round(w/320)),soft=boxBlur(f,w,h,rad);
+    for(i=0;i<n*3;i++)f[i]=f[i]*0.55+soft[i]*0.45;
+    var bl=boxBlur(f,w,h,Math.max(2,Math.round(w/110)));
+    for(i=0,j=0;i<n;i++,j+=4){p[j]=255*(f[i*3]*1.7-bl[i*3]*0.7);p[j+1]=255*(f[i*3+1]*1.7-bl[i*3+1]*0.7);p[j+2]=255*(f[i*3+2]*1.7-bl[i*3+2]*0.7)}
+    ctx.putImageData(im,x,y)}
+
+  /* ---------- 4. build the A4 page ---------- */
+  function mode(){return(root.querySelector('input[name="eap-mode"]:checked')||{}).value||"both"}
+  function prepare(){
+    var c=canvas(st.base.width,st.base.height);c.getContext("2d").drawImage(st.base,0,0);
+    if($("eap-white").checked)whiten(c);
+    if($("eap-enh").checked)st.photos.forEach(function(r){enhancePhoto(c,r,+$("eap-bright").value)});
+    return c}
+
+  function compose(){
+    if(!st.base)return;
+    var src=prepare(),B=boxes(),m=mode();
+    var c=outCanvas;c.width=A4W;c.height=A4H;var ctx=c.getContext("2d");
+    ctx.fillStyle="#fff";ctx.fillRect(0,0,A4W,A4H);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+    var M=8*MM,cw=CARD_W*MM,chh=CARD_H*MM,gap=7.8*MM;
+    function put(b,x,y,w,h){ctx.drawImage(src,b.x,b.y,b.w,b.h,x,y,w,h)}
+    function guides(x,y){if(!$("eap-guides").checked)return;ctx.save();ctx.strokeStyle="#8c8c8c";ctx.lineWidth=0.18*MM;ctx.setLineDash([1.06*MM,0.7*MM]);
+      ctx.strokeRect(x-0.7*MM,y-0.7*MM,cw+1.4*MM,chh+1.4*MM);ctx.restore()}
+    function cardRow(y){var x=(A4W-(2*cw+gap))/2;put(B.front,x,y,cw,chh);put(B.back,x+cw+gap,y,cw,chh);guides(x,y);guides(x+cw+gap,y)}
+    function fit(b,top,bottom){var s=Math.min((A4W-2*M)/b.w,(bottom-top)/b.h),w=b.w*s,h=b.h*s;put(b,(A4W-w)/2,top,w,h);return s}
+    if(m==="full"){fit(B.full,M,A4H-M)}
+    else if(m==="cards"){var nC=+$("eap-copies").value;for(var i=0;i<nC;i++)cardRow(M+2*MM+i*(chh+6*MM))}
+    else{
+      var cardY=A4H-M-2*MM-chh;cardRow(cardY);
+      var sep=cardY-4.6*MM;ctx.save();ctx.strokeStyle="#b3b3b3";ctx.lineWidth=0.14*MM;ctx.setLineDash([0.7*MM,0.7*MM]);
+      ctx.beginPath();ctx.moveTo(M,sep);ctx.lineTo(A4W-M,sep);ctx.stroke();ctx.restore();
+      fit(B.full,M,sep-4.6*MM)}
+    drawThumb(B);
+    var notes=[];
+    if(!st.det.found&&m!=="full")notes.push("Cut line not found automatically — check the card crop under Step 2.");
+    status(notes.join(" ")||"A4 · 210 × 297 mm · "+DPI+" dpi"+(m!=="full"?" · card 85.6 × 54 mm":""),notes.length>0)}
+
+  function drawThumb(B){
+    var t=$("eap-thumb"),k=Math.min(1,320/st.base.width);t.width=Math.round(st.base.width*k);t.height=Math.round(st.base.height*k);
+    var ctx=t.getContext("2d");ctx.drawImage(st.base,0,0,t.width,t.height);ctx.lineWidth=2;
+    [[B.full,"#2563eb"],[B.front,"#16a34a"],[B.back,"#ea580c"]].concat(st.photos.map(function(p){return[p,"#dc2626"]})).forEach(function(a){
+      ctx.strokeStyle=a[1];ctx.strokeRect(a[0].x*k,a[0].y*k,a[0].w*k,a[0].h*k)})}
+
+  var timer=null;function refresh(){clearTimeout(timer);timer=setTimeout(compose,60)}
+
+  function ready(c){
+    st.base=c;st.det=detect(c);
+    ["eap-top","eap-bot","eap-mid"].forEach(function(id){$(id).value=0});
+    var has=st.photos.length>0;
+    $("eap-enh").disabled=!has;$("eap-bright").disabled=!has;$("eap-enh-lab").classList.toggle("off",!has);
+    $("eap-photo-note").textContent=has?"":"Photo enhancement needs the original e-Aadhaar PDF (no photo found in this file).";
+    $("eap-adj").open=!st.det.found;
+    $("eap-work").classList.remove("hide");compose()}
+
+  /* ---------- 5. outputs ---------- */
+  function setJpegDpi(buf,dpi){ // write 300 dpi into the JFIF header so it prints at A4 size
+    var b=new Uint8Array(buf);
+    if(b[2]===0xFF&&b[3]===0xE0&&b[6]===0x4A&&b[7]===0x46&&b[8]===0x49&&b[9]===0x46){b[13]=1;b[14]=dpi>>8;b[15]=dpi&255;b[16]=dpi>>8;b[17]=dpi&255}
+    return b}
+  function save(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000)}
+  function jpegBlob(){return new Promise(function(ok){outCanvas.toBlob(function(b){b.arrayBuffer().then(function(ab){ok(new Blob([setJpegDpi(ab,DPI)],{type:"image/jpeg"}))})},"image/jpeg",0.95)})}
+  function busy(btn,on,label){btn.disabled=on;if(label)btn.textContent=label}
+
+  $("eap-jpg").onclick=async function(){var b=this,t=b.textContent;busy(b,true,"Preparing…");await nextFrame();
+    try{save(await jpegBlob(),st.name+"_A4_print.jpg")}finally{busy(b,false,t)}};
+  $("eap-pdf").onclick=async function(){var b=this,t=b.textContent;busy(b,true,"Preparing…");
+    try{if(!window.jspdf)await loadScript(JSPDF);
+      var blob=await jpegBlob(),url=await new Promise(function(ok){var r=new FileReader();r.onload=function(){ok(r.result)};r.readAsDataURL(blob)});
+      var pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
+      pdf.addImage(url,"JPEG",0,0,210,297,undefined,"NONE");pdf.setProperties({title:st.name+" A4 print"});pdf.save(st.name+"_A4_print.pdf")}
+    catch(e){status(e.message||String(e),true)}finally{busy(b,false,t)}};
+  $("eap-print").onclick=async function(){
+    var blob=await jpegBlob(),url=URL.createObjectURL(blob);
+    var fr=document.createElement("iframe");fr.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";document.body.appendChild(fr);
+    var d=fr.contentWindow.document;
+    d.open();d.write('<!doctype html><html><head><title>'+esc(st.name)+' A4</title><style>@page{size:A4 portrait;margin:0}html,body{margin:0;padding:0}img{display:block;width:210mm;height:297mm}</style></head><body><img src="'+url+'"></body></html>');d.close();
+    var img=d.querySelector("img");
+    function go(){fr.contentWindow.focus();fr.contentWindow.print();setTimeout(function(){fr.remove();URL.revokeObjectURL(url)},60000)}
+    if(img.complete)setTimeout(go,150);else img.onload=function(){setTimeout(go,150)}};
+
+  /* ---------- wiring ---------- */
+  var drop=$("eap-drop"),inp=$("eap-file");
+  drop.onclick=function(){inp.click()};drop.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();inp.click()}};
+  inp.onchange=function(){handle(inp.files);inp.value=""};
+  drop.ondragover=function(e){e.preventDefault();drop.classList.add("over")};drop.ondragleave=function(){drop.classList.remove("over")};
+  drop.ondrop=function(e){e.preventDefault();drop.classList.remove("over");handle(e.dataTransfer.files)};
+  $("eap-pw-go").onclick=function(){openPdf($("eap-pw-in").value.trim())};
+  $("eap-pw-in").onkeydown=function(e){if(e.key==="Enter")openPdf(this.value.trim())};
+  [].forEach.call(root.querySelectorAll('input[name="eap-mode"]'),function(r){r.onchange=function(){$("eap-copies-wrap").classList.toggle("hide",mode()!=="cards");refresh()}});
+  ["eap-copies","eap-enh","eap-white","eap-guides"].forEach(function(id){$(id).onchange=refresh});
+  ["eap-top","eap-bot","eap-mid"].forEach(function(id){$(id).oninput=refresh});
+  $("eap-bright").oninput=function(){var v=+this.value;$("eap-bright-v").textContent=v?(v>0?"Auto +"+v:"Auto "+v):"Auto";refresh()};
+  $("eap-reset").onclick=function(){["eap-top","eap-bot","eap-mid"].forEach(function(id){$(id).value=0});refresh()};
+})();
+</script>
+</body></html>

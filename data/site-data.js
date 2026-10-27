@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-eaadhaar-a4-print",
+      "date": "2026-10-27",
+      "type": "launch",
+      "title": "New tool: e-Aadhaar A4 Print Maker",
+      "body": "Upload the e-Aadhaar PDF and get one A4 page with the full Aadhaar letter on top and the cut-out card (front and back) at real ID-card size below. The photo is brightened and sharpened for glossy photo paper. Download a 300 dpi JPEG or PDF, or print directly. Card-only and letter-only layouts too. Free, and the file is read only in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-aadhaar-services-report",
       "date": "2026-10-27",
       "type": "launch",
@@ -163,6 +171,19 @@ window.RLL_DATA = {
       "badge": "Free tool",
       "url": "tools/aadhaar-services-report.html",
       "color": "#60a5fa",
+      "visibility": "public",
+      "added": "2026-10-27"
+    },
+    {
+      "id": "t-eaadhaar-a4-print",
+      "slug": "eaadhaar-a4-print",
+      "name": "e-Aadhaar A4 Print Maker",
+      "tagline": "Full Aadhaar letter plus the cut-out card at real ID size on one A4 page, photo enhanced.",
+      "description": "Upload the e-Aadhaar PDF (password-protected ones too). Get the full letter on top and the card front and back at 85.6 × 54 mm below, with a brighter, sharper photo. Download a 300 dpi JPEG or PDF for glossy photo paper. Free; the file never leaves your browser.",
+      "category": "Aadhaar",
+      "badge": "Free tool",
+      "url": "tools/eaadhaar-a4-print.html",
+      "color": "#f472b6",
       "visibility": "public",
       "added": "2026-10-27"
     }

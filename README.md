@@ -11,7 +11,7 @@ A simple static website (no server, no database) that you can host on any domain
 | `admin.html` | **Project Studio** — Create Project, Manage Projects, Daily Update, Settings & Publish |
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
-| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva) |
+| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker) |
 | `apps/` | Apps, one folder each (Sunshine Homes community app) |
 
 ## Try it now
