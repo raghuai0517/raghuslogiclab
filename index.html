@@ -36,7 +36,7 @@
         <div class="section-head">
           <div>
             <span class="eyebrow eyebrow-blue">// tools</span>
-            <p class="muted" style="margin:0">Fill in and preview free in your browser. Download the print-ready A4 PDF for &#8377;10 by UPI (PhonePe, Google Pay, Paytm).</p>
+            <p class="muted" style="margin:0">Fill in and preview free in your browser. Affidavit PDFs are &#8377;10 by UPI (PhonePe, Google Pay, Paytm); tools marked <b>Free tool</b> cost nothing.</p>
           </div>
         </div>
         <div id="tool-groups"></div>
@@ -210,7 +210,7 @@
       return '<div class="tool-group"><h2 class="tool-group-title">' + esc((c + " related").toUpperCase()) + '</h2>' +
         '<div class="grid">' + byCat[c].map(function (t) {
           return '<a class="card tool-card blue" href="' + esc(t.url) + '">' +
-            '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-blue">Free to fill &middot; &#8377;10 PDF</span></div>' +
+            '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-blue">' + esc(t.badge || "Free to fill \u00b7 \u20b910 PDF") + '</span></div>' +
             '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
             "<p>" + esc(t.tagline || "") + "</p>" +
             (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +

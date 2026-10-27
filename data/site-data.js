@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-aadhaar-services-report",
+      "date": "2026-10-27",
+      "type": "launch",
+      "title": "New tool: Aadhaar Services Report for AP Seva",
+      "body": "Aadhaar operators can upload the CSV exported from the UC Client and get a day-wise report of services done, using the AP Seva portal's Challan Payment service names and amounts. Print all sheets on A4, print just the portal checklist, or download Excel. It's free, and the files are read only in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-sunshine-backup",
       "date": "2026-10-24",
       "type": "feature",
@@ -144,6 +152,19 @@ window.RLL_DATA = {
       "color": "#fbbf24",
       "visibility": "public",
       "added": "2026-10-16"
+    },
+    {
+      "id": "t-aadhaar-services-report",
+      "slug": "aadhaar-services-report",
+      "name": "Aadhaar Services Report for AP Seva",
+      "tagline": "Upload the UC Client CSV and get a day-wise report to enter in the AP Seva portal.",
+      "description": "For Aadhaar operators: counts services day by day under the AP Seva Challan Payment service names, with amounts. Print on A4 or download Excel. Free; files never leave your browser.",
+      "category": "Aadhaar",
+      "badge": "Free tool",
+      "url": "tools/aadhaar-services-report.html",
+      "color": "#60a5fa",
+      "visibility": "public",
+      "added": "2026-10-27"
     }
   ],
   "apps": [

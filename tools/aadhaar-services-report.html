@@ -1,0 +1,373 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Aadhaar Services Report for AP Seva · RaghusLogicLab</title>
+<meta name="description" content="Free tool for Aadhaar operators: upload the UC Client CSV export and get a day-wise report of services done, in AP Seva portal Challan Payment service names, ready to print on A4 or download as Excel.">
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Same palette and shell as the other Aadhaar tools (stamp-paper green, light + dark). */
+:root {
+  --bg: #eef1ef; --panel: #ffffff; --fg: #16232a; --muted: #5a6b68; --line: #d3dbd8;
+  --accent: #1f6b57; --accent-ink: #ffffff; --accent-soft: #dcebe5;
+  --warn: #b23a2e; --warn-soft: #f7e3e0; --ok: #1f7a3f; --amber: #9c5700; --input: #fff9e6;
+  --th: #1f3864; --th-ink: #ffffff; --day: #dfe7f3; --tot: #eef1f4; --cell: #c6cfd8;
+  --ui: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111a19; --panel: #18231f; --fg: #e4ece8; --muted: #9aaea7; --line: #2c3b36;
+    --accent: #5fbf9d; --accent-ink: #0c1714; --accent-soft: #1f3a31;
+    --warn: #f08a7c; --warn-soft: #3a1f1b; --ok: #6fd39a; --amber: #f2b45c; --input: #2a2a1c;
+    --th: #24406f; --th-ink: #f2f6ff; --day: #1f2c3d; --tot: #1d2724; --cell: #34453f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111a19; --panel: #18231f; --fg: #e4ece8; --muted: #9aaea7; --line: #2c3b36;
+  --accent: #5fbf9d; --accent-ink: #0c1714; --accent-soft: #1f3a31;
+  --warn: #f08a7c; --warn-soft: #3a1f1b; --ok: #6fd39a; --amber: #f2b45c; --input: #2a2a1c;
+  --th: #24406f; --th-ink: #f2f6ff; --day: #1f2c3d; --tot: #1d2724; --cell: #34453f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.5;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 40px; display: grid; gap: 18px; }
+.hide { display: none !important; }
+
+.rll-bar { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); }
+.rll-bar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.rll-bar a:hover { text-decoration: underline; }
+.rll-home { display: inline-flex; align-items: center; gap: 6px; }
+.rll-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-size: 0.68rem; font-weight: 800; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+header.top h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.01em; text-wrap: balance; }
+header.top p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.src { font-size: 0.8rem; color: var(--muted); }
+.step { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+
+.drop { border: 2px dashed var(--line); border-radius: 10px; padding: 26px 16px; text-align: center; cursor: pointer; background: var(--bg); transition: border-color .15s, background .15s; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop strong { display: block; font-size: 1.02rem; margin-bottom: 4px; }
+.drop span { color: var(--muted); font-size: 0.84rem; }
+.files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center; }
+.chip { background: var(--accent-soft); color: var(--fg); border-radius: 999px; padding: 3px 10px; font-size: 0.8rem; }
+.chip.err { background: var(--warn-soft); color: var(--warn); }
+.privacy { font-size: 0.8rem; color: var(--muted); margin: 10px 0 0; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+label { display: block; font-size: 0.84rem; font-weight: 600; margin-bottom: 4px; }
+input[type=text], input[type=date], select { font: inherit; font-size: 0.92rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; width: 100%; min-width: 0; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 500; margin: 2px 0 0; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, .drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+button { font: inherit; font-weight: 600; font-size: 0.9rem; border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
+button.ghost { background: transparent; color: var(--accent); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.stat b { display: block; font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 0.8rem; color: var(--muted); }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 14px; overflow-x: auto; }
+.tab { background: none; border: 0; border-radius: 8px 8px 0 0; color: var(--muted); padding: 9px 14px; white-space: nowrap; }
+.tab.on { color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 -2px 0 var(--accent); }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+th, td { border: 1px solid var(--cell); padding: 6px 8px; vertical-align: middle; }
+thead th { background: var(--th); color: var(--th-ink); font-weight: 600; text-align: center; }
+.dayrow td { background: var(--day); font-weight: 700; }
+.dayrow .meta { font-weight: 400; font-style: italic; font-size: 0.78rem; text-align: right; color: var(--muted); }
+.totrow td { background: var(--tot); font-weight: 700; }
+.grand td { background: var(--th); color: var(--th-ink); font-weight: 700; }
+.c { text-align: center; } .r { text-align: right; } .tick { width: 64px; }
+.st-Completed { color: var(--ok); font-weight: 700; } .st-InProcess { color: var(--amber); font-weight: 700; } .st-REJECTED { color: var(--warn); font-weight: 700; }
+td select { padding: 4px 6px; font-size: 0.8rem; background: var(--input); }
+.muted { color: var(--muted); font-size: 0.8rem; }
+.notes { font-size: 0.8rem; color: var(--muted); margin: 12px 0 0; }
+ul.notes { padding-left: 18px; } .notes li { margin-bottom: 3px; }
+.empty { text-align: center; color: var(--muted); padding: 26px; }
+.flag { background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 1px 6px; font-size: 0.7rem; margin-left: 4px; }
+
+.how { font-size: 0.86rem; margin: 0; padding-left: 20px; color: var(--muted); }
+.how li { margin-bottom: 4px; } .how b { color: var(--fg); }
+.copy { text-align: center; font-size: 0.82rem; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+.copy a { color: var(--accent); }
+@media (max-width: 600px) { header.top h1 { font-size: 1.3rem; } .panel { padding: 14px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style></head><body>
+
+<div class="wrap" id="aat-app">
+  <nav class="rll-bar" aria-label="Site"><a href="../index.html" class="rll-home"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#tools">Tools</a></nav>
+  <header class="top">
+    <div>
+      <h1>Aadhaar Services Report for AP Seva</h1>
+      <p>For Aadhaar operators at village and ward secretariats: upload the CSV exported from the Aadhaar UC Client and get a day-wise list of services done, using the same "Type of Service" names as the AP Seva portal's <em>Digital Services › Challan Payment</em> form. Print it on A4 and tick off each day as you enter it.</p>
+    </div>
+    <div class="src">Free · no login · nothing is uploaded</div>
+  </header>
+
+  <section class="panel" aria-labelledby="s1">
+    <p class="step" id="s1">Step 1 · Upload the UC Client CSV</p>
+    <div class="drop" id="aat-drop" tabindex="0" role="button" aria-label="Choose CSV files">
+      <strong>Click to choose CSV files, or drop them here</strong>
+      <span>You can select several exports at once. Entries repeated across files are counted once, keeping the final status (Completed or Rejected).</span>
+      <input type="file" id="aat-file" accept=".csv,text/csv" multiple class="hide">
+    </div>
+    <div class="files" id="aat-files"></div>
+    <p class="privacy">🔒 The files are read only inside your browser. Nothing is uploaded or saved on any server.</p>
+  </section>
+
+  <section class="panel hide" id="aat-opts" aria-labelledby="s2">
+    <p class="step" id="s2">Step 2 · Report settings</p>
+    <div class="grid">
+      <div><label for="aat-from">From date</label><input type="date" id="aat-from"></div>
+      <div><label for="aat-to">To date</label><input type="date" id="aat-to"></div>
+      <div><label for="aat-name">Name · Designation (printed on the report)</label><input type="text" id="aat-name" placeholder="e.g. RAVI KUMAR P · Panchayat Secretary"></div>
+      <div><label for="aat-mbu">Free Mandatory Biometric Update (₹0) goes under</label>
+        <select id="aat-mbu"><option value="57">Age 5-7 &amp;&amp; 15-17</option><option value="715">Ages 7-15</option></select></div>
+      <div style="grid-column:1/-1"><label class="check"><input type="checkbox" id="aat-rej" checked> Include rejected packets (the fee was collected)</label></div>
+    </div>
+  </section>
+
+  <section id="aat-out" class="hide" aria-labelledby="s3">
+    <div class="stats" id="aat-stats" style="margin-bottom:16px"></div>
+    <div class="panel">
+      <p class="step" id="s3">Step 3 · Check the report, then print or download</p>
+      <div class="btns">
+        <button id="aat-print-all">Print all sheets (A4 / PDF)</button>
+        <button class="ghost" id="aat-print-portal">Print Portal Update only</button>
+        <button class="ghost" id="aat-xlsx">Download Excel</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button class="tab on" data-tab="portal">Portal Update</button>
+        <button class="tab" data-tab="summary">Day-wise Summary</button>
+        <button class="tab" data-tab="details">Enrolment Details</button>
+      </div>
+      <div id="aat-portal" class="scroll"></div>
+      <div id="aat-summary" class="scroll hide"></div>
+      <div id="aat-details" class="scroll hide"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="s4">
+    <p class="step" id="s4">How services are matched to the portal</p>
+    <ul class="how">
+      <li><b>New enrolment</b> (type N) → Aadhaar enrolment</li>
+      <li><b>Mandatory biometric update, ₹0</b> → Mandatory Biometric update along with Demographic updates (Age 5-7 &amp;&amp; 15-17), or Ages 7-15 if you choose that in Step 2</li>
+      <li><b>Mandatory biometric update, ₹125</b> → Mandatory Biometric Update For Greater Than 17 Years</li>
+      <li><b>Update, ₹125</b> → Biometric Update with or without Demographic update · <b>Update, ₹75</b> → Demographic Update</li>
+      <li>The UC Client export doesn't record the resident's age, so change any entry on the <b>Enrolment Details</b> tab if it belongs elsewhere. The date and time come from the enrolment number.</li>
+    </ul>
+  </section>
+
+  <footer class="copy">© 2026 RLL. All rights reserved. · Not affiliated with UIDAI or the Government of Andhra Pradesh.<br><a href="../terms.html">Terms</a> · <a href="../privacy.html">Privacy</a> · <a href="../refund.html">Refund &amp; Cancellation</a> · <a href="../shipping.html">Shipping &amp; Delivery</a> · <a href="../contact.html">Contact Us</a></footer>
+</div>
+
+<script>
+(function(){
+  var root=document.getElementById('aat-app'); if(!root) return;
+  var $=function(id){return document.getElementById(id)};
+  var S={ENR:"Aadhaar enrolment",MBU57:"Mandatory Biometric update along with Demographic updates (Age 5-7 && 15-17)",
+    MBU17:"Mandatory Biometric Update For Greater Than 17 Years",BIO:"Biometric Update with or without Demographic update",
+    DEMO:"Demographic Update",EAAD:"E-Aadhaar Download and color print on A4 Sheet",DOC:"Document Update",MBU715:"Mandatory Biometric Update For Ages 7-15"};
+  var PORTAL=[S.ENR,S.MBU57,S.MBU17,S.BIO,S.DEMO,S.EAAD,S.DOC,S.MBU715];
+  var SHORT={}; SHORT[S.ENR]="Aadhaar enrolment";SHORT[S.MBU57]="MBU + Demo (Age 5-7 & 15-17)";SHORT[S.MBU17]="MBU > 17 Years";
+  SHORT[S.BIO]="Biometric Update with/without Demo";SHORT[S.DEMO]="Demographic Update";SHORT[S.EAAD]="E-Aadhaar Print";SHORT[S.DOC]="Document Update";SHORT[S.MBU715]="MBU Ages 7-15";
+  var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var recs={}, files=[], overrides={}, operator="", cur=null;
+
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function pad(n){return(n<10?"0":"")+n}
+  function key(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+  function dmy(k){var p=k.split("-");return p[2]+"-"+p[1]+"-"+p[0]}
+  function dayName(k){var p=k.split("-");return DAYS[new Date(+p[0],p[1]-1,+p[2]).getDay()]}
+  function inr(n){return Math.round(n).toLocaleString("en-IN")}
+  function dash(n){return n?inr(n):"-"}
+
+  function parseCSV(t){
+    var rows=[],row=[],f="",q=false;t=t.replace(/^﻿/,"");
+    for(var i=0;i<t.length;i++){var c=t[i];
+      if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+      else if(c=='"')q=true; else if(c==','){row.push(f);f=""}
+      else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;row.push(f);f="";if(row.length>1||row[0]!=="")rows.push(row);row=[]}
+      else f+=c}
+    if(f!==""||row.length){row.push(f);rows.push(row)}
+    return rows}
+  var FINAL={Completed:1,REJECTED:1};
+
+  function addFile(name,text,order){
+    var rows=parseCSV(text); if(!rows.length) throw "empty file";
+    var h=rows[0].map(function(x){return x.trim().toUpperCase()}), ix=function(n){return h.indexOf(n)};
+    var iE=ix("ENROLMENT_NO_DATE"); if(iE<0) throw "not a UC Client export (ENROLMENT_NO_DATE column missing)";
+    var iT=ix("TYPE"),iM=ix("MANDATORY_BIO_METRIC_UPDATE_ONLY"),iS=ix("STATUS"),iA=ix("TOTAL_AMOUNT_CHARGED"),iO=ix("OPERATOR_ID"),iR=ix("REJECT_REASON_DESCRIPTION");
+    var n=0;
+    for(var r=1;r<rows.length;r++){var x=rows[r],en=(x[iE]||"").trim(); if(!/\d{14}$/.test(en)) continue;
+      var s=en.slice(-14), d=new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8),+s.slice(8,10),+s.slice(10,12),+s.slice(12,14));
+      var rec={en:en,date:key(d),time:pad(d.getHours()%12||12)+":"+pad(d.getMinutes())+(d.getHours()<12?" AM":" PM"),ts:d.getTime(),
+        type:(x[iT]||"").trim().toUpperCase(),mbu:(x[iM]||"").trim(),status:(x[iS]||"").trim(),amt:parseFloat(x[iA])||0,
+        reason:((x[iR]||"").split("errorReasonCode=").pop()||"").replace(/_/g," ").trim(),src:name,order:order};
+      if(iO>=0&&x[iO]) operator=x[iO].trim();
+      var old=recs[en];
+      // keep a final status (Completed/Rejected) over InProcess; otherwise the newer file wins
+      if(!old || (FINAL[rec.status]&&!FINAL[old.status]) || (!!FINAL[rec.status]===!!FINAL[old.status]&&order>=old.order)) recs[en]=rec;
+      n++}
+    return n}
+
+  function classify(r){
+    if(overrides[r.en]) return overrides[r.en];
+    if(r.type==="N") return S.ENR;
+    if(/^y/i.test(r.mbu)) return r.amt>0?S.MBU17:($("aat-mbu").value==="715"?S.MBU715:S.MBU57);
+    if(r.amt>=125) return S.BIO;
+    return S.DEMO}
+
+  function handle(list){
+    list=[].slice.call(list).filter(function(f){return /\.csv$/i.test(f.name)||f.type.indexOf("csv")>=0});
+    if(!list.length) return;
+    list.sort(function(a,b){return a.lastModified-b.lastModified});
+    var left=list.length;
+    list.forEach(function(f,i){var rd=new FileReader();
+      rd.onload=function(){var ok=true,msg;try{msg=addFile(f.name,rd.result,Date.now()+i)+" entries"}catch(e){ok=false;msg=e}
+        files.push({name:f.name,ok:ok,msg:msg}); if(--left===0) loaded()};
+      rd.readAsText(f)})}
+
+  function loaded(){
+    $("aat-files").innerHTML=files.map(function(f){return '<span class="chip'+(f.ok?'':' err')+'">'+esc(f.name)+' — '+esc(f.msg)+'</span>'}).join("")+
+      (files.length?' <button class="ghost" id="aat-clear" style="padding:3px 10px;font-size:12.5px">Clear all</button>':'');
+    var c=$("aat-clear"); if(c) c.onclick=function(){recs={};files=[];overrides={};operator="";$("aat-files").innerHTML="";$("aat-opts").classList.add("hide");$("aat-out").classList.add("hide")};
+    var ds=Object.keys(recs).map(function(k){return recs[k].date}).sort();
+    if(!ds.length) return;
+    $("aat-from").value=ds[0]; $("aat-to").value=ds[ds.length-1];
+    $("aat-opts").classList.remove("hide"); $("aat-out").classList.remove("hide"); render()}
+
+  function build(){
+    var from=$("aat-from").value,to=$("aat-to").value,inc=$("aat-rej").checked;
+    var list=Object.keys(recs).map(function(k){return recs[k]}).filter(function(r){return r.date>=from&&r.date<=to&&(inc||r.status!=="REJECTED")})
+      .sort(function(a,b){return a.ts-b.ts});
+    list.forEach(function(r){r.svc=classify(r)});
+    var days={},order=[];
+    list.forEach(function(r){if(!days[r.date]){days[r.date]=[];order.push(r.date)}days[r.date].push(r)});
+    var used=PORTAL.filter(function(s){return list.some(function(r){return r.svc===s})});
+    var none=[]; if(from&&to){for(var d=new Date(from+"T00:00");key(d)<=to;d.setDate(d.getDate()+1)){var k=key(d);if(!days[k])none.push(dmy(k).slice(0,5))}}
+    var tot=list.reduce(function(a,r){return a+r.amt},0);
+    return {list:list,days:days,order:order,used:used,none:none,tot:tot,from:from,to:to,inc:inc,
+      rej:list.filter(function(r){return r.status==="REJECTED"}).length,inproc:list.filter(function(r){return r.status==="InProcess"}).length}}
+
+  function agg(rs,s){var n=0,a=0;rs.forEach(function(r){if(r.svc===s){n++;a+=r.amt}});return{n:n,a:a}}
+  function period(m){return dmy(m.from)+(m.from===m.to?"":" to "+dmy(m.to))}
+
+  function portalHTML(m){
+    var h='<table><thead><tr><th style="width:44px">S.No</th><th style="width:110px">Service Raised Date</th><th>Type of Service (as in portal)</th><th style="width:96px">No of Services Provided</th><th style="width:90px">Amount (₹)</th><th class="tick">Updated ✓</th></tr></thead><tbody>';
+    var sn=0;
+    m.order.forEach(function(k){var rs=m.days[k],rj=rs.filter(function(r){return r.status==="REJECTED"}).length,dn=0,da=0;
+      h+='<tr class="dayrow"><td colspan="3">'+dmy(k)+' ('+dayName(k)+')</td><td colspan="3" class="meta">'+rs.length+(rs.length===1?' packet':' packets')+' · '+rj+' rejected</td></tr>';
+      PORTAL.forEach(function(s){var g=agg(rs,s);if(!g.n)return;sn++;dn+=g.n;da+=g.a;
+        h+='<tr><td class="c">'+sn+'</td><td class="c">'+dmy(k)+'</td><td>'+esc(s)+'</td><td class="c">'+g.n+'</td><td class="c">'+inr(g.a)+'</td><td></td></tr>'});
+      h+='<tr class="totrow"><td></td><td></td><td class="r">Day Total</td><td class="c">'+dn+'</td><td class="c">'+inr(da)+'</td><td></td></tr>'});
+    h+='<tr class="grand"><td></td><td></td><td class="r">GRAND TOTAL ('+period(m)+')</td><td class="c">'+m.list.length+'</td><td class="c">₹'+inr(m.tot)+'</td><td></td></tr></tbody></table>';
+    h+='<ul class="notes"><li>Select Category: <b>Aadhar Services</b> · Service Raised Date = the date shown · tick ✓ after "Add Service".</li>'+
+      '<li>Amount = total charged incl. 18% GST, from the UC Client. '+(m.inc?'Rejected packets are included because the fee was collected.':'Rejected packets are excluded.')+'</li>'+
+      '<li>Free Mandatory Biometric Updates (₹0) are under "'+($("aat-mbu").value==="715"?'Ages 7-15':'Age 5-7 && 15-17')+'"; MBU charged ₹125 under "Greater Than 17 Years". Updates at ₹125 = Biometric Update; ₹75 = Demographic Update. Change any entry on the Enrolment Details tab.</li>'+
+      (m.inproc?'<li>'+m.inproc+' packet(s) were still InProcess in the export.</li>':'')+
+      (m.none.length?'<li>No services on: '+m.none.join(", ")+'.</li>':'')+'</ul>';
+    return h}
+
+  function summaryHTML(m){
+    var h='<table><thead><tr><th rowspan="2">Date</th><th rowspan="2">Day</th>';
+    m.used.forEach(function(s){h+='<th colspan="2">'+esc(SHORT[s])+'</th>'});
+    h+='<th colspan="2">Total</th><th rowspan="2" class="tick">Updated ✓</th></tr><tr>';
+    m.used.forEach(function(){h+='<th>Nos</th><th>₹</th>'}); h+='<th>Nos</th><th>₹</th></tr></thead><tbody>';
+    var T={};
+    m.order.forEach(function(k){var rs=m.days[k],tn=0,ta=0;h+='<tr><td class="c">'+dmy(k)+'</td><td class="c">'+dayName(k)+'</td>';
+      m.used.forEach(function(s){var g=agg(rs,s);tn+=g.n;ta+=g.a;T[s]=T[s]||{n:0,a:0};T[s].n+=g.n;T[s].a+=g.a;h+='<td class="c">'+dash(g.n)+'</td><td class="c">'+dash(g.a)+'</td>'});
+      h+='<td class="c"><b>'+tn+'</b></td><td class="c"><b>'+dash(ta)+'</b></td><td></td></tr>'});
+    h+='<tr class="totrow"><td colspan="2" class="c">TOTAL</td>';
+    m.used.forEach(function(s){h+='<td class="c">'+dash(T[s].n)+'</td><td class="c">'+dash(T[s].a)+'</td>'});
+    h+='<td class="c">'+m.list.length+'</td><td class="c">'+inr(m.tot)+'</td><td></td></tr></tbody></table>';
+    h+='<p class="notes">'+m.used.map(function(s){return '<b>'+esc(SHORT[s])+'</b> = '+esc(s)}).join(" · ")+'</p>';
+    return h}
+
+  function detailsHTML(m,forPrint){
+    var h='<table><thead><tr><th>S.No</th><th>Date</th><th>Time</th><th>Enrolment No</th><th>UC Type</th><th>Mandatory Bio</th><th>Status</th><th>Amount (₹)</th><th>Portal Type of Service</th><th>Source File</th></tr></thead><tbody>';
+    m.list.forEach(function(r,i){
+      var sel=forPrint?esc(r.svc):'<select data-en="'+esc(r.en)+'">'+PORTAL.map(function(s){return '<option'+(s===r.svc?' selected':'')+'>'+esc(s)+'</option>'}).join("")+'</select>'+(overrides[r.en]?'<span class="flag">changed</span>':'');
+      h+='<tr><td class="c">'+(i+1)+'</td><td class="c">'+dmy(r.date)+'</td><td class="c">'+r.time+'</td><td class="c">'+esc(r.en)+'</td><td class="c">'+(r.type==="N"?"New Enrolment":"Update")+
+        '</td><td class="c">'+esc(r.mbu)+'</td><td class="c st-'+esc(r.status)+'" title="'+esc(r.reason)+'">'+esc(r.status)+'</td><td class="c">'+inr(r.amt)+'</td><td>'+sel+'</td><td class="muted">'+esc(r.src)+'</td></tr>'});
+    h+='<tr class="totrow"><td colspan="7" class="r">Total</td><td class="c">'+inr(m.tot)+'</td><td colspan="2"></td></tr></tbody></table>';
+    if(!forPrint) h+='<p class="notes">Yellow boxes: change the portal service for any entry (e.g. a free MBU that was for a child aged 7-15). All sheets update immediately. Hover a status to see the reject reason.</p>';
+    return h}
+
+  function render(){
+    cur=build(); var m=cur;
+    $("aat-stats").innerHTML=[[m.list.length,"Services"],["₹"+inr(m.tot),"Amount"],[m.order.length,"Working days"],[m.rej,"Rejected"],[m.inproc,"In process"]]
+      .map(function(s){return '<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>'}).join("");
+    if(!m.list.length){["portal","summary","details"].forEach(function(t){$("aat-"+t).innerHTML='<div class="empty">No entries in the selected dates.</div>'});return}
+    $("aat-portal").innerHTML=portalHTML(m); $("aat-summary").innerHTML=summaryHTML(m); $("aat-details").innerHTML=detailsHTML(m,false);
+    [].forEach.call($("aat-details").querySelectorAll("select[data-en]"),function(s){s.onchange=function(){overrides[s.dataset.en]=s.value;render()}})}
+
+  var PRINT_CSS='@page{size:A4 portrait;margin:11mm 9mm 13mm}@page wide{size:A4 landscape;margin:10mm 9mm 12mm}'+
+    'body{font-family:Arial,Helvetica,sans-serif;color:#000;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    '.sheet{break-after:page}.sheet:last-child{break-after:auto}.wide{page:wide}'+
+    'h1{font-size:16px;text-align:center;margin:0 0 2px}.hd{font-size:11px;text-align:center;margin:0 0 2px}.hd2{font-size:9.5px;text-align:center;font-style:italic;margin:0 0 8px}'+
+    'table{border-collapse:collapse;width:100%;font-size:10.5px}th,td{border:1px solid #777;padding:3.5px 5px;vertical-align:middle}'+
+    'thead{display:table-header-group}tr{break-inside:avoid}thead th{background:#1f3864;color:#fff;text-align:center}'+
+    '.dayrow td{background:#d9e1f2;font-weight:700;font-size:11.5px}.dayrow .meta{font-weight:400;font-style:italic;font-size:9.5px;text-align:right}'+
+    '.totrow td{background:#f2f2f2;font-weight:700}.grand td{background:#1f3864;color:#fff;font-weight:700;font-size:11.5px}'+
+    '.c{text-align:center}.r{text-align:right}.tick{width:58px}.muted{font-size:9px}'+
+    '.st-Completed{color:#006100;font-weight:700}.st-InProcess{color:#9c5700;font-weight:700}.st-REJECTED{color:#c00000;font-weight:700}'+
+    '.notes{font-size:9.5px;margin-top:8px;padding-left:16px}.notes li{margin-bottom:2px}p.notes{padding-left:0}.wide table{font-size:10px}.details table{font-size:9px}.details td{padding:2.5px 4px}';
+
+  function printDoc(which){
+    if(!cur||!cur.list.length) return; var m=cur;
+    var who=($("aat-name").value||"").trim(), op=operator?"Operator "+operator:"";
+    var line=[who,op].filter(Boolean).join(" · ");
+    function head(t){return '<h1>'+t+'</h1>'+(line?'<p class="hd">'+esc(line)+'</p>':'')+'<p class="hd2">Period: '+period(m)+' · '+m.list.length+' services · ₹'+inr(m.tot)+'</p>'}
+    var body='<div class="sheet">'+head("AP Seva Portal — Aadhaar Services Challan Entry Sheet")+portalHTML(m)+'</div>';
+    if(which==="all"){
+      body+='<div class="sheet wide">'+head("Aadhaar Services — Day-wise Summary")+summaryHTML(m)+'</div>';
+      body+='<div class="sheet wide details">'+head("Aadhaar UC Client — Enrolment Details")+detailsHTML(m,true)+'</div>'}
+    var fr=document.createElement("iframe");fr.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";document.body.appendChild(fr);
+    var d=fr.contentWindow.document;
+    d.open();d.write('<!doctype html><html><head><meta charset="utf-8"><title>Aadhaar Services Report '+period(m)+'</title><style>'+PRINT_CSS+'</style></head><body>'+body+'</body></html>');d.close();
+    setTimeout(function(){fr.contentWindow.focus();fr.contentWindow.print();setTimeout(function(){fr.remove()},60000)},250)}
+
+  function loadXLSX(cb){if(window.XLSX) return cb();var s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=cb;s.onerror=function(){var b=document.getElementById("aat-xlsx");b.textContent="Excel needs internet — try again";setTimeout(function(){b.textContent="Download Excel"},4000)};document.head.appendChild(s)}
+  function downloadXLSX(){
+    if(!cur||!cur.list.length) return; var m=cur;
+    loadXLSX(function(){var X=window.XLSX,wb=X.utils.book_new();
+      var a=[["AP Seva Portal — Aadhaar Services ("+period(m)+")"],[],["S.No","Service Raised Date","Day","Type of Service","No of Services Provided","Amount (Rs)","Updated"]],sn=0;
+      m.order.forEach(function(k){PORTAL.forEach(function(s){var g=agg(m.days[k],s);if(g.n)a.push([++sn,dmy(k),dayName(k),s,g.n,g.a,""])})});
+      a.push([],["","","","GRAND TOTAL",m.list.length,m.tot]);
+      var ws=X.utils.aoa_to_sheet(a);ws["!cols"]=[{wch:6},{wch:13},{wch:11},{wch:72},{wch:12},{wch:11},{wch:9}];X.utils.book_append_sheet(wb,ws,"Portal Update");
+      var hd=["Date","Day"];m.used.forEach(function(s){hd.push(SHORT[s]+" Nos",SHORT[s]+" Rs")});hd.push("Total Nos","Total Rs");
+      var b=[hd];m.order.forEach(function(k){var row=[dmy(k),dayName(k)],tn=0,ta=0;m.used.forEach(function(s){var g=agg(m.days[k],s);row.push(g.n,g.a);tn+=g.n;ta+=g.a});row.push(tn,ta);b.push(row)});
+      ws=X.utils.aoa_to_sheet(b);X.utils.book_append_sheet(wb,ws,"Day-wise Summary");
+      var c=[["S.No","Date","Time","Enrolment No","UC Type","Mandatory Bio","Status","Amount (Rs)","Portal Type of Service","Reject Reason","Source File"]];
+      m.list.forEach(function(r,i){c.push([i+1,dmy(r.date),r.time,r.en,r.type==="N"?"New Enrolment":"Update",r.mbu,r.status,r.amt,r.svc,r.reason,r.src])});
+      ws=X.utils.aoa_to_sheet(c);ws["!cols"]=[{wch:5},{wch:11},{wch:9},{wch:30},{wch:13},{wch:8},{wch:11},{wch:10},{wch:60},{wch:30},{wch:26}];X.utils.book_append_sheet(wb,ws,"Enrolment Details");
+      X.writeFile(wb,"Aadhaar_Services_Report_"+period(m).replace(/ /g,"_")+".xlsx")})}
+
+  var drop=$("aat-drop"),inp=$("aat-file");
+  drop.onclick=function(){inp.click()}; drop.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();inp.click()}};
+  inp.onchange=function(){handle(inp.files);inp.value=""};
+  drop.ondragover=function(e){e.preventDefault();drop.classList.add("over")}; drop.ondragleave=function(){drop.classList.remove("over")};
+  drop.ondrop=function(e){e.preventDefault();drop.classList.remove("over");handle(e.dataTransfer.files)};
+  ["aat-from","aat-to","aat-rej","aat-mbu"].forEach(function(id){$(id).onchange=render});
+  var nm=$("aat-name"); nm.value=store("aat-name")||""; nm.oninput=function(){store("aat-name",nm.value)};
+  [].forEach.call(root.querySelectorAll(".tab"),function(t){t.onclick=function(){
+    [].forEach.call(root.querySelectorAll(".tab"),function(x){x.classList.toggle("on",x===t)});
+    ["portal","summary","details"].forEach(function(n){$("aat-"+n).classList.toggle("hide",n!==t.dataset.tab)})}});
+  $("aat-print-all").onclick=function(){printDoc("all")}; $("aat-print-portal").onclick=function(){printDoc("portal")};
+  $("aat-xlsx").onclick=downloadXLSX;
+})();
+</script>
+</body></html>
