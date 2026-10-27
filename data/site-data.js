@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-dsc-exam-hall",
+      "date": "2026-10-27",
+      "type": "feature",
+      "title": "New: DSC EXAM HALL — bilingual mock tests",
+      "body": "A new DSC EXAM HALL section on the home page. First tool: 356 DSC-pattern questions in English and Telugu from the AP Class 8 Social Science Semester 1 textbook, with chapter-wise full exams, 10-question quick tests, a grand test, explained answers and A4 answer-sheet PDFs. You can also upload another textbook PDF to build a new question bank.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-eaadhaar-a4-print",
       "date": "2026-10-27",
       "type": "launch",
@@ -137,6 +145,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-dsc-exam-hall",
+      "slug": "dsc-exam-hall",
+      "name": "DSC Exam Hall",
+      "tagline": "Bilingual (English / తెలుగు) DSC-pattern mock tests, chapter by chapter, with scores and explained answers.",
+      "description": "356 questions from the AP Class 8 Social Science Semester 1 textbook: full chapter exams, 10-question quick tests and a grand test with timer, question palette and negative-marking option. Every answer is explained; download A4 answer-sheet PDFs. Upload other textbook PDFs to make new question banks. Free.",
+      "category": "DSC",
+      "badge": "Free tool",
+      "url": "tools/dsc-exam-hall.html",
+      "color": "#ec4899",
+      "visibility": "public",
+      "added": "2026-10-27"
+    },
     {
       "id": "t-aadhaar-dob",
       "slug": "aadhaar-dob-annexure",

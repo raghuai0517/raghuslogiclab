@@ -11,7 +11,7 @@ A simple static website (no server, no database) that you can host on any domain
 | `admin.html` | **Project Studio** — Create Project, Manage Projects, Daily Update, Settings & Publish |
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
-| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker) |
+| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker, DSC Exam Hall) |
 | `apps/` | Apps, one folder each (Sunshine Homes community app) |
 
 ## Try it now
@@ -33,6 +33,10 @@ To add a tool:
 2. Add an entry to `"tools"` in `data/site-data.js` (copy an existing one and change `id`, `slug`, `name`, `tagline`, `description`, `url`, `color`, `added`).
 3. Set `"visibility": "unlisted"` to hide a tool from the menu without deleting it.
 4. Optional `"badge"` sets the label on the tool's card (default: "Free to fill · ₹10 PDF"), e.g. `"badge": "Free tool"`.
+
+Tools with `"category": "DSC"` appear in their own pink **DSC EXAM HALL** section on the home page instead of under AADHAAR RELATED.
+
+**DSC Exam Hall** (`tools/dsc-exam-hall.html`) — bilingual (English / Telugu) DSC-pattern mock tests built from the AP Class 8 Social Science Semester 1 textbook (356 questions, built into the page). Chapter-wise full exams, 10-question quick tests, grand test, explained answers and A4 answer-sheet PDFs. Visitors can upload another textbook PDF to build an offline question bank; it is saved only in their browser. Results are also saved only in the visitor's browser.
 
 Tool pages download PDF/Word files straight from the browser. They need internet for the PDF/Word libraries (loaded from cdnjs/unpkg).
 

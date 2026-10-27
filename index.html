@@ -23,6 +23,7 @@
         <div class="btn-row" style="margin-top:24px">
           <a class="btn btn-primary" href="#projects">Explore projects</a>
           <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
+          <a class="btn btn-pink" href="#dsc">DSC Exam Hall</a>
           <a class="btn btn-teal" href="#apps">Apps</a>
           <a class="btn" href="#lab-log">Today in the lab</a>
         </div>
@@ -40,6 +41,20 @@
           </div>
         </div>
         <div id="tool-groups"></div>
+      </div>
+    </section>
+
+    <!-- DSC EXAM HALL (pink) -->
+    <section class="section dsc-section" id="dsc" style="padding-top:24px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-pink">// dsc exam prep</span>
+            <h2 class="dsc-group-title">DSC EXAM HALL</h2>
+            <p class="muted" style="margin:0">DSC-pattern mock tests in English and తెలుగు, chapter by chapter. Write the test, get your score, read every answer explained and download an A4 answer sheet. Free.</p>
+          </div>
+        </div>
+        <div class="grid" id="dsc-grid"></div>
       </div>
     </section>
 
@@ -200,7 +215,9 @@
     drawFilters(); drawGrid();
 
     /* Tools, grouped by category: "Aadhaar" -> "AADHAAR RELATED" (blue) */
-    var tools = RLL.publicTools(data), groups = [], byCat = {};
+    var allTools = RLL.publicTools(data), groups = [], byCat = {};
+    var isDsc = function (t) { return (t.category || "").toUpperCase() === "DSC"; };
+    var tools = allTools.filter(function (t) { return !isDsc(t); });
     tools.forEach(function (t) {
       var c = t.category || "Other";
       if (!byCat[c]) { byCat[c] = []; groups.push(c); }
@@ -218,6 +235,18 @@
             "</a>";
         }).join("") + "</div></div>";
     }).join("") : '<p class="muted">Tools are on the way.</p>';
+
+    /* DSC EXAM HALL (pink) */
+    var dsc = allTools.filter(isDsc);
+    document.getElementById("dsc-grid").innerHTML = dsc.length ? dsc.map(function (t) {
+      return '<a class="card tool-card pink" href="' + esc(t.url) + '">' +
+        '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-pink">' + esc(t.badge || "Free tool") + '</span></div>' +
+        '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
+        "<p>" + esc(t.tagline || "") + "</p>" +
+        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+        '<div class="meta"><span class="tag">DSC</span><span class="tool-open">Open tool &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">DSC tests are on the way.</p>';
 
     /* Apps */
     var apps = RLL.publicApps(data);
