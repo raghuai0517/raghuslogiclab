@@ -213,6 +213,7 @@ input.upper { text-transform: uppercase; }
 <script src="../assets/qrcode.js"></script>
 <script src="../assets/pay-config.js"></script>
 <script src="../assets/pay.js"></script>
+<script src="../assets/pay-auto.js"></script>
 <script>
 (function () {
 "use strict";
@@ -575,9 +576,15 @@ async function save(filename, data) {
 pdfBtn.addEventListener("click", async () => {
   if (!window.html2canvas || !window.jspdf) { setStatus("The PDF tools didn't load. Reload the page and try again.", true); return; }
   let paid = null;
-  try { paid = window.RLLPay ? await window.RLLPay.request({ item: ANNEX[state.annex].short ? "Annexure " + ANNEX[state.annex].short : "Aadhaar PDF" }) : null; } catch (e) { paid = null; }
+  try {
+    paid = window.RLLPay ? await window.RLLPay.request({
+      item: ANNEX[state.annex].short ? "Annexure " + ANNEX[state.annex].short : "Aadhaar PDF",
+      tool: "aadhaar-dob",
+      snapshot: { annex: state.annex, v: state.v, gap: state.gap, fs: state.fs }
+    }) : null;
+  } catch (e) { paid = null; }
   if (!paid) { setStatus(window.RLLPay ? "Payment not completed, so the PDF was not downloaded." : "The payment step didn't load. Reload the page and try again.", !window.RLLPay); return; }
-  pdfBtn.disabled = true; setStatus(paid.resumed ? "Using your earlier payment (" + paid.utr + "). Building PDF…" : "Payment ID accepted. Building PDF…");
+  pdfBtn.disabled = true; setStatus(paid.auto ? "Payment received. Building your PDF…" : paid.resumed ? "Using your earlier payment (" + paid.utr + "). Building PDF…" : "Payment ID accepted. Building PDF…");
   const off = document.getElementById("offscreen");
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -597,6 +604,22 @@ pdfBtn.addEventListener("click", async () => {
 
 /* ---------------- Start ---------------- */
 syncPicker(); buildForm(); render();
+
+/* Automatic payments: button label, and finish a paid download after the phone reloads the page */
+if (window.RLLPay && window.RLLPay.auto) pdfBtn.textContent = "Pay ₹" + (window.RLLPay.price || 10) + " & Download PDF" + (window.RLLPay.test ? " · TEST" : "");
+if (window.RLLPay && window.RLLPay.resume) window.RLLPay.resume().then(function (back) {
+  if (!back) return;
+  const s = back.snapshot;
+  if (s) {
+    if (s.annex && ANNEX[s.annex]) state.annex = s.annex;
+    if (s.v && typeof s.v === "object") state.v = s.v;
+    if (s.fs) { state.fs = s.fs; fsSel.value = String(s.fs); }
+    syncPicker(); buildForm();
+    if (s.gap) setGap(s.gap); else render();
+  }
+  setStatus("Payment received. Downloading your PDF…");
+  pdfBtn.click(); // request() re-uses the paid order, so no second payment
+});
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
 })();
 </script>
