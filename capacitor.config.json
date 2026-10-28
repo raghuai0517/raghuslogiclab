@@ -1,0 +1,7 @@
+{
+  "appId": "com.raghuslogiclab.dscexamhall",
+  "appName": "AP DSC Exam Hall",
+  "webDir": "www",
+  "android": { "backgroundColor": "#F5F6FA" },
+  "plugins": { "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#F5F6FA" } }
+}
