@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-ap-dsc-2026",
+      "date": "2026-10-28",
+      "type": "launch",
+      "title": "New in DSC EXAM HALL: AP DSC 2026 Exam Hall",
+      "body": "Post-wise mock exams for AP DSC 2026 (SGT, SA in every subject, Special Education, TGT, PGT, PET, Physical Director, Principal) and chapter, topic and quick tests from all AP textbooks for Classes 1–10, in English and Telugu, with notebook notes, glossaries and A4 PDFs. The earlier DSC Exam Hall tool stays as it is.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-dsc-exam-hall",
       "date": "2026-10-27",
       "type": "feature",
@@ -145,6 +153,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-ap-dsc-2026",
+      "slug": "ap-dsc-2026",
+      "name": "AP DSC 2026 Exam Hall",
+      "tagline": "Post-wise mock tests for AP DSC 2026 (SGT, SA, TGT, PGT, PET, Principal) and chapter tests from every AP textbook, Classes 1–10, in English and తెలుగు.",
+      "description": "Full CBT-pattern mock exams for every post as per the AP DSC 2026 TRT scheme, plus a clickable syllabus index of 83 AP textbooks and 972 chapters with quick, full and topic tests, notebook-style notes, Do You Know, Glossary and Exercises. GK, Perspectives, Psychology, Methodology, English, PE and Administration question banks. Explained answers and A4 PDFs. Free.",
+      "category": "DSC",
+      "badge": "New · 2026",
+      "url": "tools/ap-dsc-2026/index.html",
+      "color": "#ec4899",
+      "visibility": "public",
+      "added": "2026-10-28"
+    },
     {
       "id": "t-dsc-exam-hall",
       "slug": "dsc-exam-hall",
