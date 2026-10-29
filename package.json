@@ -2,13 +2,16 @@
   "name": "ap-dsc-exam-hall",
   "version": "1.0.0",
   "private": true,
-  "description": "AP DSC 2026 Exam Hall — Android app (Capacitor wrapper around the offline web app)",
+  "description": "AP DSC 2026 Exam Hall \u2014 Android app (Capacitor wrapper around the offline web app)",
   "dependencies": {
-    "@capacitor/android": "^6.2.0",
-    "@capacitor/app": "^6.0.2",
-    "@capacitor/cli": "^6.2.0",
-    "@capacitor/core": "^6.2.0",
-    "@capacitor/filesystem": "^6.0.3",
-    "@capacitor/share": "^6.0.3"
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/cli": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/share": "8.0.3"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

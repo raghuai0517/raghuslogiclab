@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DSC Exam Hall</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="AP DSC 2026 preparation: post-wise mock tests, chapter and topic tests from every AP textbook (Classes 1–10), Do You Know, Glossary, Exercises and notebook-style notes.">
@@ -543,6 +543,9 @@ const STR={
  settings:["Settings","సెట్టింగ్‌లు"],
  trialTag:["FREE TRIAL","ఉచిత ట్రయల్"],trialTxt:["{n} free chapters for your post, 10-question quick tests and a {m}-question mini mock.","మీ పోస్టుకు {n} ఉచిత అధ్యాయాలు, 10 ప్రశ్నల త్వరిత పరీక్షలు, {m} ప్రశ్నల మినీ మాక్."],
  freeCh:["Your 2 free chapters","మీ 2 ఉచిత అధ్యాయాలు"],freeChNote:["The first two chapters of the {p} syllabus. The syllabus index and all other chapters open in the full version.","{p} సిలబస్‌లో మొదటి రెండు అధ్యాయాలు. సిలబస్ సూచిక, మిగతా అధ్యాయాలు పూర్తి వెర్షన్‌లో తెరుచుకుంటాయి."],openCh:["Open","తెరవండి"],
+ notGov:["Independent study tool by RaghusLogicLab. Not affiliated with, or endorsed by, the Government of Andhra Pradesh or its School Education Department. Official information: cse.ap.gov.in and tet2dsc.apcfss.in.","ఇది RaghusLogicLab రూపొందించిన స్వతంత్ర అధ్యయన సాధనం. ఆంధ్రప్రదేశ్ ప్రభుత్వం లేదా పాఠశాల విద్యాశాఖతో దీనికి సంబంధం లేదు. అధికారిక సమాచారం: cse.ap.gov.in, tet2dsc.apcfss.in."],
+ freeApp:["FREE APP","ఉచిత యాప్"],freeChNoteS:["The first two chapters of the {p} syllabus, with notes and tests.","{p} సిలబస్‌లో మొదటి రెండు అధ్యాయాలు – నోట్స్, పరీక్షలతో."],
+ storeT:["Not in this free app","ఈ ఉచిత యాప్‌లో లేదు"],storeB:["This part is not included in this free app. The free app has the first 2 chapters of your post's syllabus, 10-question quick tests in every part and a 30-question mini mock.","ఈ భాగం ఈ ఉచిత యాప్‌లో లేదు. ఉచిత యాప్‌లో మీ పోస్టు సిలబస్‌లో మొదటి 2 అధ్యాయాలు, ప్రతి భాగంలో 10 ప్రశ్నల త్వరిత పరీక్షలు, 30 ప్రశ్నల మినీ మాక్ ఉన్నాయి."],ok:["OK","సరే"],
  getFull:["Get full access","పూర్తి యాక్సెస్ పొందండి"],getFullP:["Unlock all · ₹{p}","అన్నీ తెరవండి · ₹{p}"],unlockFull:["Full version","పూర్తి వెర్షన్"],
  unlockT:["Unlock the full Exam Hall","పూర్తి పరీక్షా హాలును తెరవండి"],unlockB:["This part is in the full version. Sign in with Google and pay once to use everything:","ఇది పూర్తి వెర్షన్‌లో ఉంది. Googleతో సైన్ ఇన్ చేసి ఒకసారి చెల్లిస్తే అన్నీ వాడుకోవచ్చు:"],
  unlockL1:["All {c} chapters of 83 AP textbooks with notes, tiles and tests","83 AP పాఠ్యపుస్తకాల్లోని మొత్తం {c} అధ్యాయాలు – నోట్స్, టైల్స్, పరీక్షలు"],unlockL2:["Full CBT mock exams for every post","ప్రతి పోస్టుకు పూర్తి CBT మాదిరి పరీక్షలు"],unlockL3:["All GK, pedagogy, psychology and methodology questions with PDFs","జీకే, బోధనాశాస్త్రం, మనోవిజ్ఞానం, పద్ధతుల ప్రశ్నలన్నీ PDFలతో"],
@@ -699,11 +702,11 @@ const TCFG=()=>Object.assign({maxCh:2,mini:30,full:"",api:"",price:null,days:nul
 function chOpen(chId){if(!TRIAL)return true;return trialChapters(curPost()).some(x=>x.ch.id===chId)}
 function lockBtn(label,cls){return `<button class="btn ${cls||""} lockb" data-lock>${ICON.lock}${esc(label||t("unlockFull"))}</button>`}
 function bindLocks(root){(root||document).querySelectorAll("[data-lock]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();unlockModal()})}
-function unlockModal(){const c=TCFG();trialPing("unlock");const nCh=CAT.books.reduce((s,b)=>s+b.parts.reduce((x,p)=>x+p.chapters.length,0),0);
+function unlockModal(){const c=TCFG();trialPing("unlock");if(c.store){modal(`<div class="unlock-box"><h2>${ICON.lock} ${esc(t("storeT"))}</h2><p class="muted">${esc(t("storeB"))}</p><div class="acts"><button class="btn primary" data-x>${esc(t("ok"))}</button></div></div>`,b=>{b.querySelector("[data-x]").onclick=closeModal});return}const nCh=CAT.books.reduce((s,b)=>s+b.parts.reduce((x,p)=>x+p.chapters.length,0),0);
   modal(`<div class="unlock-box"><h2>${ICON.lock} ${esc(t("unlockT"))}</h2>${c.price?`<div class="price">₹${esc(c.price)}</div><div class="muted">${c.days?esc(t("forDays",{d:c.days})):""}</div>`:""}
   <p class="muted">${esc(t("unlockB"))}</p><ul><li>${esc(t("unlockL1",{c:nCh}))}</li><li>${esc(t("unlockL2"))}</li><li>${esc(t("unlockL3"))}</li></ul>
   <div class="acts"><button class="btn" data-x>${esc(t("notNow"))}</button>${c.full?`<a class="btn primary" href="${esc(c.full)}">${esc(t("getFull"))}</a>`:""}</div></div>`,b=>{b.querySelector("[data-x]").onclick=closeModal})}
-function drawTrialBar(){const el=$("#trialBar");if(!el)return;if(!TRIAL){el.hidden=true;return}const c=TCFG();el.hidden=false;
+function drawTrialBar(){const el=$("#trialBar");if(!el)return;if(!TRIAL){el.hidden=true;return}const c=TCFG();el.hidden=false;if(c.store){el.innerHTML=`<div class="wrap"><span class="tb-tag">${esc(t("freeApp"))}</span><span class="tb-txt">${esc(t("trialTxt",{n:c.maxCh,m:c.mini}))}</span></div>`;return}
   el.innerHTML=`<div class="wrap"><span class="tb-tag">${esc(t("trialTag"))}</span><span class="tb-txt">${esc(t("trialTxt",{n:c.maxCh,m:c.mini}))}</span>${c.full?`<a href="${esc(c.full)}">${esc(c.price?t("getFullP",{p:c.price}):t("getFull"))}</a>`:""}</div>`}
 function trialPing(ev,extra){if(!TRIAL)return;const c=TCFG();if(!c.api)return;try{
   let vid=LS.get("vid",null);if(!vid||!/^[a-z0-9]{6,20}$/.test(vid)){vid=(Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)).replace(/[^a-z0-9]/g,"");LS.set("vid",vid)}
@@ -712,7 +715,7 @@ function trialPing(ev,extra){if(!TRIAL)return;const c=TCFG();if(!c.api)return;tr
   const src=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()?"app":"web";
   fetch(c.api.replace(/\/+$/,"")+"/dsc/trial",{method:"POST",mode:"no-cors",keepalive:true,body:JSON.stringify(Object.assign({vid,ev,post:(curPost().name||[settings.post])[0],src},extra||{}))}).catch(()=>{})}catch(e){}}
 if(TRIAL)setTimeout(()=>trialPing("open"),1500);
-if(TRIAL){const c=TCFG();if(c.api&&!c.price){fetch(c.api.replace(/\/+$/,"")+"/dsc/config").then(r=>r.json()).then(j=>{if(j&&j.ok){window.DSC_TRIAL_CFG=Object.assign(window.DSC_TRIAL_CFG||{},{price:j.price,days:j.days});drawTrialBar()}}).catch(()=>{})}}
+if(TRIAL){const c=TCFG();if(c.api&&!c.price&&!c.store){fetch(c.api.replace(/\/+$/,"")+"/dsc/config").then(r=>r.json()).then(j=>{if(j&&j.ok){window.DSC_TRIAL_CFG=Object.assign(window.DSC_TRIAL_CFG||{},{price:j.price,days:j.days});drawTrialBar()}}).catch(()=>{})}}
 const termLabel=x=>x==="S1"?t("sem1"):x==="S2"?t("sem2"):t("fy");
 const chTitleHTML=c=>c.te?biText(c.title,c.te):L_(c.title);
 function aiQs(chId){return LS.get("dsc.ai.q."+chId,[])}
@@ -789,9 +792,10 @@ function renderHome(){
         ${pp.parts.map(([k,n],j)=>`<tr><td class="wrapc">${["I","II","III","IV","V","VI"][j]}. ${esc(two(PARTS[k]))}${k==="content"?` <span class="muted">(${esc(post.content.codes.map(c=>two(SUBJ[c])).join(", ")||"—")})</span>`:""}</td><td class="num">${n}</td></tr>`).join("")}
         <tr class="tot"><td>${esc(t("total"))}</td><td class="num">${tots[i]}</td></tr></tbody></table></div>`).join("")}
       <div class="notice">${esc(t("pattNote"))}</div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">${esc(t("notGov"))}</p>
     </div>
   </section>
-  ${TRIAL?`<section class="panel free-ch"><h2>${esc(t("freeCh"))}</h2><p class="muted" style="margin:-4px 0 10px">${esc(t("freeChNote",{p:two(post.name)}))}</p>
+  ${TRIAL?`<section class="panel free-ch"><h2>${esc(t("freeCh"))}</h2><p class="muted" style="margin:-4px 0 10px">${esc(t(TCFG().store?"freeChNoteS":"freeChNote",{p:two(post.name)}))}</p>
     ${trialChapters(post).map(x=>`<div class="chrow"><span class="no">${esc(x.ch.n)}</span><div style="min-width:0"><button class="ttl" data-fopen="${x.ch.id}">${chTitleHTML(x.ch)}</button><div class="cnt">${esc(t("cls",{n:x.book.cls}))} · ${esc(x.book.title)} · ${esc(t("qn",{n:x.ch.nq}))}</div></div>
       <div class="tst"><button class="btn xs" data-fopen="${x.ch.id}">${esc(t("openCh"))}</button>${x.ch.nq?`<button class="btn xs primary" data-fquick="${x.ch.id}">${ICON.play}${esc(t("quick10"))}</button>`:""}</div></div>`).join("")}</section>`:""}
   <h2 style="margin-top:24px;font-size:18px">${esc(t("practise"))}</h2>
