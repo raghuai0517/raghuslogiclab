@@ -164,6 +164,7 @@ select,input[type=text],input[type=number],input[type=search],textarea{backgroun
 .hub-head h1{font-size:clamp(22px,3vw,30px);font-weight:800}
 .tests{display:grid;gap:8px;min-width:240px}
 .tests .btn{justify-content:flex-start}
+.free-ch{margin-top:20px;border:2px solid #FACC15}.free-ch h2{margin:0 0 6px;font-size:18px;color:#0284C7}
 .trial-bar{background:#0284C7;color:#FDE047;font-weight:700;font-size:14px}
 .trial-bar .wrap{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
 .trial-bar .tb-tag{background:#FDE047;color:#0C4A6E;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;letter-spacing:.04em}
@@ -552,7 +553,8 @@ const STR={
  brandTag:["AP DSC 2026 · every textbook, every chapter","ఏపీ డీఎస్సీ 2026 · ప్రతి పాఠ్యపుస్తకం, ప్రతి అధ్యాయం"],
  navHome:["Mock tests","మాదిరి పరీక్షలు"],navIndex:["Syllabus index","సిలబస్ సూచిక"],navBanks:["GK · Pedagogy","జీకే · బోధనాశాస్త్రం"],navHist:["My results","నా ఫలితాలు"],navUp:["Upload PDF","PDF అప్‌లోడ్"],
  settings:["Settings","సెట్టింగ్‌లు"],
- trialTag:["FREE TRIAL","ఉచిత ట్రయల్"],trialTxt:["First {n} chapters of every book, 10-question quick tests and a {m}-question mini mock.","ప్రతి పుస్తకంలో మొదటి {n} అధ్యాయాలు, 10 ప్రశ్నల త్వరిత పరీక్షలు, {m} ప్రశ్నల మినీ మాక్."],
+ trialTag:["FREE TRIAL","ఉచిత ట్రయల్"],trialTxt:["{n} free chapters for your post, 10-question quick tests and a {m}-question mini mock.","మీ పోస్టుకు {n} ఉచిత అధ్యాయాలు, 10 ప్రశ్నల త్వరిత పరీక్షలు, {m} ప్రశ్నల మినీ మాక్."],
+ freeCh:["Your 2 free chapters","మీ 2 ఉచిత అధ్యాయాలు"],freeChNote:["The first two chapters of the {p} syllabus. The syllabus index and all other chapters open in the full version.","{p} సిలబస్‌లో మొదటి రెండు అధ్యాయాలు. సిలబస్ సూచిక, మిగతా అధ్యాయాలు పూర్తి వెర్షన్‌లో తెరుచుకుంటాయి."],openCh:["Open","తెరవండి"],
  getFull:["Get full access","పూర్తి యాక్సెస్ పొందండి"],getFullP:["Unlock all · ₹{p}","అన్నీ తెరవండి · ₹{p}"],unlockFull:["Full version","పూర్తి వెర్షన్"],
  unlockT:["Unlock the full Exam Hall","పూర్తి పరీక్షా హాలును తెరవండి"],unlockB:["This part is in the full version. Sign in with Google and pay once to use everything:","ఇది పూర్తి వెర్షన్‌లో ఉంది. Googleతో సైన్ ఇన్ చేసి ఒకసారి చెల్లిస్తే అన్నీ వాడుకోవచ్చు:"],
  unlockL1:["All {c} chapters of 83 AP textbooks with notes, tiles and tests","83 AP పాఠ్యపుస్తకాల్లోని మొత్తం {c} అధ్యాయాలు – నోట్స్, టైల్స్, పరీక్షలు"],unlockL2:["Full CBT mock exams for every post","ప్రతి పోస్టుకు పూర్తి CBT మాదిరి పరీక్షలు"],unlockL3:["All GK, pedagogy, psychology and methodology questions with PDFs","జీకే, బోధనాశాస్త్రం, మనోవిజ్ఞానం, పద్ధతుల ప్రశ్నలన్నీ PDFలతో"],
@@ -700,7 +702,7 @@ async function loadBook(id){
 function findCh(b,chId){for(const p of b.parts)for(const c of p.chapters)if(c.id===chId)return{part:p,ch:c};return null}
 function catCh(chId){const bid=chId.split("-")[0];const b=bookMeta(bid);if(!b)return null;for(const p of b.parts)for(const c of p.chapters)if(c.id===chId)return{book:b,part:p,ch:c};return null}
 const TCFG=()=>Object.assign({maxCh:2,mini:30,full:"",api:"",price:null,days:null},TRIAL||{},window.DSC_TRIAL_CFG||{});
-function chOpen(chId){if(!TRIAL)return true;const m=catCh(chId);if(!m)return false;return m.part.chapters.findIndex(c=>c.id===chId)<TCFG().maxCh}
+function chOpen(chId){if(!TRIAL)return true;return trialChapters(curPost()).some(x=>x.ch.id===chId)}
 function lockBtn(label,cls){return `<button class="btn ${cls||""} lockb" data-lock>${ICON.lock}${esc(label||t("unlockFull"))}</button>`}
 function bindLocks(root){(root||document).querySelectorAll("[data-lock]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();unlockModal()})}
 function unlockModal(){const c=TCFG();trialPing("unlock");const nCh=CAT.books.reduce((s,b)=>s+b.parts.reduce((x,p)=>x+p.chapters.length,0),0);
@@ -731,7 +733,7 @@ function wrapQ(q,chId,chTitle,chTitleTe,chNo){
 
 /* ========== app state & routing ========== */
 const state={view:"home",exam:null,result:null,filter:"all",upload:null,ch:null,sub:0,tile:null,idx:{cls:"all",subj:"all",q:"",only:true}};
-function go(view,opts){if(state.view==="exam"&&view!=="exam"&&state.exam){return}state.view=view;Object.assign(state,opts||{});stopTimer();render();window.scrollTo({top:0})}
+function go(view,opts){if(state.view==="exam"&&view!=="exam"&&state.exam){return}if(TRIAL&&view==="index")view="home";state.view=view;Object.assign(state,opts||{});stopTimer();render();window.scrollTo({top:0})}
 function render(){applyChrome();({home:renderHome,index:renderIndex,chapter:renderChapter,banks:renderBanks,exam:renderExam,result:renderResult,upload:renderUpload,history:renderHistory}[state.view]||renderHome)()}
 function applyChrome(){
   document.documentElement.lang=UI()==="en"?"en":"te";
@@ -739,7 +741,7 @@ function applyChrome(){
   $("#brandName").textContent=t("brandName");$("#brandTag").textContent=t("brandTag");
   [["navHome","home"],["navIndex","index"],["navBanks","banks"],["navHist","history"],["navUp","upload"]].forEach(([id,v])=>{const b=$("#"+id);b.textContent=t(id);b.classList.toggle("on",state.view===v||(v==="index"&&state.view==="chapter"))});
   $("#btnSettings").textContent=t("settings");
-  if(TRIAL)$("#navUp").hidden=true;
+  if(TRIAL){$("#navUp").hidden=true;$("#navIndex").innerHTML=`<span class="lock-ic">${ICON.lock}</span>${esc(t("navIndex"))}`}
   drawTrialBar();
   $("#langSw").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.l===LANG()));
 }
@@ -747,15 +749,18 @@ $("#langSw").querySelectorAll("button").forEach(b=>b.onclick=()=>{settings.lang=
   if(state.view==="exam"){drawQ();drawPalette();$("#examTitle").innerHTML=examTitleHTML(state.exam);const sb=$("#submit");sb&&(sb.textContent=t("submitExam"))}else render()});
 function leaveExamThen(fn){if(state.view==="exam"){confirmBox(t("leaveQ"),esc(t("leaveB")),t("leave"),()=>{state.exam=null;state.view="home";fn()},true)}else fn()}
 $("#goHome").onclick=()=>leaveExamThen(()=>go("home"));
-$("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>leaveExamThen(()=>go(b.dataset.v)));
+$("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>leaveExamThen(()=>TRIAL&&b.dataset.v==="index"?unlockModal():go(b.dataset.v)));
 $("#btnSettings").onclick=openSettings;
 
 /* ========== HOME: post, pattern, mock test ========== */
 function postTotals(post){return post.papers.map(pp=>pp.parts.reduce((s,[,n])=>s+n,0))}
-function contentChapters(post){const out=[];if(!post.content.codes.length)return out;
+function allContentChapters(post){const out=[];if(!post.content.codes.length)return out;
   for(const b of CAT.books){if(b.cls<post.content.cls[0]||b.cls>post.content.cls[1])continue;
-    for(const p of b.parts){if(!post.content.codes.includes(p.code))continue;p.chapters.forEach((c,ci)=>{if(!TRIAL||ci<TCFG().maxCh)out.push({book:b,part:p,ch:c})})}}
+    for(const p of b.parts){if(!post.content.codes.includes(p.code))continue;for(const c of p.chapters)out.push({book:b,part:p,ch:c})}}
   return out}
+/* free trial: only the first two chapters of the chosen post's syllabus (a post without book content gets the first two Class 1 chapters) */
+function trialChapters(post){let cc=allContentChapters(post);if(!cc.length){cc=[];for(const b of CAT.books)for(const p of b.parts)for(const c of p.chapters)cc.push({book:b,part:p,ch:c})}return cc.slice(0,TCFG().maxCh)}
+function contentChapters(post){return TRIAL?trialChapters(post).filter(x=>post.content.codes.includes(x.part.code)):allContentChapters(post)}
 function partAvail(part,post){if(part==="content"&&post.contentBank)return bankQs(post.contentBank).length;if(part==="content")return contentChapters(post).reduce((s,x)=>s+x.ch.nq,0)+(post.extra?bankQs(post.extra).length:0);const n=bankQs(bankFor(part,post)).length;return part==="meth"&&n&&bankFor(part,post)!=="meth-sgt"?n+bankQs("meth-sgt").length:n}
 function renderHome(){
   const post=curPost();const tots=postTotals(post);
@@ -781,7 +786,7 @@ function renderHome(){
       <div class="chips" style="margin-top:12px"><span class="chip"><b>${esc(t("cbt"))}</b></span><span class="chip">${esc(t("merit"))}</span></div>
       <div class="row" style="margin-top:14px">
         ${TRIAL?`<button class="btn primary" id="miniMock">${ICON.play}${esc(t("miniMock",{n:TCFG().mini}))}</button>${lockBtn(t("fullMock"))}`:post.papers.map((pp,i)=>`<button class="btn primary" data-mock="${i}">${ICON.play}${esc(t("startMock"))}${post.papers.length>1?" · "+esc(two(pp.name)):""}</button>`).join("")}
-        <button class="btn hl-blue" id="toIndex">${ICON.list}${esc(t("openIndex"))}</button>
+        <button class="btn hl-blue" id="toIndex">${TRIAL?ICON.lock:ICON.list}${esc(t("openIndex"))}</button>
       </div>
     </div>
     <div class="patt">
@@ -792,6 +797,9 @@ function renderHome(){
       <div class="notice">${esc(t("pattNote"))}</div>
     </div>
   </section>
+  ${TRIAL?`<section class="panel free-ch"><h2>${esc(t("freeCh"))}</h2><p class="muted" style="margin:-4px 0 10px">${esc(t("freeChNote",{p:two(post.name)}))}</p>
+    ${trialChapters(post).map(x=>`<div class="chrow"><span class="no">${esc(x.ch.n)}</span><div style="min-width:0"><button class="ttl" data-fopen="${x.ch.id}">${chTitleHTML(x.ch)}</button><div class="cnt">${esc(t("cls",{n:x.book.cls}))} · ${esc(x.book.title)} · ${esc(t("qn",{n:x.ch.nq}))}</div></div>
+      <div class="tst"><button class="btn xs" data-fopen="${x.ch.id}">${esc(t("openCh"))}</button>${x.ch.nq?`<button class="btn xs primary" data-fquick="${x.ch.id}">${ICON.play}${esc(t("quick10"))}</button>`:""}</div></div>`).join("")}</section>`:""}
   <h2 style="margin-top:24px;font-size:18px">${esc(t("practise"))}</h2>
   <div class="sec-grid">
     ${post.papers.flatMap((pp,pi)=>pp.parts.map(([k,n],j)=>{const av=partAvail(k,post);return `
@@ -799,7 +807,7 @@ function renderHome(){
         <span class="k">${post.papers.length>1?esc(two(pp.name))+" · ":""}${esc(t("part"))} ${["I","II","III","IV","V","VI"][j]} · ${n} Q</span>
         <h3>${esc(two(PARTS[k]))}</h3>
         <p>${av?esc(k==="content"?`${cc.length} ${t("chapters")} · ${t("inBank",{n:av})}`:t("inBank",{n:av})):esc(t("notReady"))}</p>
-        <div class="acts">${av?`<button class="btn sm primary" data-part="${k}" data-n="10">${ICON.bolt}${esc(t("quick10"))}</button>${TRIAL?lockBtn(n+" Q","sm"):`<button class="btn sm" data-part="${k}" data-n="${n}">${ICON.play}${n} Q</button>`}`:""}${k==="content"?`<button class="btn sm hl-blue" id="toIndex2">${esc(t("openIndex"))}</button>`:""}</div>
+        <div class="acts">${av?`<button class="btn sm primary" data-part="${k}" data-n="10">${ICON.bolt}${esc(t("quick10"))}</button>${TRIAL?lockBtn(n+" Q","sm"):`<button class="btn sm" data-part="${k}" data-n="${n}">${ICON.play}${n} Q</button>`}`:""}${k==="content"?`<button class="btn sm hl-blue" id="toIndex2">${TRIAL?ICON.lock:""}${esc(t("openIndex"))}</button>`:""}</div>
       </article>`})).join("")}
   </div>
   <div class="side-grid">
@@ -810,8 +818,10 @@ function renderHome(){
   $("#postSel").onchange=e=>{settings.post=e.target.value;saveSettings();renderHome()};
   $("#app").querySelectorAll("[data-mock]").forEach(b=>b.onclick=()=>startMock(post,+b.dataset.mock));
   $("#app").querySelectorAll("[data-part]").forEach(b=>b.onclick=()=>startPart(post,b.dataset.part,+b.dataset.n));
-  $("#toIndex").onclick=()=>go("index",{idx:{...state.idx,only:true}});
-  const ti=$("#toIndex2");ti&&(ti.onclick=()=>go("index",{idx:{...state.idx,only:true}}));
+  $("#toIndex").onclick=()=>TRIAL?unlockModal():go("index",{idx:{...state.idx,only:true}});
+  const ti=$("#toIndex2");ti&&(ti.onclick=()=>TRIAL?unlockModal():go("index",{idx:{...state.idx,only:true}}));
+  $("#app").querySelectorAll("[data-fopen]").forEach(b=>b.onclick=()=>openChapter(b.dataset.fopen,0));
+  $("#app").querySelectorAll("[data-fquick]").forEach(b=>b.onclick=()=>startChapterTest(b.dataset.fquick,"quick"));
   renderRecent($("#recent"),6);
 }
 function coverageTable(){
@@ -863,7 +873,7 @@ async function startPart(post,part,n){
 
 /* ========== SYLLABUS INDEX ========== */
 function bestFor(key){let best=null;for(const a of attempts){if(a.key===key){if(best==null||a.pct>best)best=a.pct}}return best}
-function renderIndex(){
+function renderIndex(){if(TRIAL){state.view="home";renderHome();return unlockModal()}
   const post=curPost();const f=state.idx;
   const codes=[...new Set(CAT.books.flatMap(b=>b.parts.map(p=>p.code)))];
   const q=f.q.trim().toLowerCase();
@@ -922,7 +932,7 @@ function renderIndex(){
 function openChapter(chId,sub){go("chapter",{ch:chId,sub:sub||0,tile:null})}
 async function renderChapter(){
   const meta=catCh(state.ch);if(!meta)return go("index");
-  if(!chOpen(state.ch)){state.view="index";render();return unlockModal()}
+  if(!chOpen(state.ch)){state.view=TRIAL?"home":"index";render();return unlockModal()}
   const {book,part,ch}=meta;
   $("#app").innerHTML=`<div class="empty"><span class="spin"></span> ${esc(t("loading"))}</div>`;
   let b;try{b=await loadBook(book.id)}catch(e){$("#app").innerHTML=`<div class="panel"><p>${esc(t("loadFail"))}</p><button class="btn" id="bk">${esc(t("back"))}</button></div>`;$("#bk").onclick=()=>go("index");return}
@@ -965,7 +975,7 @@ async function renderChapter(){
       <details class="panel reader"><summary>${esc(t("readText"))} · ${esc(t("pages",{a:c.subs[sub].s,b:c.subs[sub].e}))}</summary><div id="pgtext"></div></details>
     </section>
   </div>`;
-  $("#cIdx").onclick=()=>go("index");
+  $("#cIdx").onclick=()=>go(TRIAL?"home":"index");
   $("#tQuick").onclick=()=>startChapterTest(c.id,"quick");
   $("#tFull").onclick=()=>startChapterTest(c.id,"full");
   $("#tTopic").onclick=()=>startChapterTest(c.id,"topic",sub);
