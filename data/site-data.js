@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-auto-pdf-payment",
+      "date": "2026-10-29",
+      "type": "feature",
+      "title": "Pay ₹10 and the PDF downloads by itself",
+      "body": "The Aadhaar affidavit tools now take payment through Razorpay: pay with PhonePe, Google Pay, any UPI app, card or net banking, and the PDF downloads automatically once the payment is confirmed. No transaction ID to copy or type. Each payment gives one PDF.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-ap-dsc-2026",
       "date": "2026-10-28",
       "type": "launch",
