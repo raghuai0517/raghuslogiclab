@@ -99,9 +99,13 @@ select,input[type=text],input[type=number],input[type=search],textarea{backgroun
 .booklet{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px 28px}
 .booklet h1{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.015em}
 .booklet .pub{margin-top:6px;color:var(--muted);font-size:14px}
-.post-pick{display:grid;gap:6px;margin-top:14px}
-.post-pick label{font-size:13px;color:var(--muted)}
-.post-pick select{font-weight:600;font-size:15px;max-width:100%}
+.post-pick{display:grid;gap:10px;margin-top:16px;background:#1D4ED8;border:2px solid #FACC15;border-radius:12px;padding:14px 16px;box-shadow:0 4px 14px rgba(29,78,216,.28)}
+.post-pick label{font-size:20px;font-weight:800;line-height:1.3;color:#FDE047;letter-spacing:.01em}
+.post-pick select{font-weight:700;font-size:18px;max-width:100%;background:#1E3A8A;color:#FDE047;border:2px solid #FACC15;border-radius:8px;padding:10px 12px;min-height:46px}
+.post-pick select option,.post-pick select optgroup{background:#fff;color:#111827}
+.btn.hl-blue{background:#1D4ED8;color:#FDE047;border:2px solid #FACC15;font-size:17px;font-weight:800;padding:10px 18px;min-height:46px}
+.btn.hl-blue:hover{background:#1E40AF;color:#FEF08A}
+.btn.hl-blue svg{stroke:#FDE047}
 .patt{border-left:1px dashed var(--line-strong);padding-left:24px;min-width:0}
 .patt table{margin-top:6px}
 .patt .tot td{font-weight:700;border-top:1.5px solid var(--ink)}
@@ -735,7 +739,7 @@ function renderHome(){
       <div class="chips" style="margin-top:12px"><span class="chip"><b>${esc(t("cbt"))}</b></span><span class="chip">${esc(t("merit"))}</span></div>
       <div class="row" style="margin-top:14px">
         ${post.papers.map((pp,i)=>`<button class="btn primary" data-mock="${i}">${ICON.play}${esc(t("startMock"))}${post.papers.length>1?" · "+esc(two(pp.name)):""}</button>`).join("")}
-        <button class="btn" id="toIndex">${ICON.list}${esc(t("openIndex"))}</button>
+        <button class="btn hl-blue" id="toIndex">${ICON.list}${esc(t("openIndex"))}</button>
       </div>
     </div>
     <div class="patt">
@@ -753,7 +757,7 @@ function renderHome(){
         <span class="k">${post.papers.length>1?esc(two(pp.name))+" · ":""}${esc(t("part"))} ${["I","II","III","IV","V","VI"][j]} · ${n} Q</span>
         <h3>${esc(two(PARTS[k]))}</h3>
         <p>${av?esc(k==="content"?`${cc.length} ${t("chapters")} · ${t("inBank",{n:av})}`:t("inBank",{n:av})):esc(t("notReady"))}</p>
-        <div class="acts">${av?`<button class="btn sm primary" data-part="${k}" data-n="10">${ICON.bolt}${esc(t("quick10"))}</button><button class="btn sm" data-part="${k}" data-n="${n}">${ICON.play}${n} Q</button>`:""}${k==="content"?`<button class="btn sm ghost" id="toIndex2">${esc(t("openIndex"))}</button>`:""}</div>
+        <div class="acts">${av?`<button class="btn sm primary" data-part="${k}" data-n="10">${ICON.bolt}${esc(t("quick10"))}</button><button class="btn sm" data-part="${k}" data-n="${n}">${ICON.play}${n} Q</button>`:""}${k==="content"?`<button class="btn sm hl-blue" id="toIndex2">${esc(t("openIndex"))}</button>`:""}</div>
       </article>`})).join("")}
   </div>
   <div class="side-grid">
