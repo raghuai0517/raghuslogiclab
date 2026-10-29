@@ -56,6 +56,14 @@ window.RLL_DATA = {
       "project": "raghuslogiclab-main"
     },
     {
+      "id": "u-ap-dsc-2026-trial",
+      "date": "2026-10-29",
+      "type": "feature",
+      "title": "AP DSC 2026 Exam Hall: free trial and full access",
+      "body": "Try the AP DSC 2026 Exam Hall free with the new Free Trial tile: no login needed. For the full Exam Hall (every chapter of all 83 AP textbooks, full CBT mocks for every post, all question banks), create an account with your Gmail and pay once through Razorpay (UPI, cards, netbanking).",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-ap-dsc-2026",
       "date": "2026-10-28",
       "type": "launch",
@@ -162,13 +170,26 @@ window.RLL_DATA = {
   ],
   "tools": [
     {
+      "id": "t-ap-dsc-2026-trial",
+      "slug": "ap-dsc-2026-trial",
+      "name": "AP DSC 2026 Exam Hall — Free Trial",
+      "tagline": "Try it free, no login: first 2 chapters of every AP textbook with notes and tests, 10-question quick tests in every part and a 30-question mini mock. English and తెలుగు.",
+      "description": "The free trial of the AP DSC 2026 Exam Hall. Open the first two chapters of every AP textbook (Classes 1–10) with notebook notes, Do You Know, Glossary, Exercises and chapter tests; take 10-question quick tests in GK, Perspectives, Psychology, Methodology and Content; and sit a 30-question mini mock for your post. Unlock the full Exam Hall any time.",
+      "category": "DSC",
+      "badge": "Free trial",
+      "url": "tools/ap-dsc-2026-trial/index.html",
+      "color": "#0284c7",
+      "visibility": "public",
+      "added": "2026-10-29"
+    },
+    {
       "id": "t-ap-dsc-2026",
       "slug": "ap-dsc-2026",
       "name": "AP DSC 2026 Exam Hall",
-      "tagline": "Post-wise mock tests for AP DSC 2026 (SGT, SA, TGT, PGT, PET, Principal) and chapter tests from every AP textbook, Classes 1–10, in English and తెలుగు.",
-      "description": "Full CBT-pattern mock exams for every post as per the AP DSC 2026 TRT scheme, plus a clickable syllabus index of 83 AP textbooks and 972 chapters with quick, full and topic tests, notebook-style notes, Do You Know, Glossary and Exercises. GK, Perspectives, Psychology, Methodology, English, PE and Administration question banks. Explained answers and A4 PDFs. Free.",
+      "tagline": "Full access: post-wise CBT mock tests for AP DSC 2026 (SGT, SA, TGT, PGT, PET, PD, Principal) and chapter tests from every AP textbook, Classes 1–10, in English and తెలుగు. Sign in with Google.",
+      "description": "Full CBT-pattern mock exams for every post as per the AP DSC 2026 TRT scheme, plus a clickable syllabus index of 83 AP textbooks and 972 chapters with quick, full and topic tests, notebook-style notes, Do You Know, Glossary and Exercises. GK, Perspectives, Psychology, Methodology, English, PE and Administration question banks. Explained answers and A4 PDFs. Sign in with Google and pay once through Razorpay for full access.",
       "category": "DSC",
-      "badge": "New · 2026",
+      "badge": "Sign in · Full access",
       "url": "tools/ap-dsc-2026/index.html",
       "color": "#ec4899",
       "visibility": "public",
