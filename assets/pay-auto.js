@@ -8,7 +8,7 @@
     - "Pay ₹10 & Download PDF" opens Razorpay's checkout (PhonePe / Google Pay / any UPI app, QR on a computer).
     - The worker confirms the payment with Razorpay, then the PDF downloads by itself. No ID to type.
     - If the customer's phone reloads the page after the UPI app, resume() finishes the download.
-    - If the worker can't be reached, it falls back to the manual payment box in pay.js.
+    - If the worker can't be reached, it shows "payments unavailable, try again" (no manual ID box).
 
   Interface used by the tool pages (same as pay.js, plus resume):
     const paid = await RLLPay.request({ item, tool, snapshot });   // null if not paid
@@ -78,12 +78,15 @@
     })();
   }
 
-  function useManual(opts) {
-    return manual ? manual.request(opts) : Promise.resolve(null);
+  var lastError = "";
+  function unavailable() {
+    lastError = "unavailable"; window.RLLPay.lastError = lastError;
+    return null;
   }
 
   function request(opts) {
     opts = opts || {};
+    lastError = ""; window.RLLPay.lastError = "";
     var p = pending();
     if (p && p.paid) return Promise.resolve({ orderId: p.orderId, utr: p.paymentId || p.orderId, method: "razorpay", auto: true, resumed: true });
 
@@ -91,7 +94,7 @@
     return post("/order", { tool: opts.tool || location.pathname.split("/").pop(), item: opts.item || "PDF" })
       .then(function (o) { if (!o || !o.ok) throw new Error((o && o.error) || "order_failed"); order = o; return loadCheckout(); })
       .then(function () { return openCheckout(order, opts); },
-            function () { return useManual(opts); }); // worker or Razorpay script unreachable: manual box
+            function () { return unavailable(); }); // worker or Razorpay script unreachable
   }
 
   function openCheckout(o, opts) {

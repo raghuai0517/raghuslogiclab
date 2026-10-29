@@ -18,7 +18,7 @@
                 ?paytest=1 at the end of a tool's address use it; customers never see it.
 */
 window.RLL_PAY_CONFIG = {
-  upiId: "9491157078hdfc@ybl",
+  upiId: "",
   payeeName: "RaghusLogicLab",
   amount: 10,
   razorpayUrl: "https://rzp.io/rzp/raghuslogiclab-pdf",

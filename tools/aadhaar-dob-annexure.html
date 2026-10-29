@@ -194,6 +194,7 @@ input.upper { text-transform: uppercase; }
         <button type="button" class="btn" id="pdfBtn">Download PDF · ₹10</button>
         <span class="status" id="status" role="status"></span>
       </div>
+      <p class="tip">Paid but no PDF? Open this page again in the same browser within 2 hours and it finishes the download, or <a href="../contact.html">contact us</a> with your Razorpay payment ID (starts with pay_).</p>
       <p class="tip">To print on bond paper: open the PDF, choose paper size <b>A4</b> and scale <b>Actual size / 100%</b> (turn off “Fit to page”). Test on plain paper first and hold it against the stamp paper.</p>
       <div class="overflow" id="overflow" hidden>The text runs past the bottom of the page. Reduce the stamp space or choose a smaller text size.</div>
       <div class="stage" id="stage">
@@ -583,7 +584,11 @@ pdfBtn.addEventListener("click", async () => {
       snapshot: { annex: state.annex, v: state.v, gap: state.gap, fs: state.fs }
     }) : null;
   } catch (e) { paid = null; }
-  if (!paid) { setStatus(window.RLLPay ? "Payment not completed, so the PDF was not downloaded." : "The payment step didn't load. Reload the page and try again.", !window.RLLPay); return; }
+  if (!paid) {
+    if (window.RLLPay && window.RLLPay.lastError === "unavailable") setStatus("Payments are unavailable for a moment. Please try again in a few minutes.", true);
+    else setStatus(window.RLLPay ? "Payment not completed, so the PDF was not downloaded." : "The payment step didn't load. Reload the page and try again.", !window.RLLPay);
+    return;
+  }
   pdfBtn.disabled = true; setStatus(paid.auto ? "Payment received. Building your PDF…" : paid.resumed ? "Using your earlier payment (" + paid.utr + "). Building PDF…" : "Payment ID accepted. Building PDF…");
   const off = document.getElementById("offscreen");
   try {
