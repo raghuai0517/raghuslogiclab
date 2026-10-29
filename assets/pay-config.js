@@ -24,5 +24,5 @@ window.RLL_PAY_CONFIG = {
   razorpayUrl: "https://rzp.io/rzp/raghuslogiclab-pdf",
   usedIdsUrl: "",
   apiUrl: "",
-  testApiUrl: ""
+  testApiUrl: "https://rll-pay.raghusreenivas-pudeti.workers.dev"
 };
