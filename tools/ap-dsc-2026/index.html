@@ -56,6 +56,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height
 @media (max-width:860px){.g-wrap{grid-template-columns:1fr;grid-template-areas:"top" "card" "more";row-gap:16px}.g-top{padding-top:6px}.g-card{margin-top:0}.g-more{padding-top:6px}.g-top .te{margin-bottom:0}.g-facts div{min-width:0;flex:1 1 40%}}
 @media (max-width:420px){.g-pad{padding:16px}.g-top h1{margin-top:6px}}
 </style>
+<script defer src="../../assets/track.js?v=1"></script>
 </head>
 <body>
 <nav class="rll-bar" aria-label="Site"><a href="../../index.html" class="rll-home"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../../index.html#dsc">DSC Exam Hall</a><span aria-hidden="true">/</span><span>AP DSC 2026</span></nav>
@@ -91,7 +92,9 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height
   DSCAcc.startGate(document.getElementById("gate"), function (key) {
     return DSCAcc.loadText("app" + DSCAcc.ext, key).then(function (html) {
       html = html.replace("<head>", "<head><script>window.DSC_KEY=" + JSON.stringify(key) + "<\/script>");
+      if (window.RLLT) RLLT.ev("open", "Full tool unlocked");
       document.open(); document.write(html); document.close();
+      if (window.RLLT) RLLT.rebind();
     });
   });
 })();

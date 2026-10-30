@@ -97,7 +97,8 @@ details.adj[open] summary { margin-bottom: 10px; }
 .copy a { color: var(--accent); }
 @media (max-width: 600px) { header.top h1 { font-size: 1.3rem; } .panel { padding: 14px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-</style></head><body>
+</style><meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>
+</head><body>
 
 <div class="wrap" id="eap-app">
   <nav class="rll-bar" aria-label="Site"><a href="../index.html" class="rll-home"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#tools">Tools</a></nav>
@@ -437,7 +438,7 @@ details.adj[open] summary { margin-bottom: 10px; }
     var d=fr.contentWindow.document;
     d.open();d.write('<!doctype html><html><head><title>'+esc(st.name)+' A4</title><style>@page{size:A4 portrait;margin:0}html,body{margin:0;padding:0}img{display:block;width:210mm;height:297mm}</style></head><body><img src="'+url+'"></body></html>');d.close();
     var img=d.querySelector("img");
-    function go(){fr.contentWindow.focus();fr.contentWindow.print();setTimeout(function(){fr.remove();URL.revokeObjectURL(url)},60000)}
+    function go(){if(window.RLLT)RLLT.ev('print','e-Aadhaar A4 print');fr.contentWindow.focus();fr.contentWindow.print();setTimeout(function(){fr.remove();URL.revokeObjectURL(url)},60000)}
     if(img.complete)setTimeout(go,150);else img.onload=function(){setTimeout(go,150)}};
 
   /* ---------- wiring ---------- */

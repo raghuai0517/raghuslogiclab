@@ -102,7 +102,8 @@ ul.notes { padding-left: 18px; } .notes li { margin-bottom: 3px; }
 .copy a { color: var(--accent); }
 @media (max-width: 600px) { header.top h1 { font-size: 1.3rem; } .panel { padding: 14px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-</style></head><body>
+</style><meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>
+</head><body>
 
 <div class="wrap" id="aat-app">
   <nav class="rll-bar" aria-label="Site"><a href="../index.html" class="rll-home"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#tools">Tools</a></nav>
@@ -337,7 +338,7 @@ ul.notes { padding-left: 18px; } .notes li { margin-bottom: 3px; }
     var fr=document.createElement("iframe");fr.style.cssText="position:fixed;right:0;bottom:0;width:0;height:0;border:0";document.body.appendChild(fr);
     var d=fr.contentWindow.document;
     d.open();d.write('<!doctype html><html><head><meta charset="utf-8"><title>Aadhaar Services Report '+period(m)+'</title><style>'+PRINT_CSS+'</style></head><body>'+body+'</body></html>');d.close();
-    setTimeout(function(){fr.contentWindow.focus();fr.contentWindow.print();setTimeout(function(){fr.remove()},60000)},250)}
+    if(window.RLLT)RLLT.ev('print','Aadhaar Services Report '+period(m));setTimeout(function(){fr.contentWindow.focus();fr.contentWindow.print();setTimeout(function(){fr.remove()},60000)},250)}
 
   function loadXLSX(cb){if(window.XLSX) return cb();var s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
     s.onload=cb;s.onerror=function(){var b=document.getElementById("aat-xlsx");b.textContent="Excel needs internet — try again";setTimeout(function(){b.textContent="Download Excel"},4000)};document.head.appendChild(s)}

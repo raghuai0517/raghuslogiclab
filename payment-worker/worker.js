@@ -23,6 +23,14 @@
  *   POST /dsc/trial  {vid, ev, post, kind, src}      -> free-trial page reports a visit (no login; text/plain body)
  *   (/dsc/* calls send "Authorization: Bearer <session token>")
  *
+ * 3) Site visits and downloads (whole raghuslogiclab.com, needs the D1 binding DB):
+ *   POST /t  {vid, ev, path, title, item, ref, tok, pay, src}  -> assets/track.js reports a page view / download / print
+ *   GET  /site/admin/summary?days=30                 -> admin: totals, daily chart, top pages/downloads, places, devices
+ *   GET  /site/admin/visitors?days=30                -> admin: one row per visitor
+ *   GET  /site/admin/visitor?vid=xxxx                -> admin: everything one visitor did (newest first)
+ *   GET  /site/admin/events?kind=all|dl|paid&days=30 -> admin: activity, downloads, payments
+ *   (admin = the same admin password / admin Gmail session as the DSC admin panel)
+ *
  * Settings (Worker > Settings > Variables and Secrets):
  *   RZP_KEY_ID          text    rzp_live_xxxxxxxx
  *   RZP_KEY_SECRET      secret  (from Razorpay > Account & Settings > API Keys)
@@ -34,7 +42,7 @@
  *   SESSION_SECRET      secret  long random text (signs the login sessions)
  *   DSC_CONTENT_KEY     secret  the content key printed when the site was built
  *   ADMIN_PASSWORD      secret  password for "Admin login" on the sign-in page
- * Binding: KV namespace bound as ORDERS.
+ * Bindings: KV namespace bound as ORDERS; D1 database bound as DB (site visits and downloads, kept 180 days).
  */
 const RZP = "https://api.razorpay.com/v1";
 const TTL = 60 * 60 * 24 * 30; // keep order records 30 days
@@ -54,6 +62,8 @@ export default {
       if (p === "/status" && req.method === "GET") return json(await status(url.searchParams.get("order"), env), cors);
       if (p === "/consume" && req.method === "POST") return json(await consume(await body(req), env), cors);
       if (p.startsWith("/dsc/")) return json(await dsc(p, req, url, env), cors);
+      if (p === "/t" && req.method === "POST") return json(await siteHit(req, env), cors);
+      if (p.startsWith("/site/")) return json(await site(p, req, url, env), cors);
       return json({ ok: false, error: "not_found" }, cors, 404);
     } catch (e) {
       return json({ ok: false, error: "server_error" }, cors, 500);
@@ -64,13 +74,13 @@ export default {
 /* ================= PDF downloads (unchanged) ================= */
 async function createOrder(b, env) {
   const amount = Number(env.PRICE_PAISE || 1000);
-  const tool = clip(b.tool, 40), item = clip(b.item, 40);
+  const tool = clip(b.tool, 40), item = clip(b.item, 40), vid = okVid(b.vid);
   const r = await rzp(env, "/orders", {
     method: "POST",
     body: JSON.stringify({ amount, currency: "INR", receipt: "rll_" + Date.now(), notes: { tool, item } }),
   });
   if (!r.id) return { ok: false, error: "order_failed" };
-  await save(env, r.id, { status: "created", amount, tool, item, created: now() });
+  await save(env, r.id, { status: "created", amount, tool, item, vid, created: now() });
   return { ok: true, orderId: r.id, amount, currency: "INR", keyId: env.RZP_KEY_ID };
 }
 
@@ -127,7 +137,11 @@ async function markIfPaid(env, orderId, rec, p) {
   if (p.status === "authorized") return { ok: true, status: "created", note: "capturing" };
   if (p.status !== "captured") return { ok: false, error: "not_captured", paymentStatus: p.status };
   rec.status = "paid"; rec.paymentId = p.id; rec.method = p.method || ""; rec.paid = now();
+  const em = String(p.email || "").toLowerCase();
+  if (em && !/@razorpay\.com$/.test(em)) rec.payerEmail = clip(em, 80);
+  if (p.contact) rec.payerPhone = clip(p.contact, 20);
   await save(env, orderId, rec);
+  await sitePaid(env, orderId, rec);
   if (rec.kind === "dsc") await grantPaid(env, orderId, rec);
   return { ok: true, status: "paid" };
 }
@@ -232,6 +246,7 @@ async function dscLogin(b, env, req) {
   if (b.vid && /^[a-z0-9]{6,20}$/.test(String(b.vid))) u.vid = String(b.vid);
   await putUser(env, u);
   await logEvent(env, req, { t: isNew ? "signup" : "login", e: email, n: u.name, m: "google", v: u.vid || "" });
+  await siteRow(env, req, { vid: u.vid || "", ev: "signin", path: "/tools/ap-dsc-2026/", title: "AP DSC 2026 Exam Hall", item: isNew ? "New account" : "Sign-in", email });
   const token = await makeSession(email, env);
   const me = await dscMe(email, env, u);
   return { ...me, token, isNew, needsProfile: !u.phone };
@@ -377,6 +392,117 @@ async function trialPing(req, env) {
   m.last = now(); m.w++;
   await env.ORDERS.put(key, "1", { metadata: m, expirationTtl: LOG_TTL });
   return { ok: true };
+}
+
+/* ================= Site visits and downloads (D1) ================= */
+const SITE_KEEP_DAYS = 180;
+const EVENTS = ["view", "download", "print", "open", "click"];
+let schemaReady = false;
+async function db(env) {
+  if (!env.DB) return null;
+  if (!schemaReady) {
+    await env.DB.batch([
+      env.DB.prepare("CREATE TABLE IF NOT EXISTS hits (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, day TEXT NOT NULL, vid TEXT, ev TEXT NOT NULL, path TEXT, title TEXT, item TEXT, ref TEXT, email TEXT, pay TEXT, amount REAL, contact TEXT, city TEXT, region TEXT, country TEXT, device TEXT, src TEXT)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS hits_day ON hits(day, ev)"),
+      env.DB.prepare("CREATE INDEX IF NOT EXISTS hits_vid ON hits(vid, day)"),
+    ]);
+    schemaReady = true;
+  }
+  return env.DB;
+}
+function okVid(v) { v = String(v || ""); return /^[a-z0-9]{6,20}$/.test(v) ? v : ""; }
+function istDay(offsetDays) { return new Date(Date.now() + 5.5 * 3600000 + (offsetDays || 0) * DAY).toISOString().slice(0, 10); }
+const BOT = /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|whatsapp|curl|wget|python|monitor/i;
+
+async function siteRow(env, req, r) {
+  try {
+    const d = await db(env);
+    if (!d) return false;
+    const pl = place(req);
+    await d.prepare("INSERT INTO hits (at, day, vid, ev, path, title, item, ref, email, pay, amount, contact, city, region, country, device, src) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+      .bind(now(), istDay(), r.vid || "", r.ev, clip(r.path, 160), clip(r.title, 120), clip(r.item, 160), clip(r.ref, 80),
+        clip(r.email, 80), clip(r.pay, 40), r.amount == null ? null : Number(r.amount), clip(r.contact, 20),
+        pl.c, pl.r, pl.co, req ? device(req) : "", clip(r.src, 8)).run();
+    return true;
+  } catch (e) { return false; }
+}
+
+async function siteHit(req, env) {
+  if (!env.DB) return { ok: false, error: "no_db" };
+  if (BOT.test(req.headers.get("User-Agent") || "")) return { ok: true, skipped: "bot" };
+  let b = {};
+  try { const raw = await req.text(); if (raw.length > 4000) return { ok: false }; b = JSON.parse(raw); } catch (e) { return { ok: false }; }
+  const vid = okVid(b.vid);
+  const ev = EVENTS.includes(b.ev) ? b.ev : "";
+  if (!vid || !ev) return { ok: false };
+  const d = await db(env);
+  const n = await d.prepare("SELECT COUNT(*) AS n FROM hits WHERE vid = ? AND day = ?").bind(vid, istDay()).first();
+  if (n && n.n >= 400) return { ok: true, capped: true }; // one visitor can't flood the log
+  let email = "";
+  if (b.tok) { const e = await sessionEmail({ headers: new Headers({ Authorization: "Bearer " + String(b.tok).slice(0, 600) }) }, env); if (e) email = e; }
+  let ref = "";
+  try { if (b.ref) { const h = new URL(String(b.ref)).hostname.replace(/^www\./, ""); if (!/raghuslogiclab\.com$/.test(h)) ref = h; } } catch (e) {}
+  const path = String(b.path || "/").replace(/\/index\.html$/i, "/") || "/";
+  const ok = await siteRow(env, req, { vid, ev, path, title: b.title, item: b.item, ref, email, pay: b.pay, src: b.src === "app" ? "app" : "web" });
+  return { ok };
+}
+
+async function sitePaid(env, orderId, rec) {
+  if (rec.kind === "dsc") {
+    const u = await getUser(env, rec.email);
+    return siteRow(env, null, { vid: (u && u.vid) || "", ev: "paid", path: "/tools/ap-dsc-2026/", title: "AP DSC 2026 Exam Hall",
+      item: "Membership · " + (rec.days || "") + " days", email: rec.email, pay: rec.paymentId || orderId, amount: rec.amount / 100, contact: rec.payerPhone || (u && u.phone) || "" });
+  }
+  const name = String(rec.tool || "").replace(/\.html$/, "").replace(/-/g, " ");
+  return siteRow(env, null, { vid: rec.vid || "", ev: "paid", path: "/tools/" + (rec.tool || ""), title: name.charAt(0).toUpperCase() + name.slice(1), item: rec.item || "PDF",
+    email: rec.payerEmail || "", pay: rec.paymentId || orderId, amount: rec.amount / 100, contact: rec.payerPhone || "" });
+}
+
+async function site(p, req, url, env) {
+  const email = await sessionEmail(req, env);
+  if (!email) return { ok: false, error: "signed_out" };
+  if (!isAdmin(email, env)) return { ok: false, error: "not_admin" };
+  const d = await db(env);
+  if (!d) return { ok: false, error: "no_db" };
+  const days = Math.min(SITE_KEEP_DAYS, Math.max(1, Math.round(Number(url.searchParams.get("days")) || 30)));
+  const from = istDay(1 - days);
+  const all = async (sql, ...args) => (await d.prepare(sql).bind(...args).all()).results || [];
+  const DL = "ev IN ('download','print')";
+
+  if (p === "/site/admin/summary") {
+    await d.prepare("DELETE FROM hits WHERE day < ?").bind(istDay(-SITE_KEEP_DAYS)).run();
+    const tot = (since) => d.prepare(`SELECT COUNT(DISTINCT vid) AS visitors, SUM(ev='view') AS views, SUM(${DL}) AS downloads, SUM(ev='paid') AS payments, SUM(CASE WHEN ev='paid' THEN amount ELSE 0 END) AS amount FROM hits WHERE day >= ?`).bind(since).first();
+    const [today, week, month, range, online] = await Promise.all([
+      tot(istDay()), tot(istDay(-6)), tot(istDay(-29)), tot(from),
+      d.prepare("SELECT COUNT(DISTINCT vid) AS n FROM hits WHERE day = ? AND at >= ?").bind(istDay(), new Date(Date.now() - 5 * 60000).toISOString()).first(),
+    ]);
+    const [daily, pages, downloads, places, devices, refs] = await Promise.all([
+      all(`SELECT day, COUNT(DISTINCT vid) AS visitors, SUM(ev='view') AS views, SUM(${DL}) AS downloads FROM hits WHERE day >= ? GROUP BY day ORDER BY day`, from),
+      all("SELECT path, MAX(title) AS title, COUNT(*) AS n, COUNT(DISTINCT vid) AS visitors FROM hits WHERE day >= ? AND ev = 'view' GROUP BY path ORDER BY n DESC LIMIT 20", from),
+      all(`SELECT path, MAX(title) AS title, COUNT(*) AS n, COUNT(DISTINCT vid) AS visitors FROM hits WHERE day >= ? AND ${DL} GROUP BY path ORDER BY n DESC LIMIT 20`, from),
+      all("SELECT city, region, country, COUNT(DISTINCT vid) AS visitors FROM hits WHERE day >= ? GROUP BY city, region, country ORDER BY visitors DESC LIMIT 20", from),
+      all("SELECT device, COUNT(DISTINCT vid) AS visitors FROM hits WHERE day >= ? AND device <> '' GROUP BY device ORDER BY visitors DESC LIMIT 12", from),
+      all("SELECT ref, COUNT(DISTINCT vid) AS visitors FROM hits WHERE day >= ? AND ref <> '' GROUP BY ref ORDER BY visitors DESC LIMIT 12", from),
+    ]);
+    return { ok: true, days, from, today, week, month, range, online: (online && online.n) || 0, daily, pages, downloads, places, devices, refs };
+  }
+  if (p === "/site/admin/visitors") {
+    const items = await all(`SELECT vid, MIN(at) AS first, MAX(at) AS last, COUNT(DISTINCT day) AS days, SUM(ev='view') AS views, SUM(${DL}) AS downloads, SUM(ev='paid') AS payments,
+      COUNT(DISTINCT CASE WHEN ev='view' THEN path END) AS pages, MAX(email) AS email, MAX(contact) AS contact, MAX(city) AS city, MAX(region) AS region, MAX(country) AS country, MAX(device) AS device, MAX(src) AS src
+      FROM hits WHERE day >= ? AND vid <> '' GROUP BY vid ORDER BY last DESC LIMIT 2000`, from);
+    return { ok: true, days, items };
+  }
+  if (p === "/site/admin/visitor") {
+    const vid = okVid(url.searchParams.get("vid"));
+    if (!vid) return { ok: false, error: "bad_vid" };
+    return { ok: true, vid, items: await all("SELECT at, ev, path, title, item, ref, email, pay, amount, contact, city, region, country, device, src FROM hits WHERE vid = ? ORDER BY id DESC LIMIT 1000", vid) };
+  }
+  if (p === "/site/admin/events") {
+    const kind = url.searchParams.get("kind");
+    const where = kind === "dl" ? DL : kind === "paid" ? "ev = 'paid'" : "1=1";
+    return { ok: true, days, kind: kind || "all", items: await all(`SELECT at, vid, ev, path, title, item, ref, email, pay, amount, contact, city, region, country, device, src FROM hits WHERE day >= ? AND ${where} ORDER BY id DESC LIMIT 3000`, from) };
+  }
+  return { ok: false, error: "not_found" };
 }
 
 /* ---------- sessions (HMAC-signed, 30 days) ---------- */

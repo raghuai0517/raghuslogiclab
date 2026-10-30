@@ -91,7 +91,7 @@
     if (p && p.paid) return Promise.resolve({ orderId: p.orderId, utr: p.paymentId || p.orderId, method: "razorpay", auto: true, resumed: true });
 
     var order;
-    return post("/order", { tool: opts.tool || location.pathname.split("/").pop(), item: opts.item || "PDF" })
+    return post("/order", { tool: opts.tool || location.pathname.split("/").pop(), item: opts.item || "PDF", vid: window.RLLT ? RLLT.vid() : "" })
       .then(function (o) { if (!o || !o.ok) throw new Error((o && o.error) || "order_failed"); order = o; return loadCheckout(); })
       .then(function () { return openCheckout(order, opts); },
             function () { return unavailable(); }); // worker or Razorpay script unreachable

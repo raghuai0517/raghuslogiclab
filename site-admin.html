@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Site Admin · RaghusLogicLab</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6fa;--card:#fff;--ink:#141a2e;--muted:#5b647d;--line:#e3e6ef;--line2:#c9cedd;--acc:#b5195a;--bar:#2a78d6;--bar-h:#1c5fae;--ok:#0f7a3d;--err:#b42318;--chip:#eef2ff}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0e1322;--card:#151b2e;--ink:#e8ebf5;--muted:#a3abc6;--line:#2b3350;--line2:#3a4466;--acc:#f0679b;--bar:#3987e5;--bar-h:#6aa6ee;--ok:#4ade80;--err:#f87171;--chip:#1f2945}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif}
+[hidden]{display:none!important}
+a{color:var(--acc)}
+.top{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.top-in{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;text-decoration:none;color:inherit}
+.mark{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--acc);color:#fff;font-size:.72rem;font-weight:800}
+.sp{flex:1}
+.who{font-size:.85rem;color:var(--muted)}
+select,input,button{font:inherit;color:inherit}
+.in{border:1px solid var(--line2);background:var(--card);border-radius:9px;padding:8px 11px;min-height:38px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line2);background:var(--card);border-radius:9px;padding:7px 14px;font-weight:650;cursor:pointer;min-height:38px;text-decoration:none;color:inherit}
+.btn:hover{border-color:var(--acc)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.sm{min-height:32px;padding:4px 10px;font-size:.85rem}
+.chk{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted);cursor:pointer}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:650;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h2{font-size:1rem;margin:0 0 10px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.tile .k{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font-size:1.9rem;font-weight:800;line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums}
+.tile .s{font-size:.82rem;color:var(--muted)}
+.live{display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;margin-right:6px;box-shadow:0 0 0 3px rgba(22,163,74,.2)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-top:16px}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:70vh}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--card);font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);z-index:1}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--chip)}
+.muted{color:var(--muted)}.small{font-size:.82rem}
+.chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.78rem;font-weight:650;background:var(--chip);white-space:nowrap}
+.chip.dl{background:#e0f2fe;color:#075985}.chip.pr{background:#ede9fe;color:#5b21b6}.chip.pay{background:#dcfce7;color:#166534}.chip.sg{background:#fef3c7;color:#92400e}.chip.op{background:#fce7f3;color:#9d174d}
+@media (prefers-color-scheme:dark){.chip.dl{background:#0c3550;color:#bae6fd}.chip.pr{background:#2e1f5e;color:#ddd6fe}.chip.pay{background:#123b24;color:#bbf7d0}.chip.sg{background:#45300a;color:#fde68a}.chip.op{background:#4a1430;color:#fbcfe8}}
+.bar-row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--card);padding:5px 12px;font-weight:650;font-size:.85rem;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--ink);color:var(--card)}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font-size:11px}
+.chart path.bp{fill:var(--bar)}.chart path.bp.on{fill:var(--bar-h)}.chart rect.b{fill:transparent;cursor:default}.chart rect.b:focus{outline:2px solid var(--bar-h);outline-offset:-2px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--card);border-radius:8px;padding:6px 10px;font-size:.82rem;white-space:nowrap;transform:translate(-50%,-110%)}
+.tip b{font-size:1rem}
+.login{max-width:420px;margin:8vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}
+.login h1{margin:0 0 4px;font-size:1.35rem}
+.login label{display:block;font-weight:650;margin:16px 0 6px}
+.login .in{width:100%}
+.err{color:var(--err);font-weight:600}.okm{color:var(--ok);font-weight:600}
+.drawer{position:fixed;inset:0;z-index:20;background:rgba(10,14,28,.55);display:flex;justify-content:flex-end}
+.drawer .pane{background:var(--bg);width:min(760px,100%);height:100%;overflow:auto;padding:18px;box-shadow:-10px 0 40px rgba(0,0,0,.3)}
+.x{border:0;background:none;font-size:1.6rem;line-height:1;cursor:pointer;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.setup ol{padding-left:20px}.setup li{margin:6px 0}
+code{background:var(--chip);border-radius:5px;padding:1px 6px;font-size:.88em}
+details summary{cursor:pointer;color:var(--muted);font-size:.85rem;margin-top:8px}
+@media (max-width:640px){.top{position:static}.who,label[for=range]{display:none}.tl li{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.tile .v{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<header class="top" id="top" hidden>
+  <div class="top-in">
+    <a class="brand" href="index.html"><span class="mark">RL</span>RaghusLogicLab · Site Admin</a>
+    <span class="sp"></span>
+    <label class="small muted" for="range">Period</label>
+    <select class="in" id="range">
+      <option value="1">Today</option><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="180">Last 180 days</option>
+    </select>
+    <button class="btn" id="refresh" title="Load the latest">↻ Refresh</button>
+    <label class="chk" title="Visits from this browser are not logged"><input type="checkbox" id="notrack"> Don't count my visits</label>
+    <span class="who" id="who"></span>
+    <button class="btn sm" id="signout">Sign out</button>
+  </div>
+</header>
+
+<section class="login" id="login" hidden>
+  <a class="brand" href="index.html"><span class="mark">RL</span>RaghusLogicLab</a>
+  <h1 style="margin-top:14px">Site Admin</h1>
+  <p class="muted small" style="margin:0">Who visited the website and who downloaded what. Use the same admin password as the AP DSC 2026 Exam Hall admin login.</p>
+  <form id="loginForm">
+    <label for="pw">Admin password</label>
+    <input class="in" id="pw" type="password" autocomplete="current-password" required>
+    <p class="err" id="loginErr" hidden></p>
+    <button class="btn pri" style="width:100%;margin-top:14px" id="loginBtn">Sign in</button>
+  </form>
+  <p class="muted small" style="margin:14px 0 0">Signed in on the DSC Exam Hall as admin already? This page opens without the password in the same browser.</p>
+</section>
+
+<main id="app" hidden>
+  <nav class="tabs" role="tablist">
+    <button data-tab="overview" class="on">Overview</button>
+    <button data-tab="visitors">Visitors</button>
+    <button data-tab="dl">Downloads</button>
+    <button data-tab="paid">Payments</button>
+    <button data-tab="all">All activity</button>
+    <button data-tab="dsc">DSC members</button>
+  </nav>
+  <div id="view"></div>
+</main>
+
+<div class="drawer" id="drawer" hidden><div class="pane" id="pane"></div></div>
+
+<script>
+(function () {
+  "use strict";
+  var API = "https://rll-pay.raghusreenivas-pudeti.workers.dev";
+  var SK = "ap26.session";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var tab = "overview", cache = {}, members = null;
+
+  function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+  function session() { return store(SK); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function num(n) { return Number(n || 0).toLocaleString("en-IN"); }
+  function rupees(n) { return "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 }); }
+  function when(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "—"; return d.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }); }
+  function ago(iso) { var s = (Date.now() - Date.parse(iso)) / 1000; if (!(s >= 0)) return ""; if (s < 60) return "just now"; if (s < 3600) return Math.round(s / 60) + " min ago"; if (s < 86400) return Math.round(s / 3600) + " h ago"; return Math.round(s / 86400) + " d ago"; }
+  function dayLabel(d) { var x = new Date(d + "T00:00:00+05:30"); return x.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" }); }
+  function placeOf(x) { return [x.city, x.region].filter(Boolean).join(", ") || x.country || "—"; }
+  function pageName(path, title) {
+    if (!path || path === "/" || path === "/index.html") return "Home page";
+    var t = String(title || "").replace(/\s*[·|–-]\s*RaghusLogicLab.*$/i, "").trim();
+    if (t) return t;
+    if (!path || path === "/" || path === "/index.html") return "Home page";
+    return path;
+  }
+  var EV = { view: ["Opened", ""], download: ["Downloaded", "dl"], print: ["Printed", "pr"], open: ["Unlocked full tool", "op"], signin: ["Signed in", "sg"], paid: ["Paid", "pay"], click: ["Clicked", ""] };
+  function evChip(e) { var x = EV[e] || [e, ""]; return '<span class="chip ' + x[1] + '">' + esc(x[0]) + "</span>"; }
+
+  function api(path, opt) {
+    opt = opt || {};
+    var h = { "Content-Type": "application/json" }, s = session();
+    if (s && s.token) h.Authorization = "Bearer " + s.token;
+    return fetch(API + path, { method: opt.method || "GET", headers: h, body: opt.body ? JSON.stringify(opt.body) : undefined, cache: "no-store" })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: "http_" + r.status }; }); })
+      .catch(function () { return { ok: false, error: "network" }; });
+  }
+  function days() { return Number($("#range").value) || 30; }
+  function get(path) {
+    var key = path + "|" + days();
+    if (cache[key]) return Promise.resolve(cache[key]);
+    return api(path + (path.indexOf("?") > -1 ? "&" : "?") + "days=" + days()).then(function (r) { if (r && r.ok) cache[key] = r; return r; });
+  }
+
+  /* ---------- who is this visitor? (DSC accounts give a name) ---------- */
+  function loadMembers() {
+    if (members) return Promise.resolve(members);
+    return api("/dsc/admin").then(function (d) {
+      members = { byEmail: {}, byVid: {}, list: [] };
+      if (d && d.ok) { members.list = d.users || []; members.list.forEach(function (u) { members.byEmail[u.email] = u; if (u.v) members.byVid[u.v] = u.email; }); members.price = d.price; members.days = d.days; }
+      return members;
+    });
+  }
+  function person(x) {
+    var email = x.email || (members && members.byVid[x.vid]) || "";
+    var u = email && members ? members.byEmail[email] : null;
+    var name = u && u.name ? u.name : "";
+    var phone = (u && u.phone) || x.contact || "";
+    if (name || email) return "<b>" + esc(name || email) + "</b>" + (name && email ? '<div class="small muted">' + esc(email) + "</div>" : "") + (phone ? '<div class="small muted">' + esc(phone) + "</div>" : "");
+    if (phone) return "<b>" + esc(phone) + '</b><div class="small muted">Visitor #' + esc(String(x.vid || "").slice(0, 6) || "—") + "</div>";
+    return x.vid ? "Visitor #" + esc(x.vid.slice(0, 6)) : '<span class="muted">—</span>';
+  }
+  function personText(x) {
+    var email = x.email || (members && members.byVid[x.vid]) || "", u = email && members ? members.byEmail[email] : null;
+    return [(u && u.name) || "", email, (u && u.phone) || x.contact || "", x.vid || ""].join(" ");
+  }
+
+  /* ---------- problems the page can explain ---------- */
+  function problem(r) {
+    var e = (r && r.error) || "error";
+    if (e === "signed_out" || e === "not_admin") { signOut(e === "not_admin" ? "This browser is signed in to AP DSC 2026 as a member, not as admin. Use the admin password." : "", e === "not_admin"); return true; }
+    if (e === "no_db" || e === "not_found" || e === "http_404") {
+      $("#view").innerHTML = '<div class="card setup"><h2>' + (e === "no_db" ? "One step left: connect the visit log database" : "One step left: update the rll-pay worker") + "</h2>" +
+        "<p>Your login works. Visit and download logging needs the new worker code and a free Cloudflare D1 database (10 minutes, once):</p><ol>" +
+        "<li>dash.cloudflare.com → <b>Storage &amp; Databases → D1 SQL Database → Create</b> → name it <code>rll-stats</code> → Create.</li>" +
+        "<li><b>Workers &amp; Pages → rll-pay → Settings → Bindings → Add → D1 database</b> → Variable name <code>DB</code> → database <code>rll-stats</code> → Deploy.</li>" +
+        "<li><b>rll-pay → Edit code</b> → replace everything with <code>payment-worker/worker.js</code> from the website repository → <b>Deploy</b>.</li>" +
+        "<li>Come back here and press Refresh. Visits are counted from that moment on.</li></ol>" +
+        '<p class="muted small">Full guide: <code>payment-worker/SETUP-SITE-ADMIN.md</code>. The DSC members tab works already.</p></div>';
+      return true;
+    }
+    $("#view").innerHTML = '<div class="card"><p class="err">Could not load (' + esc(e) + ").</p><p class=\"muted small\">Check the internet connection and press Refresh.</p></div>";
+    return true;
+  }
+
+  /* ---------- chart: one series, bars, hover tooltip ---------- */
+  var metric = "visitors";
+  var METRIC = { visitors: "Visitors", views: "Page views", downloads: "Downloads & prints" };
+  function chart(daily, fromDay, n) {
+    var map = {}; (daily || []).forEach(function (d) { map[d.day] = d; });
+    var rows = [], start = new Date(fromDay + "T00:00:00Z");
+    for (var i = 0; i < n; i++) { var dd = new Date(start.getTime() + i * 864e5).toISOString().slice(0, 10); rows.push({ day: dd, v: Number((map[dd] || {})[metric] || 0) }); }
+    var W = 900, H = 240, L = 36, R = 8, T = 10, B = 26, max = Math.max(1, Math.max.apply(null, rows.map(function (r) { return r.v; })));
+    var step = Math.pow(10, Math.floor(Math.log10(max))), nice = Math.ceil(max / step) * step; if (nice / step > 5) step *= 2; nice = Math.ceil(max / step) * step;
+    var bw = (W - L - R) / rows.length, gap = Math.min(2, bw * .2), h = H - T - B;
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(METRIC[metric]) + ' per day">';
+    for (var g = 0; g <= nice; g += step) { var y = T + h - g / nice * h; s += '<line class="gl" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text class="ax" x="' + (L - 6) + '" y="' + (y + 4) + '" text-anchor="end">' + num(g) + "</text>"; }
+    var every = Math.ceil(rows.length / 10);
+    rows.forEach(function (r, i) {
+      var x = L + i * bw + gap / 2, bh = r.v / nice * h, w = Math.max(1, bw - gap), rr = Math.min(4, w / 2, bh);
+      if (r.v > 0) s += '<path d="M' + x + "," + (T + h) + "V" + (T + h - bh + rr) + "q0,-" + rr + " " + rr + ",-" + rr + "H" + (x + w - rr) + "q" + rr + ",0 " + rr + "," + rr + "V" + (T + h) + 'Z" class="bp" data-p="' + i + '" pointer-events="none"/>';
+      s += '<rect class="b" tabindex="0" x="' + (L + i * bw) + '" y="' + T + '" width="' + bw + '" height="' + h + '" data-i="' + i + '"/>';
+      if (i % every === 0 || rows.length <= 10) s += '<text class="ax" x="' + (L + i * bw + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(dayLabel(r.day)) + "</text>";
+    });
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + (T + h) + '" y2="' + (T + h) + '" stroke="var(--line2)"/></svg><div class="tip" hidden></div>';
+    var box = $("#chart"); box.innerHTML = s;
+    var tip = box.querySelector(".tip"), svg = box.querySelector("svg");
+    function show(el) {
+      var r = rows[+el.getAttribute("data-i")], bb = el.getBoundingClientRect(), cb = box.getBoundingClientRect();
+      tip.hidden = false; tip.innerHTML = "<b>" + num(r.v) + "</b> " + esc(METRIC[metric].toLowerCase()) + "<br>" + esc(dayLabel(r.day));
+      var sc = cb.width / W; tip.style.left = (bb.left - cb.left + bb.width / 2) + "px"; tip.style.top = Math.max(34, (T + h - r.v / nice * h) * sc - 4) + "px";
+      svg.querySelectorAll("path.bp.on").forEach(function (p) { p.classList.remove("on"); });
+      var bp = svg.querySelector('path.bp[data-p="' + el.getAttribute("data-i") + '"]'); if (bp) bp.classList.add("on");
+    }
+    svg.querySelectorAll("rect.b").forEach(function (el) { el.addEventListener("pointermove", function () { show(el); }); el.addEventListener("focus", function () { show(el); }); });
+    svg.addEventListener("pointerleave", function () { tip.hidden = true; svg.querySelectorAll("path.bp.on").forEach(function (p) { p.classList.remove("on"); }); });
+    $("#chartTable").innerHTML = "<table><thead><tr><th>Day</th><th class=n>" + esc(METRIC[metric]) + "</th></tr></thead><tbody>" + rows.slice().reverse().map(function (r) { return "<tr><td>" + esc(dayLabel(r.day)) + '</td><td class="n">' + num(r.v) + "</td></tr>"; }).join("") + "</tbody></table>";
+  }
+
+  /* ---------- tabs ---------- */
+  function overview() {
+    get("/site/admin/summary").then(function (d) {
+      if (!d || !d.ok) return problem(d);
+      function tile(k, t, s) { return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + t + '</div><div class="s">' + s + "</div></div>"; }
+      function line(x) { return num(x && x.visitors) + " visitors · " + num(x && x.views) + " views · " + num(x && x.downloads) + " downloads"; }
+      var r = d.range || {};
+      var html = '<div class="tiles">' +
+        tile('<span class="live"></span>Online now', num(d.online), "active in the last 5 minutes") +
+        tile("Today", num(d.today && d.today.visitors), num(d.today && d.today.views) + " views · " + num(d.today && d.today.downloads) + " downloads") +
+        tile("Last 7 days", num(d.week && d.week.visitors), num(d.week && d.week.views) + " views · " + num(d.week && d.week.downloads) + " downloads") +
+        tile("Last 30 days", num(d.month && d.month.visitors), num(d.month && d.month.views) + " views · " + num(d.month && d.month.downloads) + " downloads") +
+        tile("Payments · period", rupees(r.amount), num(r.payments) + " payments") +
+        "</div>" +
+        '<div class="card"><div class="bar-row"><h2 style="margin:0">Per day · ' + esc($("#range").selectedOptions[0].textContent) + '</h2><div class="seg" id="seg">' +
+        Object.keys(METRIC).map(function (k) { return '<button data-m="' + k + '"' + (k === metric ? ' class="on"' : "") + ">" + METRIC[k] + "</button>"; }).join("") +
+        '</div></div><div class="chart" id="chart"></div><details><summary>Show as table</summary><div class="tw" id="chartTable" style="max-height:300px;margin-top:8px"></div></details>' +
+        '<p class="small muted" style="margin:8px 0 0">' + esc(line(r)) + " in this period.</p></div>" +
+        '<div class="grid2">' +
+        list("Most opened pages", d.pages, function (x) { return '<a href="' + esc(x.path) + '" target="_blank" rel="noopener">' + esc(pageName(x.path, x.title)) + "</a>"; }, "Opens", "n") +
+        list("Downloads & prints by tool", d.downloads, function (x) { return esc(pageName(x.path, x.title)); }, "Files", "n") +
+        list("Where visitors are", d.places, function (x) { return esc(placeOf(x)) + (x.country && x.country !== "IN" ? ' <span class="chip">' + esc(x.country) + "</span>" : ""); }, "Visitors", "visitors") +
+        list("Devices", d.devices, function (x) { return esc(x.device); }, "Visitors", "visitors") +
+        list("Came from (other websites)", d.refs, function (x) { return esc(x.ref); }, "Visitors", "visitors") +
+        "</div>";
+      $("#view").innerHTML = html;
+      chart(d.daily, d.from, d.days);
+      $("#seg").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; metric = b.dataset.m; $("#seg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); }); chart(d.daily, d.from, d.days); };
+    });
+  }
+  function list(title, rows, label, head, key) {
+    rows = rows || [];
+    return '<div class="card"><h2>' + title + "</h2>" + (rows.length ? '<div class="tw" style="max-height:360px"><table><thead><tr><th></th><th class="n">' + head + '</th>' + (key === "n" ? '<th class="n">Visitors</th>' : "") + "</tr></thead><tbody>" +
+      rows.map(function (x) { return "<tr><td>" + label(x) + '</td><td class="n">' + num(x[key]) + "</td>" + (key === "n" ? '<td class="n">' + num(x.visitors) + "</td>" : "") + "</tr>"; }).join("") + "</tbody></table></div>" : '<p class="muted small">Nothing yet in this period.</p>') + "</div>";
+  }
+
+  function searchBox(ph, csvName) {
+    return '<div class="bar-row"><input class="in" id="q" placeholder="' + esc(ph) + '" style="flex:1;max-width:420px"><span class="muted small" id="count"></span><span class="sp"></span><button class="btn sm" id="csv">Download CSV</button></div>';
+  }
+  function csv(name, head, rows) {
+    var lines = [head.join(",")].concat(rows.map(function (r) { return r.map(function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }));
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  function visitors() {
+    Promise.all([get("/site/admin/visitors"), loadMembers()]).then(function (res) {
+      var d = res[0]; if (!d || !d.ok) return problem(d);
+      $("#view").innerHTML = searchBox("Search name, Gmail, mobile, city, device") +
+        '<div class="tw"><table><thead><tr><th>Who</th><th>Where</th><th>Device</th><th>First seen</th><th>Last seen</th><th class="n">Days</th><th class="n">Pages</th><th class="n">Opens</th><th class="n">Downloads</th><th class="n">Paid</th></tr></thead><tbody id="rows"></tbody></table></div>' +
+        '<p class="small muted">Click a visitor to see everything they opened and downloaded. A visitor is one browser; names show when they signed in to AP DSC 2026 or paid.</p>';
+      function draw(q) {
+        q = (q || "").toLowerCase();
+        var l = d.items.filter(function (x) { return !q || (personText(x) + " " + placeOf(x) + " " + x.device).toLowerCase().indexOf(q) > -1; });
+        $("#count").textContent = num(l.length) + " visitors";
+        $("#rows").innerHTML = l.map(function (x) {
+          return '<tr class="click" data-vid="' + esc(x.vid) + '"><td>' + person(x) + "</td><td>" + esc(placeOf(x)) + "</td><td>" + esc(x.device || "—") + (x.src === "app" ? ' <span class="chip">app</span>' : "") + "</td><td>" + esc(when(x.first)) + "</td><td>" + esc(when(x.last)) + '<div class="small muted">' + esc(ago(x.last)) + '</div></td><td class="n">' + num(x.days) + '</td><td class="n">' + num(x.pages) + '</td><td class="n">' + num(x.views) + '</td><td class="n">' + (x.downloads ? "<b>" + num(x.downloads) + "</b>" : "0") + '</td><td class="n">' + (x.payments ? '<span class="chip pay">' + num(x.payments) + "</span>" : "") + "</td></tr>";
+        }).join("") || '<tr><td colspan="10" class="muted">No visitors in this period yet.</td></tr>';
+        return l;
+      }
+      var shown = draw("");
+      $("#q").oninput = function (e) { shown = draw(e.target.value); };
+      $("#rows").onclick = function (e) { var tr = e.target.closest("tr[data-vid]"); if (tr) visitor(tr.dataset.vid); };
+      $("#csv").onclick = function () {
+        csv("raghuslogiclab-visitors.csv", ["visitor", "name", "gmail", "mobile", "city", "region", "country", "device", "first_seen", "last_seen", "days", "pages", "opens", "downloads", "payments"],
+          shown.map(function (x) { var em = x.email || members.byVid[x.vid] || "", u = members.byEmail[em] || {}; return [x.vid, u.name || "", em, u.phone || x.contact || "", x.city, x.region, x.country, x.device, x.first, x.last, x.days, x.pages, x.views, x.downloads, x.payments]; }));
+      };
+    });
+  }
+
+  function visitor(vid) {
+    $("#drawer").hidden = false; $("#pane").innerHTML = '<p class="muted">Loading…</p>';
+    api("/site/admin/visitor?vid=" + encodeURIComponent(vid)).then(function (d) {
+      if (!d || !d.ok) { $("#pane").innerHTML = '<p class="err">Could not load.</p>'; return; }
+      var it = d.items || [], first = it[it.length - 1] || {}, any = it.filter(function (x) { return x.email || x.contact; })[0] || {};
+      var head = Object.assign({ vid: vid }, any);
+      var dls = it.filter(function (x) { return x.ev === "download" || x.ev === "print"; }).length;
+      $("#pane").innerHTML = '<div class="bar-row"><h2 style="margin:0">' + person(head) + '</h2><button class="x" id="close" aria-label="Close">×</button></div>' +
+        '<p class="small muted">Visitor #' + esc(vid) + " · " + esc(placeOf(first)) + " · " + esc(first.device || "") + " · first seen " + esc(when(first.at)) + "</p>" +
+        '<div class="tiles"><div class="tile"><div class="k">Pages opened</div><div class="v">' + num(it.filter(function (x) { return x.ev === "view"; }).length) + '</div></div><div class="tile"><div class="k">Downloads & prints</div><div class="v">' + num(dls) + '</div></div><div class="tile"><div class="k">Paid</div><div class="v">' + rupees(it.reduce(function (s, x) { return s + (x.ev === "paid" ? Number(x.amount) || 0 : 0); }, 0)) + "</div></div></div>" +
+        '<div class="card"><h2>Everything, newest first</h2><ul class="tl">' + it.map(function (x) {
+          return "<li><div class=\"small muted\">" + esc(when(x.at)) + "</div><div>" + evChip(x.ev) + " " + esc(pageName(x.path, x.title)) + (x.item ? " · <b>" + esc(x.item) + "</b>" : "") + (x.ev === "paid" ? " · " + rupees(x.amount) : "") + (x.pay ? ' <span class="small muted">' + esc(x.pay) + "</span>" : "") + (x.ref ? ' <span class="small muted">from ' + esc(x.ref) + "</span>" : "") + (x.city && x.city !== first.city ? ' <span class="small muted">· ' + esc(placeOf(x)) + "</span>" : "") + "</div></li>";
+        }).join("") + "</ul></div>";
+      $("#close").onclick = closeDrawer;
+    });
+  }
+  function closeDrawer() { $("#drawer").hidden = true; }
+  $("#drawer").addEventListener("click", function (e) { if (e.target.id === "drawer") closeDrawer(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+
+  function events(kind) {
+    Promise.all([get("/site/admin/events?kind=" + kind), loadMembers()]).then(function (res) {
+      var d = res[0]; if (!d || !d.ok) return problem(d);
+      var title = { dl: "Search file, tool, name, Gmail, city", paid: "Search tool, name, Gmail, mobile, payment ID", all: "Search page, file, name, Gmail, city" }[kind];
+      var total = kind === "paid" ? d.items.reduce(function (s, x) { return s + (Number(x.amount) || 0); }, 0) : 0;
+      $("#view").innerHTML = searchBox(title) + (kind === "paid" ? '<p class="small muted" style="margin-top:-4px">Payments made through Razorpay (₹10 PDFs and AP DSC 2026). Total in this period: <b>' + rupees(total) + "</b>.</p>" : "") +
+        '<div class="tw"><table><thead><tr><th>When</th><th>Who</th>' + (kind === "all" ? "<th>What</th>" : "") + "<th>Tool / page</th><th>" + (kind === "paid" ? "For" : "File") + "</th>" + (kind === "paid" ? '<th class="n">Amount</th><th>Payment ID</th>' : kind === "dl" ? "<th>Payment</th>" : "") + "<th>Where</th><th>Device</th></tr></thead><tbody id=\"rows\"></tbody></table></div>" +
+        (kind === "dl" ? '<p class="small muted">On Aadhaar and SADAREM tools only the file type is logged, never the file name, because those names contain the card holder\'s name.</p>' : "");
+      function draw(q) {
+        q = (q || "").toLowerCase();
+        var l = d.items.filter(function (x) { return !q || (personText(x) + " " + x.path + " " + x.title + " " + x.item + " " + x.pay + " " + placeOf(x) + " " + x.device).toLowerCase().indexOf(q) > -1; });
+        $("#count").textContent = num(l.length) + (kind === "dl" ? " downloads & prints" : kind === "paid" ? " payments" : " events");
+        $("#rows").innerHTML = l.map(function (x) {
+          return '<tr class="click" data-vid="' + esc(x.vid) + '"><td style="white-space:nowrap">' + esc(when(x.at)) + "</td><td>" + person(x) + "</td>" + (kind === "all" ? "<td>" + evChip(x.ev) + "</td>" : "") +
+            "<td>" + esc(pageName(x.path, x.title)) + "</td><td>" + (kind === "dl" ? evChip(x.ev) + " " : "") + esc(x.item || (x.ref ? "from " + x.ref : "")) + "</td>" +
+            (kind === "paid" ? '<td class="n">' + rupees(x.amount) + '</td><td class="small">' + esc(x.pay) + "</td>" : kind === "dl" ? '<td class="small">' + esc(x.pay || "") + "</td>" : "") +
+            "<td>" + esc(placeOf(x)) + "</td><td>" + esc(x.device || "—") + "</td></tr>";
+        }).join("") || '<tr><td colspan="9" class="muted">Nothing in this period yet.</td></tr>';
+        return l;
+      }
+      var shown = draw("");
+      $("#q").oninput = function (e) { shown = draw(e.target.value); };
+      $("#rows").onclick = function (e) { var tr = e.target.closest("tr[data-vid]"); if (tr && tr.dataset.vid) visitor(tr.dataset.vid); };
+      $("#csv").onclick = function () {
+        csv("raghuslogiclab-" + ({ dl: "downloads", paid: "payments", all: "activity" }[kind]) + ".csv", ["time_ist", "event", "visitor", "name", "gmail", "mobile", "page", "path", "file_or_item", "amount", "payment_id", "came_from", "city", "region", "country", "device"],
+          shown.map(function (x) { var em = x.email || members.byVid[x.vid] || "", u = members.byEmail[em] || {}; return [when(x.at), x.ev, x.vid, u.name || "", em, u.phone || x.contact || "", pageName(x.path, x.title), x.path, x.item, x.amount == null ? "" : x.amount, x.pay, x.ref, x.city, x.region, x.country, x.device]; }));
+      };
+    });
+  }
+
+  function dsc() {
+    members = null;
+    loadMembers().then(function (m) {
+      if (!m.list.length && m.price == null) { $("#view").innerHTML = '<div class="card"><p class="err">Could not load the DSC members.</p></div>'; return; }
+      var nowT = Date.now(), act = m.list.filter(function (u) { return Date.parse(u.until || 0) > nowT; }), paid = m.list.reduce(function (s, u) { return s + (Number(u.paid) || 0); }, 0);
+      $("#view").innerHTML = '<div class="tiles"><div class="tile"><div class="k">Accounts</div><div class="v">' + num(m.list.length) + '</div></div><div class="tile"><div class="k">Active now</div><div class="v">' + num(act.length) + '</div></div><div class="tile"><div class="k">Total paid</div><div class="v">' + rupees(paid) + '</div></div><div class="tile"><div class="k">Price</div><div class="v">' + rupees(m.price) + '</div><div class="s">' + num(m.days) + ' days · change it in the <a href="tools/ap-dsc-2026/">DSC admin panel</a></div></div></div>' +
+        searchBox("Search name, Gmail, mobile, district, post") +
+        '<div class="tw"><table><thead><tr><th>Name</th><th>Gmail</th><th>Mobile</th><th>District</th><th>Post</th><th>Joined</th><th>Access</th><th class="n">Paid</th></tr></thead><tbody id="rows"></tbody></table></div>' +
+        '<p class="small muted">Price, manual access, sign-in log and free-trial log: open AP DSC 2026 Exam Hall → Admin login → round button → Admin panel.</p>';
+      function draw(q) {
+        q = (q || "").toLowerCase();
+        var l = m.list.filter(function (u) { return !q || [u.name, u.email, u.phone, u.district, u.post].join(" ").toLowerCase().indexOf(q) > -1; });
+        $("#count").textContent = num(l.length) + " accounts";
+        $("#rows").innerHTML = l.map(function (u) {
+          var on = Date.parse(u.until || 0) > nowT;
+          return '<tr class="click" data-vid="' + esc(u.v || "") + '"><td>' + esc(u.name || "—") + "</td><td>" + esc(u.email) + "</td><td>" + esc(u.phone || "—") + "</td><td>" + esc(u.district || "—") + "</td><td>" + esc(u.post || "—") + "</td><td>" + esc(when(u.created)) + "</td><td>" + (on ? '<span class="chip pay">until ' + esc(when(u.until)) + "</span>" : '<span class="chip">' + (u.until ? "ended" : "not paid") + "</span>") + '</td><td class="n">' + rupees(u.paid) + "</td></tr>";
+        }).join("") || '<tr><td colspan="8" class="muted">No accounts yet.</td></tr>';
+        return l;
+      }
+      var shown = draw("");
+      $("#q").oninput = function (e) { shown = draw(e.target.value); };
+      $("#rows").onclick = function (e) { var tr = e.target.closest("tr[data-vid]"); if (tr && tr.dataset.vid) visitor(tr.dataset.vid); };
+      $("#csv").onclick = function () { csv("ap-dsc-2026-members.csv", ["name", "gmail", "mobile", "district", "post", "joined", "access_until", "paid_rupees"], shown.map(function (u) { return [u.name, u.email, u.phone, u.district, u.post, u.created, u.until, u.paid || 0]; })); };
+    });
+  }
+
+  function show() {
+    $("#view").innerHTML = '<p class="muted">Loading…</p>';
+    if (tab === "overview") overview();
+    else if (tab === "visitors") visitors();
+    else if (tab === "dsc") dsc();
+    else events(tab);
+  }
+
+  /* ---------- sign in / out ---------- */
+  function signedIn() {
+    var s = session() || {};
+    $("#login").hidden = true; $("#top").hidden = false; $("#app").hidden = false;
+    $("#who").textContent = s.email || "";
+    show();
+  }
+  function signOut(msg, keepMember) {
+    if (!keepMember) store(SK, null);
+    cache = {}; members = null;
+    $("#top").hidden = true; $("#app").hidden = true; $("#login").hidden = false;
+    var e = $("#loginErr"); e.hidden = !msg; e.textContent = msg || "";
+    $("#pw").focus();
+  }
+  $("#loginForm").onsubmit = function (ev) {
+    ev.preventDefault();
+    var b = $("#loginBtn"), e = $("#loginErr"); b.disabled = true; b.textContent = "Signing in…"; e.hidden = true;
+    api("/dsc/admin/login", { method: "POST", body: { password: $("#pw").value } }).then(function (r) {
+      b.disabled = false; b.textContent = "Sign in";
+      if (r && r.ok && r.token) {
+        store(SK, { token: r.token, email: r.user.email, name: r.user.name || "Admin", picture: "" });
+        $("#pw").value = "";
+        if (store("rll.notrack") === null) { try { localStorage.setItem("rll.notrack", "1"); } catch (x) {} }
+        $("#notrack").checked = localStorage.getItem("rll.notrack") === "1";
+        return signedIn();
+      }
+      e.hidden = false;
+      e.textContent = r && r.error === "bad_password" ? "Wrong password." + (r.left != null ? " " + r.left + " tries left before a 15-minute lock." : "")
+        : r && r.error === "locked" ? "Too many wrong tries. Admin login is locked for 15 minutes."
+        : r && r.error === "not_set" ? "The admin password is not set in the worker yet (ADMIN_PASSWORD)."
+        : "Could not reach the server. Check the internet connection.";
+    });
+  };
+  $("#signout").onclick = function () { signOut(""); };
+  $("#refresh").onclick = function () { cache = {}; members = null; show(); };
+  $("#range").onchange = function () { show(); };
+  $("#notrack").onchange = function (e) { try { localStorage.setItem("rll.notrack", e.target.checked ? "1" : "0"); } catch (x) {} };
+  document.querySelector(".tabs").onclick = function (e) {
+    var b = e.target.closest("button[data-tab]"); if (!b) return;
+    tab = b.dataset.tab; document.querySelectorAll(".tabs button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    show();
+  };
+
+  try { $("#notrack").checked = localStorage.getItem("rll.notrack") === "1"; } catch (e) {}
+  var s = session();
+  if (s && s.token && s.token.indexOf("demo.") !== 0) signedIn(); else signOut("");
+})();
+</script>
+</body>
+</html>

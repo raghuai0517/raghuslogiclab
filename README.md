@@ -9,6 +9,8 @@ A simple static website (no server, no database) that you can host on any domain
 | `index.html` | Home page: hero, **Projects ▾ dropdown**, project grid, daily Lab Log, About, Contact |
 | `project.html` | One page per project — this is the **customer link** (`project.html?p=link-name`) |
 | `admin.html` | **Project Studio** — Create Project, Manage Projects, Daily Update, Settings & Publish |
+| `site-admin.html` | **Site Admin** — who visited, what they opened, downloaded, printed and paid for. Same admin password as AP DSC 2026. Set-up: `payment-worker/SETUP-SITE-ADMIN.md` |
+| `assets/track.js` | Visit and download log used by Site Admin; loaded by every page except the two admin pages |
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
 | `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker, DSC Exam Hall); `tools/ap-dsc-2026/` (paid, encrypted) and `tools/ap-dsc-2026-trial/` are folders |
@@ -101,10 +103,13 @@ To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `
 - Upload the whole folder to any static host: Netlify (drag & drop), GitHub Pages, Cloudflare Pages, or Hostinger/cPanel `public_html`.
 - **Subdomains:** create them at your DNS/host (e.g. `tools.raghuslogiclab.com`), point each at that project's site, then put the address in the project's *website / subdomain* field.
 
+## Site Admin (visits and downloads)
+Open `site-admin.html` and sign in with the AP DSC 2026 admin password. It shows visitors, pages opened, downloads, prints and Razorpay payments for the whole site (last 180 days), with CSV export. Every new page must load `assets/track.js` (one `<script defer>` line before `</head>`) to be counted. Switch-on steps: `payment-worker/SETUP-SITE-ADMIN.md`.
+
 ## Good to know
 - `admin.html` can't change the live site on its own — only uploading `site-data.js` does — so visitors who open it can't alter anything. It is marked `noindex` so search engines skip it. If you prefer, don't upload `admin.html` at all and keep it only on your computer.
 - Unlisted links are hidden, not password-protected. Don't put secrets in project descriptions.
 - Drafts live in one browser. Use **Import site-data.js** to continue on another computer.
 
 ## Ideas to add next (scope for daily growth)
-Project screenshots/gallery · search box · customer enquiry form (Formspree/Netlify Forms) · per-project changelog pages · RSS feed of the Lab Log · real login for private client areas (needs a backend such as Supabase/Firebase) · analytics.
+Project screenshots/gallery · search box · customer enquiry form (Formspree/Netlify Forms) · per-project changelog pages · RSS feed of the Lab Log · real login for private client areas (needs a backend such as Supabase/Firebase).
