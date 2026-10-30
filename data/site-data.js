@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-sadarem-security-print",
+      "date": "2026-10-30",
+      "type": "launch",
+      "title": "New: SWSG RELATED tools with SADAREM Security Paper Print",
+      "body": "A new gold SWSG RELATED section on the home page. First tool: upload a SADAREM disability certificate PDF and move it down (1.5 inches by default) so it prints below the header on security paper. Adjust the position in inches or mm, keep the digitally-signed box, shrink to fit if needed, and print several certificates in one A4 PDF. Free; files never leave your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-auto-pdf-payment",
       "date": "2026-10-29",
       "type": "feature",
@@ -169,6 +177,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-sadarem-security-print",
+      "slug": "sadarem-security-print",
+      "name": "SADAREM Security Paper Print",
+      "tagline": "Move a SADAREM certificate PDF down the page so it prints below the header on security paper.",
+      "description": "Upload one or more SADAREM disability certificate PDFs and get a print-ready A4 PDF moved down 1.5 inches (or any amount, in inches or mm). Live A4 preview, left/right and size adjustment, shrink to fit, and the digitally-signed box kept for printing. Free; files never leave your browser.",
+      "category": "SWSG",
+      "badge": "Free tool",
+      "url": "tools/sadarem-security-print.html",
+      "color": "#d4a017",
+      "visibility": "public",
+      "added": "2026-10-30"
+    },
     {
       "id": "t-ap-dsc-2026-trial",
       "slug": "ap-dsc-2026-trial",

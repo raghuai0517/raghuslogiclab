@@ -23,6 +23,7 @@
         <div class="btn-row" style="margin-top:24px">
           <a class="btn btn-primary" href="#projects">Explore projects</a>
           <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
+          <a class="btn btn-gold" href="#swsg">SWSG tools</a>
           <a class="btn btn-pink" href="#dsc">DSC Exam Hall</a>
           <a class="btn btn-teal" href="#apps">Apps</a>
           <a class="btn" href="#lab-log">Today in the lab</a>
@@ -41,6 +42,20 @@
           </div>
         </div>
         <div id="tool-groups"></div>
+      </div>
+    </section>
+
+    <!-- SWSG RELATED (gold) -->
+    <section class="section swsg-section" id="swsg" style="padding-top:24px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-gold">// swsg tools</span>
+            <h2 class="swsg-group-title">SWSG RELATED</h2>
+            <p class="muted" style="margin:0">Print and certificate tools for Sachivalayam and SADAREM work. Free, and your files are read only in your browser.</p>
+          </div>
+        </div>
+        <div class="grid" id="swsg-grid"></div>
       </div>
     </section>
 
@@ -217,7 +232,8 @@
     /* Tools, grouped by category: "Aadhaar" -> "AADHAAR RELATED" (blue) */
     var allTools = RLL.publicTools(data), groups = [], byCat = {};
     var isDsc = function (t) { return (t.category || "").toUpperCase() === "DSC"; };
-    var tools = allTools.filter(function (t) { return !isDsc(t); });
+    var isSwsg = function (t) { return (t.category || "").toUpperCase() === "SWSG"; };
+    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t); });
     tools.forEach(function (t) {
       var c = t.category || "Other";
       if (!byCat[c]) { byCat[c] = []; groups.push(c); }
@@ -235,6 +251,18 @@
             "</a>";
         }).join("") + "</div></div>";
     }).join("") : '<p class="muted">Tools are on the way.</p>';
+
+    /* SWSG RELATED (gold) */
+    var swsg = allTools.filter(isSwsg);
+    document.getElementById("swsg-grid").innerHTML = swsg.length ? swsg.map(function (t) {
+      return '<a class="card tool-card gold" href="' + esc(t.url) + '">' +
+        '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-gold">' + esc(t.badge || "Free tool") + '</span></div>' +
+        '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
+        "<p>" + esc(t.tagline || "") + "</p>" +
+        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+        '<div class="meta"><span class="tag">SWSG</span><span class="tool-open">Open tool &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">SWSG tools are on the way.</p>';
 
     /* DSC EXAM HALL (pink) */
     var dsc = allTools.filter(isDsc);

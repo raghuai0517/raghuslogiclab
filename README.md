@@ -34,6 +34,10 @@ To add a tool:
 3. Set `"visibility": "unlisted"` to hide a tool from the menu without deleting it.
 4. Optional `"badge"` sets the label on the tool's card (default: "Free to fill · ₹10 PDF"), e.g. `"badge": "Free tool"`.
 
+Tools with `"category": "SWSG"` appear in their own gold **SWSG RELATED** section on the home page.
+
+**SADAREM Security Paper Print** (`tools/sadarem-security-print.html`) — upload SADAREM disability certificate PDFs and get a print-ready A4 PDF moved down (1.5 in by default) to print below the header on security paper. Inches/mm, left/right shift, size, shrink to fit, keeps the digitally-signed box (flattened for print), several certificates in one PDF. Free; runs in the browser (pdf-lib and pdf.js from cdnjs). The output file's digital signature is no longer verifiable, which the page tells users.
+
 Tools with `"category": "DSC"` appear in their own pink **DSC EXAM HALL** section on the home page instead of under AADHAAR RELATED.
 
 **DSC Exam Hall** (`tools/dsc-exam-hall.html`) — bilingual (English / Telugu) DSC-pattern mock tests built from the AP Class 8 Social Science Semester 1 textbook (356 questions, built into the page). Chapter-wise full exams, 10-question quick tests, grand test, explained answers and A4 answer-sheet PDFs. Visitors can upload another textbook PDF to build an offline question bank; it is saved only in their browser. Results are also saved only in the visitor's browser.
