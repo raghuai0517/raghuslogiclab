@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ఓటరు స్లిప్ శోధన · Voter Slip Search</title>
+<!--SITE-HEAD--><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f3ee; --card:#ffffff; --ink:#1d2430; --muted:#5f6b7a; --line:#e3ded3;
+    --pri:#0e6b62; --pri-ink:#ffffff; --pri-soft:#e3f1ee; --acc:#b45f06; --acc-soft:#fbefe1;
+    --danger:#b42318; --radius:14px;
+    --font:"Noto Sans Telugu","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+  button,input,select{font:inherit;color:inherit}
+  header{background:var(--pri);color:var(--pri-ink);padding:18px 16px 16px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+  header .wrap{padding:0}
+  h1{margin:0;font-size:1.35rem;font-weight:700;letter-spacing:.2px}
+  .sub{opacity:.85;font-size:.86rem;margin-top:2px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .stat{background:rgba(255,255,255,.13);border-radius:10px;padding:6px 12px;font-size:.84rem}
+  .stat b{font-size:1.05rem;margin-right:4px}
+  section.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-top:14px}
+  .panel h2{font-size:.95rem;margin:0 0 10px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .panel h2 small{color:var(--muted);font-weight:400;font-size:.78rem}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--pri-soft);border:1px solid #c7e3dd;border-radius:999px;padding:5px 6px 5px 12px;font-size:.86rem}
+  .chip .n{color:var(--muted);font-size:.78rem}
+  .chip button{border:0;background:transparent;cursor:pointer;width:24px;height:24px;border-radius:50%;color:var(--muted);font-size:16px;line-height:1}
+  .chip button:hover{background:#d3e9e4;color:var(--danger)}
+  .upload{display:inline-flex;align-items:center;gap:8px;border:1.5px dashed var(--pri);color:var(--pri);background:#fff;border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer;font-size:.88rem}
+  .upload:hover{background:var(--pri-soft)}
+  .upload input{display:none}
+  .drop-hint{color:var(--muted);font-size:.78rem;margin-top:8px}
+  .progress{margin-top:10px;display:none}
+  .progress.on{display:block}
+  .bar{height:8px;background:#ece8df;border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--pri);transition:width .15s}
+  .ptext{font-size:.82rem;color:var(--muted);margin-top:5px}
+  .msg{margin-top:10px;font-size:.86rem;padding:8px 12px;border-radius:10px;display:none}
+  .msg.ok{display:block;background:#e7f5ec;color:#1a6b3a}
+  .msg.err{display:block;background:#fdecea;color:var(--danger)}
+  .grid{display:grid;gap:10px;grid-template-columns:repeat(12,1fr)}
+  .f{display:flex;flex-direction:column;gap:4px;grid-column:span 12}
+  .h{grid-column:span 6}
+  .f label{font-size:.78rem;color:var(--muted);font-weight:500}
+  .f input,.f select{border:1px solid var(--line);background:#fbfaf7;border-radius:10px;padding:9px 11px;min-height:42px;outline:none;width:100%}
+  .f input:focus,.f select:focus{border-color:var(--pri);background:#fff;box-shadow:0 0 0 3px rgba(14,107,98,.12)}
+  .big input{font-size:1.08rem;min-height:48px}
+  .seg{display:flex;background:#f0ede6;border-radius:10px;padding:3px;gap:3px}
+  .seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.84rem;color:var(--muted)}
+  .seg button.on{background:#fff;color:var(--pri);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  @media(min-width:640px){.s6{grid-column:span 6}.s4{grid-column:span 4}.s3{grid-column:span 3}.s8{grid-column:span 8}}
+  @media(min-width:960px){.m2{grid-column:span 2}.m3{grid-column:span 3}.m4{grid-column:span 4}.m8{grid-column:span 8}}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:.88rem;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:#cfc8b8}
+  .btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .btn.pri:hover{background:#0b5a52}
+  .btn.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
+  .btn.acc:hover{background:#9a5105}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .resbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 10px}
+  .count{font-size:1rem;font-weight:600}
+  .count small{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
+  .cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+  .card .top{display:flex;gap:10px;align-items:flex-start}
+  .sn{background:var(--acc-soft);color:var(--acc);border-radius:10px;min-width:54px;text-align:center;padding:4px 6px;font-weight:700;font-family:Inter,sans-serif;line-height:1.15}
+  .sn small{display:block;font-size:.62rem;font-weight:500;opacity:.85}
+  .nm{font-weight:700;font-size:1.05rem;line-height:1.35}
+  .en{color:var(--muted);font-size:.78rem;font-family:Inter,sans-serif}
+  .kv{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.86rem}
+  .kv span{color:var(--muted)}
+  .kv b{font-weight:600;color:var(--ink)}
+  .epic{font-family:Inter,ui-monospace,monospace;letter-spacing:.4px}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:2px}
+  .tag{font-size:.74rem;background:#f0ede6;border-radius:999px;padding:2px 9px;color:var(--muted)}
+  .link{border:0;background:none;color:var(--pri);cursor:pointer;font-size:.8rem;font-weight:600;padding:2px 0;margin-left:auto}
+  .more{display:flex;justify-content:center;margin:16px 0 30px}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px;background:var(--card);border:1px dashed var(--line);border-radius:var(--radius)}
+  .rll-bar{display:flex;align-items:center;gap:8px;font-size:.82rem;margin-bottom:10px;opacity:.95}
+  .rll-bar a{color:#fff;text-decoration:none;font-weight:600}
+  .rll-bar a:hover{text-decoration:underline}
+  .rll-mark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#fff;color:var(--pri);font-size:.68rem;font-weight:800;margin-right:6px;font-family:Inter,sans-serif}
+  footer{color:var(--muted);font-size:.76rem;text-align:center;padding:10px 16px 30px}
+  .dropping{outline:3px dashed var(--pri);outline-offset:-8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+<!--SITE-NAV-->    <h1>ఓటరు స్లిప్ శోధన</h1>
+    <div class="sub">Voter Slip Search · యమ్.పి.టి.సి / జెడ్.పి.టి.సి ఎన్నికలు 2026</div>
+    <div class="stats">
+      <div class="stat"><b id="stTotal">0</b>ఓటర్లు</div>
+      <div class="stat"><b id="stPS">0</b>పోలింగ్ స్టేషన్లు</div>
+      <div class="stat"><b id="stM">0</b>పురుషులు</div>
+      <div class="stat"><b id="stF">0</b>స్త్రీలు</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel" id="dsPanel">
+    <h2>పోలింగ్ స్టేషన్లు <small>Polling stations loaded</small></h2>
+    <div class="chips" id="chips"></div>
+    <div class="actions" style="margin-top:10px">
+      <label class="upload">＋ ఇతర PS PDF అప్‌లోడ్ చేయండి
+        <input type="file" id="file" accept="application/pdf,.pdf" multiple>
+      </label>
+    </div>
+    <div class="drop-hint">AP SEC ఫోటో ఓటర్ స్లిప్ PDF (ఒకటి లేదా అనేకం) ఎంచుకోండి లేదా ఇక్కడ డ్రాప్ చేయండి. PDF మీ బ్రౌజర్‌లోనే చదవబడుతుంది — ఎక్కడికీ పంపబడదు.</div>
+    <div class="progress" id="prog"><div class="bar"><i id="pbar"></i></div><div class="ptext" id="ptext"></div></div>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section class="panel">
+    <h2>శోధన <small>Search</small></h2>
+    <div class="grid">
+      <div class="f big s8 m8">
+        <label for="qName">పేరు — తెలుగు లేదా English (ఉదా: సుబ్రమణ్యం / venkateswarlu)</label>
+        <input id="qName" type="search" placeholder="పేరు టైప్ చేయండి…" autocomplete="off">
+      </div>
+      <div class="f s4 m4">
+        <label>ఎందులో వెతకాలి</label>
+        <div class="seg" id="scope">
+          <button data-v="both" class="on">రెండూ</button>
+          <button data-v="name">ఓటరు పేరు</button>
+          <button data-v="rel">తండ్రి/భర్త</button>
+        </div>
+      </div>
+      <div class="f s6 m3"><label for="qEpic">ఎపిక్ నెంబర్ (EPIC)</label><input id="qEpic" type="search" placeholder="XJB0191791" autocomplete="off" style="text-transform:uppercase"></div>
+      <div class="f h s6 m3"><label for="qSerial">వరుస సంఖ్య (Serial)</label><input id="qSerial" type="search" inputmode="numeric" placeholder="700 / 700-750" autocomplete="off"></div>
+      <div class="f h s6 m3"><label for="qHouse">ఇంటి నెం.</label><input id="qHouse" type="search" placeholder="1-268" autocomplete="off"></div>
+      <div class="f s6 m3"><label for="qPS">పోలింగ్ స్టేషన్</label><select id="qPS"><option value="">అన్నీ (All)</option></select></div>
+      <div class="f h s3 m2"><label for="qAgeMin">వయస్సు నుండి</label><input id="qAgeMin" type="number" min="18" max="120" inputmode="numeric" placeholder="18"></div>
+      <div class="f h s3 m2"><label for="qAgeMax">వయస్సు వరకు</label><input id="qAgeMax" type="number" min="18" max="120" inputmode="numeric" placeholder="100"></div>
+      <div class="f h s6 m2"><label for="qGender">లింగము</label><select id="qGender"><option value="">అన్నీ</option><option value="M">పురుషుడు (M)</option><option value="F">స్త్రీ (F)</option></select></div>
+      <div class="f h s6 m3"><label for="qRel">సంబంధం</label><select id="qRel"><option value="">అన్నీ</option><option>తండ్రి</option><option>భర్త</option><option>తల్లి</option><option>ఇతర</option></select></div>
+      <div class="f s6 m3"><label for="qSort">క్రమం (Sort)</label><select id="qSort"><option value="rel">సరిపోలిక / వరుస సంఖ్య</option><option value="serial">వరుస సంఖ్య</option><option value="age">వయస్సు</option><option value="house">ఇంటి నెం.</option><option value="name">పేరు</option></select></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="clear">✕ అన్నీ క్లియర్</button>
+    </div>
+  </section>
+
+  <div class="resbar">
+    <div class="count" id="count"></div>
+    <div class="actions" style="margin:0">
+      <button class="btn pri" id="dlRes">⬇ ఫలితాలు Excel</button>
+      <button class="btn acc" id="dlAll">⬇ పూర్తి జాబితా Excel</button>
+    </div>
+  </div>
+  <div class="msg" id="dlmsg"></div>
+  <div class="cards" id="cards"></div>
+  <div class="more"><button class="btn" id="moreBtn" style="display:none">మరిన్ని చూపించు</button></div>
+</main>
+<footer>పేర్లు PDF లోని తెలుగు టెక్స్ట్ నుండి నేరుగా తీసుకోబడ్డాయి. English పేరు అంచనా మాత్రమే (approximate transliteration).</footer>
+
+<script>/*PDFLIB*/</script>
+<script>/*XLSX*/</script>
+<script>/*EXTRACT*/</script>
+<script>/*SEARCH*/</script>
+<script>/*EXPORT*/</script>
+<script id="seed" type="application/json">/*DATA*/</script>
+<script>
+(function(){
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const S = window.VoterSearch, X = window.VoterExtract, E = window.VoterExport;
+  const STORE = 'voterSlipSearch.uploads.v1';
+  const PAGE = 120;
+  let stations = new Map();   // key -> {key, psNo, psName, gp, mptc, builtin, records}
+  let all = [], results = [], shown = 0, scope = 'both';
+
+  // ---------- downloads capability ----------
+  let dlNs = Promise.resolve(null);
+  try { if (window.claude && typeof window.claude.use === 'function') dlNs = window.claude.use('downloads').catch(() => null); } catch (e) {}
+
+  // ---------- data ----------
+  const keyOf = (r) => (r.gp || '') + '|' + r.psNo;
+  function addRecords(recs, builtin) {
+    const by = new Map();
+    for (const r of recs) { const k = keyOf(r); if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+    const added = [];
+    for (const [k, list] of by) {
+      list.sort((a, b) => (a.serial || 0) - (b.serial || 0));
+      list.forEach(S.prepare);
+      const f = list[0];
+      stations.set(k, { key: k, psNo: f.psNo, psName: f.psName, gp: f.gp, mptc: f.mptc, builtin: !!builtin, records: list });
+      added.push(stations.get(k));
+    }
+    rebuild();
+    return added;
+  }
+  function rebuild() {
+    const st = [...stations.values()].sort((a, b) => (+a.psNo || 0) - (+b.psNo || 0) || a.gp.localeCompare(b.gp));
+    all = st.flatMap(s => s.records);
+    // chips
+    $('chips').innerHTML = st.map(s => `<div class="chip"><span>PS ${esc(s.psNo)} · ${esc(s.gp || s.psName)}</span><span class="n">${s.records.length}</span>${s.builtin ? '' : `<button title="తొలగించు" data-k="${esc(s.key)}">×</button>`}</div>`).join('') || '<span class="n">ఇంకా ఏదీ లేదు</span>';
+    // PS select
+    const cur = $('qPS').value;
+    $('qPS').innerHTML = '<option value="">అన్నీ (All)</option>' + st.map(s => `<option value="${esc(s.key)}">PS ${esc(s.psNo)} · ${esc(s.psName)}${s.gp ? ' (' + esc(s.gp) + ')' : ''}</option>`).join('');
+    if (stations.has(cur)) $('qPS').value = cur;
+    $('stTotal').textContent = all.length.toLocaleString('en-IN');
+    $('stPS').textContent = st.length;
+    $('stM').textContent = all.filter(r => r.genderEn === 'M').length.toLocaleString('en-IN');
+    $('stF').textContent = all.filter(r => r.genderEn === 'F').length.toLocaleString('en-IN');
+    run();
+  }
+  function persist() {
+    try {
+      const up = [...stations.values()].filter(s => !s.builtin).flatMap(s => s.records.map(strip));
+      localStorage.setItem(STORE, JSON.stringify(up));
+    } catch (e) { /* storage unavailable or full: data stays for this visit */ }
+  }
+  function strip(r) { const o = {}; for (const k in r) if (k[0] !== '_') o[k] = r[k]; return o; }
+
+  // ---------- search ----------
+  function parseSerial(s) {
+    s = (s || '').replace(/\s/g, ''); if (!s) return null;
+    const parts = s.split(',').filter(Boolean).map(p => { const m = p.match(/^(\d+)(?:-(\d*))?$/); if (!m) return null; return [+m[1], m[2] !== undefined ? (m[2] ? +m[2] : Infinity) : +m[1]]; }).filter(Boolean);
+    return parts.length ? parts : null;
+  }
+  function run() {
+    const q = $('qName').value.trim();
+    const epic = $('qEpic').value.replace(/\s/g, '').toUpperCase();
+    const ser = parseSerial($('qSerial').value);
+    const house = $('qHouse').value.replace(/\s/g, '').toLowerCase();
+    const ps = $('qPS').value, g = $('qGender').value, rel = $('qRel').value;
+    const aMin = parseInt($('qAgeMin').value, 10), aMax = parseInt($('qAgeMax').value, 10);
+    const out = [];
+    for (const r of all) {
+      if (ps && keyOf(r) !== ps) continue;
+      if (g && r.genderEn !== g) continue;
+      if (rel && r.relType !== rel) continue;
+      if (!isNaN(aMin) && !(r.age >= aMin)) continue;
+      if (!isNaN(aMax) && !(r.age <= aMax)) continue;
+      if (epic && !r.epic.includes(epic)) continue;
+      if (house && !r.house.replace(/\s/g, '').toLowerCase().startsWith(house)) continue;
+      if (ser && !ser.some(([a, b]) => r.serial >= a && r.serial <= b)) continue;
+      const sc = q ? S.nameScore(r, q, scope) : 3;
+      if (!sc) continue;
+      out.push([sc, r]);
+    }
+    const sort = $('qSort').value;
+    const bySerial = (a, b) => (+a.psNo || 0) - (+b.psNo || 0) || (a.serial || 0) - (b.serial || 0);
+    const cmp = {
+      rel: (a, b) => b[0] - a[0] || bySerial(a[1], b[1]),
+      serial: (a, b) => bySerial(a[1], b[1]),
+      age: (a, b) => (a[1].age || 0) - (b[1].age || 0) || bySerial(a[1], b[1]),
+      house: (a, b) => a[1].house.localeCompare(b[1].house, 'en', { numeric: true }) || bySerial(a[1], b[1]),
+      name: (a, b) => a[1].name.localeCompare(b[1].name, 'te') || bySerial(a[1], b[1]),
+    }[sort];
+    out.sort(cmp);
+    results = out.map(x => x[1]);
+    shown = 0; $('cards').innerHTML = '';
+    const filtered = q || epic || ser || house || ps || g || rel || !isNaN(aMin) || !isNaN(aMax);
+    $('count').innerHTML = `${results.length.toLocaleString('en-IN')} ఫలితాలు<small>${filtered ? 'మొత్తం ' + all.length.toLocaleString('en-IN') + ' లో' : 'అన్ని ఓటర్లు'}</small>`;
+    $('dlRes').disabled = !results.length; $('dlAll').disabled = !all.length;
+    if (!results.length) { $('cards').innerHTML = `<div class="empty">ఏ ఓటరూ దొరకలేదు. వేరే స్పెల్లింగ్ లేదా తక్కువ ఫిల్టర్లతో ప్రయత్నించండి.</div>`; $('moreBtn').style.display = 'none'; return; }
+    more();
+  }
+  function more() {
+    const slice = results.slice(shown, shown + PAGE);
+    $('cards').insertAdjacentHTML('beforeend', slice.map(card).join(''));
+    shown += slice.length;
+    const left = results.length - shown;
+    $('moreBtn').style.display = left > 0 ? '' : 'none';
+    $('moreBtn').textContent = `మరిన్ని చూపించు (${left.toLocaleString('en-IN')} మిగిలాయి)`;
+  }
+  function card(r) {
+    return `<div class="card">
+      <div class="top"><div class="sn"><small>వ.సం.</small>${r.serial ?? '-'}</div>
+        <div style="flex:1;min-width:0"><div class="nm">${esc(r.name)}</div><div class="en">${esc(r._en)}</div></div></div>
+      <div class="kv"><div><span>${esc(r.relType || 'బంధువు')}:</span> <b>${esc(r.relName || '-')}</b></div></div>
+      <div class="kv"><div><span>వయస్సు</span> <b>${r.age ?? '-'}</b></div><div><span>లింగము</span> <b>${esc(r.gender)}</b></div><div><span>ఇంటి నెం.</span> <b>${esc(r.house || '-')}</b></div></div>
+      <div class="kv"><div><span>EPIC</span> <b class="epic">${esc(r.epic)}</b></div></div>
+      <div class="tags"><span class="tag">PS ${esc(r.psNo)} · ${esc(r.gp)}</span><span class="tag">పేజీ ${r.page}</span>
+        ${r.house ? `<button class="link" data-fam="${esc(keyOf(r))}" data-house="${esc(r.house)}">ఇంటి సభ్యులు →</button>` : ''}</div>
+    </div>`;
+  }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  // ---------- Excel ----------
+  function filterText() {
+    const parts = [];
+    const v = (id) => $(id).value.trim();
+    if (v('qName')) parts.push('పేరు: ' + v('qName'));
+    if (v('qEpic')) parts.push('EPIC: ' + v('qEpic'));
+    if (v('qSerial')) parts.push('వరుస సంఖ్య: ' + v('qSerial'));
+    if (v('qHouse')) parts.push('ఇంటి నెం.: ' + v('qHouse'));
+    if (v('qPS')) parts.push('PS: ' + $('qPS').selectedOptions[0].textContent);
+    if (v('qGender')) parts.push('లింగము: ' + v('qGender'));
+    if (v('qRel')) parts.push('సంబంధం: ' + v('qRel'));
+    if (v('qAgeMin') || v('qAgeMax')) parts.push('వయస్సు: ' + (v('qAgeMin') || '') + '-' + (v('qAgeMax') || ''));
+    return parts.join(' ; ');
+  }
+  function fileName(rows, tag) {
+    const ps = [...new Set(rows.map(r => r.psNo))];
+    const psPart = ps.length === 1 ? 'PS' + ps[0] : ps.length + 'PS';
+    const d = new Date(); const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    return `Voters_${psPart}_${tag}_${stamp}.xlsx`;
+  }
+  async function download(rows, tag, ft) {
+    const btnMsg = $('dlmsg'); btnMsg.className = 'msg';
+    const data = E.build(window.XLSX, rows, { filterText: ft });
+    const name = fileName(rows, tag);
+    const blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const ns = await dlNs;
+    if (ns) {
+      try { await ns.save({ filename: name, data: blob }); show(btnMsg, 'ok', `✓ ${name} (${rows.length} ఓటర్లు)`); }
+      catch (e) { if (e && e.code === 'declined') return; show(btnMsg, 'err', 'డౌన్‌లోడ్ కాలేదు: ' + ((e && e.message) || e)); }
+      return;
+    }
+    try {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+      show(btnMsg, 'ok', `✓ ${name} (${rows.length} ఓటర్లు)`);
+    } catch (e) { show(btnMsg, 'err', 'ఈ వీక్షణలో డౌన్‌లోడ్ అందుబాటులో లేదు.'); }
+  }
+  function show(el, cls, text) { el.className = 'msg ' + cls; el.textContent = text; }
+
+  // ---------- upload ----------
+  async function handleFiles(files) {
+    files = [...files].filter(f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf');
+    if (!files.length) return;
+    const prog = $('prog'), bar = $('pbar'), pt = $('ptext'), msg = $('msg');
+    msg.className = 'msg'; prog.classList.add('on');
+    const done = [], failed = [];
+    for (let fi = 0; fi < files.length; fi++) {
+      const f = files[fi], tag = files.length > 1 ? `(${fi + 1}/${files.length}) ` : '';
+      try {
+        bar.style.width = '2%'; pt.textContent = `${tag}${f.name} తెరుస్తోంది… (${(f.size / 1048576).toFixed(0)} MB)`;
+        await tick();
+        const bytes = new Uint8Array(await f.arrayBuffer());
+        await tick();
+        const recs = await X.extract(window.PDFLib, bytes, async (i, n) => {
+          bar.style.width = (i / n * 100).toFixed(1) + '%';
+          pt.textContent = `${tag}${f.name} — పేజీ ${i}/${n} చదువుతోంది…`;
+          if (i % 3 === 0) await tick();
+        });
+        if (!recs.length) { failed.push(f.name + ' — ఓటరు స్లిప్ డేటా దొరకలేదు'); continue; }
+        const added = addRecords(recs, false);
+        done.push(added.map(s => `PS ${s.psNo} (${s.records.length})`).join(', '));
+      } catch (e) {
+        console.error(e); failed.push(f.name + ' — ' + ((e && e.message) || 'చదవలేకపోయాము'));
+      }
+    }
+    prog.classList.remove('on');
+    persist();
+    if (done.length) show(msg, failed.length ? 'err' : 'ok', '✓ జోడించబడింది: ' + done.join(' ; ') + (failed.length ? '  ✕ ' + failed.join(' ; ') : ''));
+    else show(msg, 'err', '✕ ' + failed.join(' ; ') + '. AP SEC ఫోటో ఓటర్ స్లిప్ PDF అని నిర్ధారించుకోండి.');
+    $('file').value = '';
+  }
+  const tick = () => new Promise(r => setTimeout(r, 0));
+
+  // ---------- wiring ----------
+  let t = null;
+  const deb = () => { clearTimeout(t); t = setTimeout(run, 160); };
+  ['qName', 'qEpic', 'qSerial', 'qHouse', 'qAgeMin', 'qAgeMax'].forEach(id => $(id).addEventListener('input', deb));
+  ['qPS', 'qGender', 'qRel', 'qSort'].forEach(id => $(id).addEventListener('change', run));
+  $('scope').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scope = b.dataset.v; [...$('scope').children].forEach(x => x.classList.toggle('on', x === b)); run(); });
+  $('clear').addEventListener('click', () => { ['qName', 'qEpic', 'qSerial', 'qHouse', 'qAgeMin', 'qAgeMax', 'qPS', 'qGender', 'qRel'].forEach(id => $(id).value = ''); $('qSort').value = 'rel'; run(); });
+  $('moreBtn').addEventListener('click', more);
+  $('cards').addEventListener('click', e => {
+    const b = e.target.closest('[data-fam]'); if (!b) return;
+    ['qName', 'qEpic', 'qSerial', 'qAgeMin', 'qAgeMax', 'qGender', 'qRel'].forEach(id => $(id).value = '');
+    $('qPS').value = b.dataset.fam; $('qHouse').value = b.dataset.house; $('qSort').value = 'serial'; run();
+    window.scrollTo({ top: $('count').getBoundingClientRect().top + window.scrollY - 20, behavior: 'smooth' });
+  });
+  $('chips').addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b) return;
+    stations.delete(b.dataset.k); persist(); rebuild();
+  });
+  $('dlRes').addEventListener('click', () => download(results, 'search', filterText()));
+  $('dlAll').addEventListener('click', () => download([...all], 'all', ''));
+  $('file').addEventListener('change', e => handleFiles(e.target.files));
+  const panel = document.body;
+  panel.addEventListener('dragover', e => { e.preventDefault(); $('dsPanel').classList.add('dropping'); });
+  panel.addEventListener('dragleave', e => { if (e.target === panel || !panel.contains(e.relatedTarget)) $('dsPanel').classList.remove('dropping'); });
+  panel.addEventListener('drop', e => { e.preventDefault(); $('dsPanel').classList.remove('dropping'); handleFiles(e.dataTransfer.files); });
+
+  // ---------- boot ----------
+  try { addRecords(JSON.parse($('seed').textContent), true); } catch (e) { console.error(e); }
+  try { const up = JSON.parse(localStorage.getItem(STORE) || '[]'); if (up.length) addRecords(up, false); } catch (e) {}
+  if (!stations.size) rebuild();
+})();
+</script>
+</body>
+</html>

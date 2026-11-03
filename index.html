@@ -26,6 +26,7 @@
           <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
           <a class="btn btn-gold" href="#swsg">SWSG tools</a>
           <a class="btn btn-pink" href="#dsc">DSC Exam Hall</a>
+          <a class="btn btn-orange" href="#elections">Local body elections</a>
           <a class="btn btn-teal" href="#apps">Apps</a>
           <a class="btn" href="#lab-log">Today in the lab</a>
         </div>
@@ -71,6 +72,20 @@
           </div>
         </div>
         <div class="grid" id="dsc-grid"></div>
+      </div>
+    </section>
+
+    <!-- LOCAL BODY ELECTIONS (orange) -->
+    <section class="section elections-section" id="elections" style="padding-top:24px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-orange">// local body elections</span>
+            <h2 class="elections-group-title">LOCAL BODY ELECTIONS</h2>
+            <p class="muted" style="margin:0">MPTC / ZPTC election tools: search voter slips by name in తెలుగు or English, EPIC or serial number, and download voter lists as Excel. Free, and your PDFs are read only in your browser.</p>
+          </div>
+        </div>
+        <div class="grid" id="elections-grid"></div>
       </div>
     </section>
 
@@ -234,7 +249,8 @@
     var allTools = RLL.publicTools(data), groups = [], byCat = {};
     var isDsc = function (t) { return (t.category || "").toUpperCase() === "DSC"; };
     var isSwsg = function (t) { return (t.category || "").toUpperCase() === "SWSG"; };
-    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t); });
+    var isElec = function (t) { return (t.category || "").toUpperCase() === "ELECTIONS"; };
+    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t) && !isElec(t); });
     tools.forEach(function (t) {
       var c = t.category || "Other";
       if (!byCat[c]) { byCat[c] = []; groups.push(c); }
@@ -276,6 +292,18 @@
         '<div class="meta"><span class="tag">DSC</span><span class="tool-open">Open tool &rarr;</span></div>' +
         "</a>";
     }).join("") : '<p class="muted">DSC tests are on the way.</p>';
+
+    /* LOCAL BODY ELECTIONS (orange) */
+    var elec = allTools.filter(isElec);
+    document.getElementById("elections-grid").innerHTML = elec.length ? elec.map(function (t) {
+      return '<a class="card tool-card orange" href="' + esc(t.url) + '">' +
+        '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-orange">' + esc(t.badge || "Free tool") + '</span></div>' +
+        '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
+        "<p>" + esc(t.tagline || "") + "</p>" +
+        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+        '<div class="meta"><span class="tag">Elections</span><span class="tool-open">Open tool &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">Election tools are on the way.</p>';
 
     /* Apps */
     var apps = RLL.publicApps(data);

@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-voter-slip-search",
+      "date": "2026-11-03",
+      "type": "launch",
+      "title": "New: LOCAL BODY ELECTIONS with Voter Slip Search",
+      "body": "A new orange LOCAL BODY ELECTIONS section on the home page. First tool: search MPTC/ZPTC photo voter slip PDFs by name in Telugu or English, EPIC number, serial number or house number, and download the voter list as Excel (name, age, gender, relation, house number, EPIC, serial number). PS 16 is built in; upload any other polling station's PDF and it works the same way. Free; PDFs are read only in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-sadarem-security-print",
       "date": "2026-10-30",
       "type": "launch",
@@ -177,6 +185,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-voter-slip-search",
+      "slug": "voter-slip-search",
+      "name": "Voter Slip Search (ఓటరు స్లిప్ శోధన)",
+      "tagline": "Search MPTC/ZPTC photo voter slip PDFs by name in Telugu or English, EPIC number, serial number or house number, and download the list as Excel.",
+      "description": "PS 16 (చేనిగుంట) is built in. Upload the AP SEC photo voter slip PDF of any other polling station and it is read in your browser: search by voter or father/husband name (తెలుగు or English spelling), EPIC, serial number or range, house number, age, gender and relation, see everyone in the same house, and download results or the full list as Excel with a summary sheet. Free; PDFs never leave your browser.",
+      "category": "ELECTIONS",
+      "badge": "Free tool",
+      "url": "tools/voter-slip-search.html",
+      "color": "#f97316",
+      "visibility": "public",
+      "added": "2026-11-03"
+    },
     {
       "id": "t-sadarem-security-print",
       "slug": "sadarem-security-print",
