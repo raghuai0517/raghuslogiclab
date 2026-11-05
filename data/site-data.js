@@ -48,14 +48,6 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
-      "id": "u-tada-polling-live",
-      "date": "2026-11-05",
-      "type": "launch",
-      "title": "New: Tada Mandal Live Polling Dashboard",
-      "body": "A live dashboard in LOCAL BODY ELECTIONS showing total men and women voted, voting percentage, and segment-wise and hourly polling for Tada Mandal, refreshed every minute from the polling Google Sheet.",
-      "project": "raghuslogiclab-main"
-    },
-    {
       "id": "u-voter-slip-search",
       "date": "2026-11-03",
       "type": "launch",
@@ -193,19 +185,6 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
-    {
-      "id": "t-tada-polling-live",
-      "slug": "tada-polling-live",
-      "name": "Tada Mandal Live Polling Dashboard",
-      "tagline": "Live MPTC/ZPTC polling for Tada Mandal: total men and women voted, voting percentage, segment-wise and hour-by-hour.",
-      "description": "Reads the Tada Mandal hourly polling Google Sheet and refreshes every minute. Shows total voters, men and women polled, poll %, all 13 MPTC segments, the 4 allotted persons, all 42 polling stations, and an hourly chart, with a live IST clock and poll-close countdown.",
-      "category": "ELECTIONS",
-      "badge": "Live",
-      "url": "tools/tada-polling-live.html",
-      "color": "#f97316",
-      "visibility": "public",
-      "added": "2026-11-05"
-    },
     {
       "id": "t-voter-slip-search",
       "slug": "voter-slip-search",
