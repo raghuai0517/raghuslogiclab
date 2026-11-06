@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Election Duty ID Card &amp; Agent Pass Maker · RaghusLogicLab</title>
+<meta name="description" content="Make MPTC/ZPTC Election Duty ID cards and Agent Passes with photos, 10.5 × 7.5 cm, 5 per A4 sheet. Free; data stays in your browser.">
+<style>
+  :root { --ui:#2b2b2b; --muted:#666; --bd:#d6d6d6; --accent:#8a5a35; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; color:var(--ui); background:#f4f2ef; }
+  header.app { background:#3a3a3a; color:#fff; padding:14px 20px; }
+  header.app h1 { margin:0; font-size:20px; }
+  .rll-bar{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;opacity:.95}
+  .rll-bar a{color:#fff;text-decoration:none;font-weight:600}
+  .rll-bar a:hover{text-decoration:underline}
+  .rll-mark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#fff;color:#3a3a3a;font-size:11px;font-weight:800;margin-right:6px}
+  header.app p { margin:4px 0 0; font-size:13px; color:#ddd; }
+  .wrap { max-width:1200px; margin:0 auto; padding:16px; display:grid; grid-template-columns: 400px 1fr; gap:16px; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+  .panel { background:#fff; border:1px solid var(--bd); border-radius:8px; padding:14px; margin-bottom:16px; }
+  .panel h2 { font-size:15px; margin:0 0 10px; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tabs button { flex:1; padding:10px; border:1px solid var(--bd); background:#fafafa; border-radius:6px; font-weight:bold; cursor:pointer; }
+  .tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  label.f { display:block; font-size:12px; font-weight:bold; color:var(--muted); margin:8px 0 3px; }
+  input[type=text], input[type=number] { width:100%; padding:8px; border:1px solid var(--bd); border-radius:5px; font-size:14px; }
+  .row2 { display:flex; gap:8px; align-items:center; }
+  .btn { padding:9px 14px; border-radius:6px; border:1px solid var(--bd); background:#fff; cursor:pointer; font-size:14px; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:bold; }
+  .btn.danger { color:#b00020; }
+  .btn.small { padding:5px 9px; font-size:12px; }
+  .photo-pick { display:flex; gap:10px; align-items:center; margin-top:6px; }
+  .photo-pick .thumb { width:44px; height:54px; border:1px solid var(--bd); background:#eee center/cover no-repeat; border-radius:3px; flex:none; }
+  .hint { font-size:12px; color:var(--muted); margin:6px 0 0; line-height:1.4; }
+  .list { max-height:420px; overflow:auto; border:1px solid var(--bd); border-radius:6px; }
+  .item { display:flex; gap:8px; align-items:center; padding:6px 8px; border-bottom:1px solid #eee; font-size:13px; }
+  .item:last-child { border-bottom:0; }
+  .item .thumb { width:30px; height:37px; background:#eee center/cover no-repeat; border:1px solid var(--bd); flex:none; }
+  .item .info { flex:1; min-width:0; }
+  .item .info b { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .info span { color:var(--muted); font-size:12px; }
+  .nophoto { color:#b00020 !important; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  .count { font-size:13px; color:var(--muted); }
+  #previewBox { overflow:hidden; }
+  #pagesScaler { transform-origin: top left; }
+  .page { width:210mm; height:297mm; background:#fff; position:relative; margin-bottom:8mm; box-shadow:0 1px 6px rgba(0,0,0,.2); overflow:hidden; }
+  .empty { padding:30px; text-align:center; color:var(--muted); }
+  input[type=file] { display:none; }
+
+  /* ---------- ID CARD (exact size 105 x 75 mm) ---------- */
+  .slot { position:absolute; }
+  .slot.rot { width:75mm; height:105mm; }
+  .slot.rot .card { position:absolute; left:0; top:0; transform-origin:0 0; transform: translate(0,105mm) rotate(-90deg); }
+  .card { width:105mm; height:75mm; position:relative; background:#fff; border:0.42mm solid var(--main); overflow:hidden; font-family: Arial, Helvetica, sans-serif; color:#000; }
+  .card .hdr { height:20.5mm; background:var(--main); color:#fff; text-align:center; padding-top:2.3mm; }
+  .card .hdr .t { font-size:16pt; font-weight:bold; line-height:1; letter-spacing:.2px; }
+  .card .hdr .rule { width:56mm; height:0; border-top:0.2mm solid #fff; margin:1.4mm auto 1.3mm; }
+  .card .hdr .l1 { font-size:8.5pt; font-weight:bold; line-height:1.1; white-space:nowrap; }
+  .card .hdr .l1 sup { font-size:5.6pt; vertical-align: 2.6pt; line-height:0; }
+  .card .hdr .m { font-size:10.5pt; font-weight:bold; margin-top:0.9mm; }
+  .card .body { position:absolute; top:22.5mm; left:4mm; right:4mm; height:35mm; display:flex; gap:3.5mm; }
+  .card .fields { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .card .frow { flex:1; display:flex; align-items:flex-end; min-width:0; }
+  .card .lab { width:var(--labw); flex:none; font-size:7.5pt; font-weight:bold; color:var(--label); line-height:1.15; padding-bottom:0.6mm; }
+  .card .val { flex:1; min-width:0; height:100%; border-bottom:0.25mm solid #a0a0a0; display:flex; align-items:flex-end; overflow:hidden; }
+  .card .val span { font-size:10pt; font-weight:bold; white-space:nowrap; padding:0 0.8mm 0.5mm; line-height:1.1; }
+  .card .photo { width:22mm; height:27mm; flex:none; border:0.3mm solid var(--main); background:var(--light); display:flex; align-items:center; justify-content:center; text-align:center; font-size:7pt; color:#555; overflow:hidden; }
+  .card .photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .card .sigs { position:absolute; left:4mm; right:4mm; bottom:3.6mm; display:flex; justify-content:space-between; }
+  .card .sig { border-top:0.18mm solid #000; padding-top:1mm; font-size:6.5pt; font-weight:bold; text-align:center; }
+  .card .sig.a { width:30mm; } .card .sig.b { width:36mm; }
+  .crop { position:absolute; background:#888; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body { background:#fff; }
+    header.app, .no-print, .panel:not(.pv) { display:none !important; }
+    .wrap { display:block; padding:0; max-width:none; }
+    .panel.pv { border:0; padding:0; margin:0; background:none; }
+    #previewBox { overflow:visible; height:auto !important; }
+    #pagesScaler { transform:none !important; }
+    .page { margin:0; box-shadow:none; page-break-after:always; break-after:page; }
+    .page:last-child { page-break-after:auto; break-after:auto; }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+<meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>
+</head>
+<body>
+<header class="app no-print">
+  <nav class="rll-bar" aria-label="Site"><a href="../index.html"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#elections">Local body elections</a></nav>
+  <h1>Election ID Card Maker</h1>
+  <p>Enter details, upload photos, then print on A4 — 5 cards per sheet (10.5 × 7.5 cm each).</p>
+</header>
+
+<div class="wrap">
+  <div class="no-print">
+    <div class="panel">
+      <div class="tabs">
+        <button id="tab-duty" onclick="setType('duty')">Election Duty</button>
+        <button id="tab-agent" onclick="setType('agent')">Agent Pass</button>
+      </div>
+
+      <h2 id="formTitle">Add person</h2>
+      <div id="formFields"></div>
+      <label class="f">Photo</label>
+      <div class="photo-pick">
+        <div class="thumb" id="formThumb"></div>
+        <button class="btn" onclick="document.getElementById('photoIn').click()">Choose photo</button>
+        <button class="btn small danger" id="rmPhoto" onclick="formPhoto=null;showFormThumb()" style="display:none">Remove</button>
+        <input type="file" id="photoIn" accept="image/*">
+      </div>
+      <div class="row2" style="margin-top:14px">
+        <button class="btn primary" id="saveBtn" onclick="saveForm()">Add card</button>
+        <button class="btn" id="cancelBtn" onclick="resetForm()" style="display:none">Cancel</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Bulk import (many people at once)</h2>
+      <div class="toolbar">
+        <button class="btn small" onclick="downloadTemplate()">1. Download Excel/CSV template</button>
+        <button class="btn small" onclick="document.getElementById('csvIn').click()">2. Import filled CSV</button>
+        <button class="btn small" onclick="document.getElementById('bulkPhotoIn').click()">3. Upload all photos</button>
+        <input type="file" id="csvIn" accept=".csv,text/csv">
+        <input type="file" id="bulkPhotoIn" accept="image/*" multiple>
+      </div>
+      <p class="hint">Fill the template in Excel and save it as <b>CSV</b>. In the <b>photo</b> column, write each photo's file name (e.g. <i>ramesh.jpg</i>). Then upload all the photos together and they are matched automatically by file name (or by the person's name if the photo column is empty).</p>
+    </div>
+
+    <div class="panel">
+      <h2>Card heading &amp; colour</h2>
+      <label class="f">Election line</label>
+      <input type="text" id="setLine" oninput="saveSettings()">
+      <label class="f">Mandal</label>
+      <input type="text" id="setMandal" oninput="saveSettings()">
+      <label class="f">Card colour</label>
+      <input type="color" id="setColor" oninput="saveSettings()">
+      <button class="btn small" onclick="resetColor()">Default colour</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel no-print">
+      <div class="toolbar">
+        <h2 style="margin:0;flex:1" id="listTitle">Cards</h2>
+        <span class="count" id="countTxt"></span>
+      </div>
+      <div class="list" id="list"></div>
+      <div class="toolbar" style="margin-top:10px">
+        <label class="f" style="margin:0">Extra blank cards:</label>
+        <input type="number" id="blanks" min="0" value="0" style="width:80px" oninput="render()">
+        <label style="font-size:13px"><input type="checkbox" id="fillLast" onchange="render()"> Fill empty spaces on last sheet with blank cards</label>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" onclick="window.print()">🖨 Print A4 sheets</button>
+        <button class="btn danger" onclick="clearAll()">Delete all cards</button>
+      </div>
+      <p class="hint">In the print dialog choose <b>A4</b>, <b>Scale 100% / Actual size</b>, margins <b>None/Default</b>, and turn on <b>Background graphics</b> so the coloured header prints.</p>
+    </div>
+
+    <div class="panel pv">
+      <div id="previewBox"><div id="pagesScaler"><div id="pages"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TYPES = {
+  duty: {
+    title: "ELECTION DUTY", color: "#B07A4F", leftSig: "Employee", labw: "23.5mm",
+    fields: [
+      { key: "name", label: "NAME" },
+      { key: "designation", label: "DESIGNATION" },
+      { key: "department", label: "DEPARTMENT" },
+      { key: "appointed", label: "APPOINTED AS" }
+    ]
+  },
+  agent: {
+    title: "AGENT PASS", color: "#6E6E6E", leftSig: "Agent", labw: "33mm",
+    fields: [
+      { key: "name", label: "NAME" },
+      { key: "party", label: "PARTY AFFILIATION /<br>INDEPENDENT", plain: "PARTY AFFILIATION / INDEPENDENT" },
+      { key: "segment", label: "MPTC / ZPTC SEGMENT" }
+    ]
+  }
+};
+const STORE_KEY = "electionIdCards_v1";
+let state = { type: "duty", data: { duty: [], agent: [] }, settings: {
+  line: "2nd ORDINARY ELECTIONS TO MPTCs & ZPTCs - 2026", mandal: "TADA MANDAL",
+  color: { duty: TYPES.duty.color, agent: TYPES.agent.color } } };
+let editIndex = -1, formPhoto = null;
+
+/* ---------- storage ---------- */
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s) state = Object.assign(state, s); } catch (e) {}
+}
+function persist() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch (e) { alert("Browser storage is full – cards are kept until you close this page. Print before closing."); }
+}
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function mix(hex, to, t) {
+  const a = hex.match(/\w\w/g).map(h => parseInt(h, 16)), b = to.match(/\w\w/g).map(h => parseInt(h, 16));
+  return "#" + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+function lineHTML(s) { return esc(s).replace(/(\d)(st|nd|rd|th)\b/gi, "$1<sup>$2</sup>"); }
+
+function processPhoto(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const W = 330, H = 405, ar = W / H;
+        let sw = img.width, sh = img.height, sx = 0, sy = 0;
+        if (sw / sh > ar) { sw = sh * ar; sx = (img.width - sw) / 2; } else { sh = sw / ar; sy = (img.height - sh) / 4; }
+        const c = document.createElement("canvas"); c.width = W; c.height = H;
+        const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+        g.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
+        res(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = rej; img.src = r.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+/* ---------- form ---------- */
+function setType(t) {
+  state.type = t; persist(); resetForm();
+  document.getElementById("tab-duty").classList.toggle("on", t === "duty");
+  document.getElementById("tab-agent").classList.toggle("on", t === "agent");
+  document.getElementById("setColor").value = state.settings.color[t];
+  render();
+}
+function buildForm(rec) {
+  const T = TYPES[state.type];
+  document.getElementById("formFields").innerHTML = T.fields.map(f =>
+    `<label class="f">${f.plain || f.label}</label><input type="text" id="in_${f.key}" value="${esc(rec ? rec[f.key] : "")}">`).join("");
+}
+function showFormThumb() {
+  const t = document.getElementById("formThumb");
+  t.style.backgroundImage = formPhoto ? `url(${formPhoto})` : "none";
+  document.getElementById("rmPhoto").style.display = formPhoto ? "" : "none";
+}
+function resetForm() {
+  editIndex = -1; formPhoto = null; buildForm(null); showFormThumb();
+  document.getElementById("formTitle").textContent = "Add person";
+  document.getElementById("saveBtn").textContent = "Add card";
+  document.getElementById("cancelBtn").style.display = "none";
+}
+function saveForm() {
+  const T = TYPES[state.type], rec = {};
+  T.fields.forEach(f => rec[f.key] = document.getElementById("in_" + f.key).value.trim());
+  if (!rec.name) { alert("Please enter the name."); return; }
+  rec.photo = formPhoto;
+  const list = state.data[state.type];
+  if (editIndex >= 0) { rec.photoName = list[editIndex].photoName; list[editIndex] = rec; } else list.push(rec);
+  persist(); resetForm(); render();
+}
+function editRec(i) {
+  const rec = state.data[state.type][i];
+  editIndex = i; formPhoto = rec.photo || null; buildForm(rec); showFormThumb();
+  document.getElementById("formTitle").textContent = "Edit person";
+  document.getElementById("saveBtn").textContent = "Save changes";
+  document.getElementById("cancelBtn").style.display = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function delRec(i) {
+  if (!confirm("Delete this card?")) return;
+  state.data[state.type].splice(i, 1); persist(); render();
+}
+function clearAll() {
+  if (!confirm("Delete ALL " + TYPES[state.type].title + " cards?")) return;
+  state.data[state.type] = []; persist(); render();
+}
+let rowPhotoIdx = -1;
+function pickRowPhoto(i) { rowPhotoIdx = i; document.getElementById("rowPhotoIn").click(); }
+
+/* ---------- settings ---------- */
+function loadSettingsUI() {
+  document.getElementById("setLine").value = state.settings.line;
+  document.getElementById("setMandal").value = state.settings.mandal;
+}
+function saveSettings() {
+  state.settings.line = document.getElementById("setLine").value;
+  state.settings.mandal = document.getElementById("setMandal").value;
+  state.settings.color[state.type] = document.getElementById("setColor").value;
+  persist(); render();
+}
+function resetColor() { document.getElementById("setColor").value = TYPES[state.type].color; saveSettings(); }
+
+/* ---------- CSV ---------- */
+function csvHeaders() { return TYPES[state.type].fields.map(f => f.key).concat("photo"); }
+function downloadTemplate() {
+  const h = csvHeaders();
+  const ex = state.type === "duty"
+    ? ["K. Ramesh", "Senior Assistant", "Revenue", "Presiding Officer", "ramesh.jpg"]
+    : ["P. Suresh", "Independent", "Tada MPTC - 3", "suresh.jpg"];
+  const blob = new Blob(["﻿" + h.join(",") + "\n" + ex.map(v => `"${v}"`).join(",") + "\n"], { type: "text/csv" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = (state.type === "duty" ? "election_duty" : "agent_pass") + "_template.csv"; a.click();
+}
+function parseCSV(text) {
+  const rows = []; let row = [], f = "", q = false;
+  text = text.replace(/^﻿/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim()));
+}
+function importCSV(text) {
+  const rows = parseCSV(text); if (rows.length < 2) { alert("No data rows found."); return; }
+  const head = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+  const T = TYPES[state.type];
+  const aliases = { appointed: ["appointed", "appointedas"], party: ["party", "partyaffiliation", "affiliation", "partyaffiliationindependent"], segment: ["segment", "mptczptcsegment", "mptcsegment"], photo: ["photo", "photofile", "photoname", "filename"] };
+  const idx = k => { const names = aliases[k] || [k]; return head.findIndex(h => names.includes(h)); };
+  let n = 0;
+  rows.slice(1).forEach(r => {
+    const rec = {};
+    T.fields.forEach(f => { const i = idx(f.key); rec[f.key] = i >= 0 ? (r[i] || "").trim() : ""; });
+    const pi = idx("photo"); rec.photoName = pi >= 0 ? (r[pi] || "").trim() : ""; rec.photo = null;
+    if (rec.name) { state.data[state.type].push(rec); n++; }
+  });
+  persist(); render(); alert(n + " people imported. Now upload their photos (step 3).");
+}
+async function bulkPhotos(files) {
+  const list = state.data[state.type];
+  const norm = s => String(s || "").toLowerCase().replace(/\.[a-z0-9]+$/, "").replace(/[^a-z0-9]/g, "");
+  let matched = 0, unmatched = [];
+  for (const file of files) {
+    const key = norm(file.name);
+    let i = list.findIndex(r => r.photoName && norm(r.photoName) === key);
+    if (i < 0) i = list.findIndex(r => !r.photo && norm(r.name) === key);
+    if (i < 0) { unmatched.push(file.name); continue; }
+    list[i].photo = await processPhoto(file); matched++;
+  }
+  persist(); render();
+  alert(matched + " photo(s) matched." + (unmatched.length ? "\nNot matched: " + unmatched.join(", ") : ""));
+}
+
+/* ---------- card rendering ---------- */
+function cardHTML(rec, t) {
+  const T = TYPES[t], col = state.settings.color[t];
+  const vars = `--main:${col};--label:${mix(col, "#000000", .35)};--light:${mix(col, "#ffffff", .88)};--labw:${T.labw}`;
+  const rows = T.fields.map(f => `<div class="frow"><div class="lab">${f.label}</div><div class="val"><span>${rec ? esc(rec[f.key]) : ""}</span></div></div>`).join("");
+  const photo = rec && rec.photo ? `<img src="${rec.photo}" alt="">` : "Affix<br>Photo";
+  return `<div class="card" style="${vars}">
+    <div class="hdr"><div class="t">${T.title}</div><div class="rule"></div>
+      <div class="l1">${lineHTML(state.settings.line)}</div><div class="m">${esc(state.settings.mandal)}</div></div>
+    <div class="body"><div class="fields">${rows}</div><div class="photo">${photo}</div></div>
+    <div class="sigs"><div class="sig a">Signature of ${T.leftSig}</div><div class="sig b">Signature of Returning Officer</div></div>
+  </div>`;
+}
+/* A4 positions (mm): 3 flat cards left, 2 turned cards right */
+const SLOTS = (() => {
+  const g = 4, bw = 105 + g + 75, bh = 3 * 75 + 2 * g, ox = (210 - bw) / 2, oy = (297 - bh) / 2;
+  const s = [];
+  for (let r = 0; r < 3; r++) s.push({ x: ox, y: oy + r * (75 + g), w: 105, h: 75, rot: false });
+  for (let r = 0; r < 2; r++) s.push({ x: ox + 105 + g, y: oy + r * (105 + g), w: 75, h: 105, rot: true });
+  return s;
+})();
+function cropMarks(s) {
+  let h = ""; const L = 2, o = 0.6;
+  [[s.x, s.y, -1, -1], [s.x + s.w, s.y, 1, -1], [s.x, s.y + s.h, -1, 1], [s.x + s.w, s.y + s.h, 1, 1]].forEach(([x, y, dx, dy]) => {
+    h += `<div class="crop" style="left:${dx < 0 ? x - o - L : x + o}mm;top:${y - 0.05}mm;width:${L}mm;height:0.1mm"></div>`;
+    h += `<div class="crop" style="left:${x - 0.05}mm;top:${dy < 0 ? y - o - L : y + o}mm;width:0.1mm;height:${L}mm"></div>`;
+  });
+  return h;
+}
+function render() {
+  const t = state.type, list = state.data[t], T = TYPES[t];
+  document.getElementById("listTitle").textContent = T.title + " cards";
+  // list
+  document.getElementById("list").innerHTML = list.length ? list.map((r, i) => `
+    <div class="item"><div class="thumb" style="${r.photo ? `background-image:url(${r.photo})` : ""}"></div>
+      <div class="info"><b>${i + 1}. ${esc(r.name)}</b><span>${esc(T.fields.slice(1).map(f => r[f.key]).filter(Boolean).join(" · "))}</span>
+      ${r.photo ? "" : `<span class="nophoto"> · no photo${r.photoName ? " (" + esc(r.photoName) + ")" : ""}</span>`}</div>
+      <button class="btn small" onclick="pickRowPhoto(${i})">Photo</button>
+      <button class="btn small" onclick="editRec(${i})">Edit</button>
+      <button class="btn small danger" onclick="delRec(${i})">✕</button></div>`).join("")
+    : `<div class="empty">No cards yet — add a person or import a CSV.</div>`;
+  // cards to print
+  const items = list.slice();
+  const blanks = Math.max(0, parseInt(document.getElementById("blanks").value) || 0);
+  for (let i = 0; i < blanks; i++) items.push(null);
+  if (document.getElementById("fillLast").checked && items.length % 5) while (items.length % 5) items.push(null);
+  const pages = Math.ceil(items.length / 5);
+  document.getElementById("countTxt").textContent = `${list.length} card(s) · ${pages} A4 sheet(s)`;
+  let html = "";
+  for (let p = 0; p < pages; p++) {
+    html += `<div class="page">`;
+    items.slice(p * 5, p * 5 + 5).forEach((rec, i) => {
+      const s = SLOTS[i];
+      html += `<div class="slot${s.rot ? " rot" : ""}" style="left:${s.x}mm;top:${s.y}mm">${cardHTML(rec, t)}</div>` + cropMarks(s);
+    });
+    html += `</div>`;
+  }
+  document.getElementById("pages").innerHTML = html || `<div class="empty">Your A4 print preview will appear here.</div>`;
+  fitText(); scalePreview();
+}
+function fitText() {
+  document.querySelectorAll("#pages .val span").forEach(sp => {
+    let fs = 10; sp.style.fontSize = fs + "pt";
+    const box = sp.parentElement;
+    while (sp.scrollWidth > box.clientWidth && fs > 5.5) { fs -= 0.25; sp.style.fontSize = fs + "pt"; }
+  });
+}
+function scalePreview() {
+  const box = document.getElementById("previewBox"), sc = document.getElementById("pagesScaler");
+  sc.style.transform = "none";
+  const natural = sc.scrollWidth, k = Math.min(1, box.clientWidth / natural);
+  sc.style.transform = `scale(${k})`;
+  box.style.height = (sc.scrollHeight * k) + "px";
+}
+window.addEventListener("resize", scalePreview);
+window.addEventListener("beforeprint", () => { document.getElementById("pagesScaler").style.transform = "none"; });
+window.addEventListener("afterprint", scalePreview);
+
+/* ---------- file inputs ---------- */
+document.getElementById("photoIn").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return; formPhoto = await processPhoto(f); showFormThumb(); e.target.value = "";
+});
+document.getElementById("csvIn").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = () => importCSV(r.result); r.readAsText(f); e.target.value = "";
+});
+document.getElementById("bulkPhotoIn").addEventListener("change", e => { bulkPhotos([...e.target.files]); e.target.value = ""; });
+const rp = document.createElement("input"); rp.type = "file"; rp.accept = "image/*"; rp.id = "rowPhotoIn"; document.body.appendChild(rp);
+rp.addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f || rowPhotoIdx < 0) return;
+  state.data[state.type][rowPhotoIdx].photo = await processPhoto(f); persist(); render(); e.target.value = "";
+});
+
+load(); loadSettingsUI(); setType(state.type);
+</script>
+</body>
+</html>

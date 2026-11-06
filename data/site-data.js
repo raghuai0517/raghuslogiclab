@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-election-id-card-maker",
+      "date": "2026-11-06",
+      "type": "launch",
+      "title": "New: Election Duty ID Card & Agent Pass Maker",
+      "body": "Make MPTC/ZPTC Election Duty ID cards and Agent Passes with photos. Enter details one by one or import an Excel/CSV list, upload photos, and print 10.5 × 7.5 cm cards, 5 per A4 sheet with crop marks. Free; everything stays in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-voter-slip-search",
       "date": "2026-11-03",
       "type": "launch",
@@ -185,6 +193,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-election-id-card-maker",
+      "slug": "election-id-card-maker",
+      "name": "Election Duty ID Card & Agent Pass Maker",
+      "tagline": "Make MPTC/ZPTC Election Duty ID cards and Agent Passes with photos, 10.5 × 7.5 cm, printed 5 per A4 sheet.",
+      "description": "Type each person's details or import your staff list from Excel (CSV), upload photos (matched automatically by file name), and print ready-to-cut cards with crop marks. Election Duty cards: name, designation, department, appointed as. Agent Passes: name, party affiliation / independent, MPTC/ZPTC segment. Change the mandal, election line and colour; add blank cards to fill by hand. Free; data and photos stay in your browser.",
+      "category": "ELECTIONS",
+      "badge": "Free tool",
+      "url": "tools/election-id-card-maker.html",
+      "color": "#b07a4f",
+      "visibility": "public",
+      "added": "2026-11-06"
+    },
     {
       "id": "t-voter-slip-search",
       "slug": "voter-slip-search",
