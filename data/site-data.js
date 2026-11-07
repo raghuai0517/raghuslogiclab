@@ -206,7 +206,7 @@ window.RLL_DATA = {
       "slug": "telugu-election-certificate",
       "name": "Election Certificate Maker (Telugu) · ఎన్నిక ధ్రువపత్రం",
       "tagline": "Fill and print the Telugu MPTC/ZPTC Certificate of Election (Form XXIX, Rule 63) on A4 landscape.",
-      "description": "Type the constituency, Returning Officer, date, party and winning candidate and the Telugu certificate fills in as you type. Choose MPTC, ZPTC or both; recognised or registered party; and శ్రీ / శ్రీమతి / కుమారి (అతనికి / ఆమెకు changes to match). Empty fields print as dotted lines to fill by hand. Prints only the certificate on A4 landscape. Free; data stays in your browser.",
+      "description": "Type the constituency, Returning Officer, date, party and winning candidate and the Telugu certificate fills in as you type. Click any word on the certificate to change it. Choose MPTC, ZPTC or both; recognised or registered party, or an independent candidate; and శ్రీ / శ్రీమతి / కుమారి (అతనికి / ఆమెకు changes to match). Empty fields print as dotted lines to fill by hand. Prints only the certificate on A4 landscape. Free; data stays in your browser.",
       "category": "ELECTIONS",
       "badge": "Free tool",
       "url": "tools/telugu-election-certificate.html",

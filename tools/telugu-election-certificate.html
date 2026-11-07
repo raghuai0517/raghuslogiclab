@@ -27,6 +27,10 @@
 #tcert-tool .tc-print{background:var(--maroon);color:#fff;flex:1}
 #tcert-tool .tc-print:hover{background:#5d1616}
 #tcert-tool .tc-clear{background:#eee;color:var(--ink)}
+#tcert-tool .tc-edit-note{margin:0 0 10px;padding:10px 12px;background:#fff7e6;border:1px solid #e8cf9a;border-radius:8px;font-size:14px;line-height:1.6}
+#tcert-tool .cert .body[contenteditable="true"]{outline:none;cursor:text}
+#tcert-tool .cert .body[contenteditable="true"] :hover{background:rgba(176,138,62,.10)}
+#tcert-tool .cert .body[contenteditable="true"]:focus-within{box-shadow:0 0 0 2px rgba(176,138,62,.45);border-radius:4px}
 #tcert-tool .tc-preview{flex:999 1 560px;min-width:0}
 #tcert-tool .tc-stage{width:100%;overflow:hidden;border:1px solid #ddd;border-radius:10px;background:#f3f1ec}
 #tcert-tool .tc-scale{transform-origin:top left}
@@ -81,7 +85,7 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
 .rll-bar a{color:#fff;text-decoration:none;font-weight:600}
 .rll-bar a:hover{text-decoration:underline}
 .rll-mark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#fff;color:#3a3a3a;font-size:11px;font-weight:800;margin-right:6px}
-@media print{header.app{display:none !important}}
+@media print{header.app{display:none !important}#tcert-tool .tc-edit-note{display:none !important}#tcert-tool .cert .body{box-shadow:none !important}#tcert-tool .cert .body *{background:none !important}}
 </style>
 <meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>
 </head>
@@ -123,14 +127,17 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   <label for="tc-edate">ఎన్నిక ప్రకటన తేదీ</label>
   <input id="tc-edate" data-k="edate" placeholder="ఉదా: 07-11-2026">
 
+  <div id="tc-partywrap">
   <label for="tc-party">రాజకీయ పార్టీ పేరు</label>
   <input id="tc-party" data-k="party" placeholder="ఉదా: తెలుగు దేశం పార్టీ">
+  </div>
 
   <label for="tc-ptype">పార్టీ రకం</label>
   <select id="tc-ptype" data-k="ptype">
     <option value="both">గుర్తింపు పొందిన / రిజిస్టరయిన (రెండూ)</option>
     <option value="rec">గుర్తింపు పొందిన</option>
     <option value="reg">రిజిస్టరయిన</option>
+    <option value="ind">స్వతంత్ర అభ్యర్థి (Independent)</option>
   </select>
 
   <label for="tc-title">గౌరవ సూచకం</label>
@@ -159,10 +166,12 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   <div class="tc-btns">
     <button type="button" class="tc-print" id="tc-printbtn">ప్రింట్ చేయండి</button>
     <button type="button" class="tc-clear" id="tc-clearbtn">ఖాళీ చేయండి</button>
+    <button type="button" class="tc-clear" id="tc-resetbtn">అసలు పాఠ్యం తిరిగి తెచ్చు</button>
   </div>
 </form>
 
 <div class="tc-preview">
+  <p class="tc-edit-note">✎ ధ్రువపత్రంపై ఏ పదం మీదైనా క్లిక్ చేసి నేరుగా మార్చవచ్చు – శీర్షిక, ఫారం నంబరు, వాక్యాలు, సంతకం వరుసలు అన్నీ. మీ మార్పులు ఈ బ్రౌజర్‌లో గుర్తుంటాయి. అసలు పాఠ్యం కావాలంటే "అసలు పాఠ్యం తిరిగి తెచ్చు" నొక్కండి.</p>
   <div class="tc-stage" id="tc-stage">
     <div class="tc-scale" id="tc-scale">
       <div class="cert" id="tc-cert">
@@ -172,12 +181,12 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
         <svg class="cn bl" viewBox="0 0 110 110" aria-hidden="true"><use href="#tc-corner"></use></svg>
         <svg class="cn br" viewBox="0 0 110 110" aria-hidden="true"><use href="#tc-corner"></use></svg>
 
-        <div class="body">
+        <div class="body" id="tc-edit" contenteditable="true" spellcheck="false">
           <h1 data-o="head"></h1>
           <div class="form-no">ఫారం – XXIX<br>[63వ నియమాన్ని చూడండి]</div>
           <div class="orn" aria-hidden="true"><i></i><b></b><i></i></div>
           <h2>ఎన్నిక ధ్రువపత్రం</h2>
-          <p><span class="mandal" data-o="bodyname"></span><span data-o="bodyrest"></span> లోని <span class="v" data-v="const" data-w="230"></span> ప్రాదేశిక నియోజకవర్గం సభ్యుని ఎన్నికకు రిటర్నింగు అధికారి అయిన <span class="v" data-v="ro" data-w="280"></span> అనే నేను <span class="v" data-v="edate" data-w="150"></span> తేదీన <span class="v" data-v="party" data-w="210"></span> (<span data-o="ptype"></span> రాజకీయ పార్టీ పేరు) నిలబెట్టిన <span data-o="title"></span> <span class="v" data-v="name" data-w="320"></span> గారు సాధారణ ఎన్నికల్లో సదరు పదవికి ఎన్నికయ్యారని ప్రకటిస్తున్నానని, అందుకు గుర్తుగా నేను ఈ ఎన్నిక ధ్రువపత్రాన్ని <span data-o="pron"></span> జారీ చేశానని, ఇందుమూలముగా ధ్రువపరుస్తున్నాను.</p>
+          <p><span class="mandal" data-o="bodyname"></span><span data-o="bodyrest"></span> లోని <span class="v" data-v="const" data-w="230"></span> ప్రాదేశిక నియోజకవర్గం సభ్యుని ఎన్నికకు రిటర్నింగు అధికారి అయిన <span class="v" data-v="ro" data-w="280"></span> అనే నేను <span class="v" data-v="edate" data-w="150"></span> తేదీన <span data-o="partyseg"><span class="v" data-v="party" data-w="210"></span> (<span data-o="ptype"></span> రాజకీయ పార్టీ పేరు) నిలబెట్టిన</span><span data-o="indseg" style="display:none">స్వతంత్ర అభ్యర్థిగా పోటీ చేసిన</span> <span data-o="title"></span> <span class="v" data-v="name" data-w="320"></span> గారు సాధారణ ఎన్నికల్లో సదరు పదవికి ఎన్నికయ్యారని ప్రకటిస్తున్నానని, అందుకు గుర్తుగా నేను ఈ ఎన్నిక ధ్రువపత్రాన్ని <span data-o="pron"></span> జారీ చేశానని, ఇందుమూలముగా ధ్రువపరుస్తున్నాను.</p>
 
           <div class="foot">
             <div class="place">ప్రదేశం : <span data-o="place"></span><br>తేదీ &nbsp;&nbsp;&nbsp;: <span class="v" data-v="date" data-w="170"></span></div>
@@ -216,38 +225,63 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   var root=document.getElementById('tcert-tool');
   if(!root) return;
   var inputs=root.querySelectorAll('[data-k]');
-  var KEY='tcert-tool-v1';
+  var KEY='tcert-tool-v1', KEYH='tcert-tool-html-v2';
+  var edit=document.getElementById('tc-edit'), ORIG=edit.innerHTML;
   var TITLES={all:'శ్రీ / శ్రీమతి / కుమారి',sri:'శ్రీ',smt:'శ్రీమతి',kum:'కుమారి'};
   var PTYPE={both:'గుర్తింపు పొందిన / రిజిస్టరయిన',rec:'గుర్తింపు పొందిన',reg:'రిజిస్టరయిన'};
   var PRON={all:'అతనికి / ఆమెకు',sri:'అతనికి',smt:'ఆమెకు',kum:'ఆమెకు'};
 
+  function q(sel){return root.querySelector(sel);}
+  function setT(sel,txt){var e=q(sel);if(e)e.textContent=txt;}
+  function show(sel,on){var e=q(sel);if(e)e.style.display=on?'':'none';}
   function get(k){var el=root.querySelector('[data-k="'+k+'"]');return el?el.value.trim():'';}
 
   function render(){
     var m=get('mandal')||'______', d=get('dist'), b=get('body')||'both';
     var mp=m+' మండల ప్రజా పరిషత్', zp=(d?d+' ':'')+'జిల్లా ప్రజా పరిషత్';
     var head=(b==='zptc')?zp:mp, name=(b==='zptc')?zp:mp, rest=(b==='both')?' / జిల్లా ప్రజా పరిషత్':'';
-    root.querySelector('[data-o="head"]').textContent=head;
-    root.querySelector('[data-o="bodyname"]').textContent=name;
-    root.querySelector('[data-o="bodyrest"]').textContent=rest;
+    setT('[data-o="head"]',head);
+    setT('[data-o="bodyname"]',name);
+    setT('[data-o="bodyrest"]',rest);
     document.getElementById('tc-distwrap').style.display=(b==='zptc')?'':'none';
-    root.querySelector('[data-o="ptype"]').textContent=PTYPE[get('ptype')||'both'];
-    root.querySelector('[data-o="place"]').textContent=get('place');
+    var pt=get('ptype')||'both', ind=(pt==='ind');
+    show('[data-o="partyseg"]',!ind); show('[data-o="indseg"]',ind);
+    document.getElementById('tc-partywrap').style.display=ind?'none':'';
+    if(!ind) setT('[data-o="ptype"]',PTYPE[pt]);
+    setT('[data-o="place"]',get('place'));
     var t=get('title')||'all';
-    root.querySelector('[data-o="title"]').textContent=TITLES[t];
-    root.querySelector('[data-o="pron"]').textContent=PRON[t];
+    setT('[data-o="title"]',TITLES[t]);
+    setT('[data-o="pron"]',PRON[t]);
     root.querySelectorAll('[data-v]').forEach(function(e){
       var v=get(e.getAttribute('data-v'));
       e.textContent=v;
       e.classList.toggle('empty',!v);
       e.style.minWidth=v?'0':(e.getAttribute('data-w')+'px');
     });
+    saveHTML();
     save();
   }
 
   function save(){
     try{var o={};inputs.forEach(function(i){o[i.getAttribute('data-k')]=i.value;});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}
   }
+  function saveHTML(){try{localStorage.setItem(KEYH,edit.innerHTML);}catch(e){}}
+  function loadHTML(){try{var h=localStorage.getItem(KEYH);if(h)edit.innerHTML=h;}catch(e){}}
+  // typing directly on the certificate: keep the form boxes in step with the filled-in values
+  edit.addEventListener('input',function(){
+    edit.querySelectorAll('[data-v]').forEach(function(e){
+      var inp=q('[data-k="'+e.getAttribute('data-v')+'"]'); if(!inp) return;
+      var v=e.textContent.trim(); inp.value=v;
+      e.classList.toggle('empty',!v); e.style.minWidth=v?'0':(e.getAttribute('data-w')+'px');
+    });
+    save(); saveHTML();
+  });
+  // paste as plain text only
+  edit.addEventListener('paste',function(ev){
+    ev.preventDefault();
+    var t=(ev.clipboardData||window.clipboardData).getData('text');
+    document.execCommand('insertText',false,t);
+  });
   function load(){
     try{var o=JSON.parse(localStorage.getItem(KEY)||'null');if(!o)return;
       inputs.forEach(function(i){var k=i.getAttribute('data-k');if(o[k]!=null)i.value=o[k];});}catch(e){}
@@ -270,11 +304,16 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
     });
     render();
   });
+  document.getElementById('tc-resetbtn').addEventListener('click',function(){
+    edit.innerHTML=ORIG;
+    try{localStorage.removeItem(KEYH);}catch(e){}
+    render();
+  });
   window.addEventListener('resize',fit);
   window.addEventListener('beforeprint',function(){document.getElementById('tc-scale').style.transform='none';});
   window.addEventListener('afterprint',fit);
 
-  load(); render(); fit();
+  load(); loadHTML(); render(); fit();
 })();
 </script>
 </body>
