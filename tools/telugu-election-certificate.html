@@ -110,6 +110,10 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
     <option value="zptc">జిల్లా ప్రజా పరిషత్ (ZPTC)</option>
   </select>
 
+  <label for="tc-headtxt">శీర్షిక (Title)</label>
+  <input id="tc-headtxt" data-k="headtxt" placeholder="ఖాళీగా ఉంటే: తడ మండల ప్రజా పరిషత్">
+  <div class="tc-hint">ఇక్కడ టైప్ చేసిన శీర్షిక ధ్రువపత్రం పైభాగంలో వస్తుంది.</div>
+
   <label for="tc-mandal">మండలం పేరు</label>
   <input id="tc-mandal" data-k="mandal" value="తడ">
 
@@ -236,30 +240,40 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   function show(sel,on){var e=q(sel);if(e)e.style.display=on?'':'none';}
   function get(k){var el=root.querySelector('[data-k="'+k+'"]');return el?el.value.trim():'';}
 
-  function render(){
+  // which certificate parts each form box controls (null = initial / everything)
+  var GROUP={headtxt:'head',body:'body',mandal:'body',dist:'body',ptype:'ptype',title:'title',place:'place'};
+  function render(changed){
+    var g=changed?(GROUP[changed]||'v'):null;
     var m=get('mandal')||'______', d=get('dist'), b=get('body')||'both';
     var mp=m+' మండల ప్రజా పరిషత్', zp=(d?d+' ':'')+'జిల్లా ప్రజా పరిషత్';
-    var head=(b==='zptc')?zp:mp, name=(b==='zptc')?zp:mp, rest=(b==='both')?' / జిల్లా ప్రజా పరిషత్':'';
-    setT('[data-o="head"]',head);
-    setT('[data-o="bodyname"]',name);
-    setT('[data-o="bodyrest"]',rest);
+    var auto=(b==='zptc')?zp:mp;
     document.getElementById('tc-distwrap').style.display=(b==='zptc')?'':'none';
+    var hi=q('[data-k="headtxt"]'); if(hi) hi.placeholder='ఖాళీగా ఉంటే: '+auto;
+    if(g===null||g==='head'||g==='body') setT('[data-o="head"]',get('headtxt')||auto);
+    if(g===null||g==='body'){
+      setT('[data-o="bodyname"]',auto);
+      setT('[data-o="bodyrest"]',(b==='both')?' / జిల్లా ప్రజా పరిషత్':'');
+    }
     var pt=get('ptype')||'both', ind=(pt==='ind');
-    show('[data-o="partyseg"]',!ind); show('[data-o="indseg"]',ind);
     document.getElementById('tc-partywrap').style.display=ind?'none':'';
-    if(!ind) setT('[data-o="ptype"]',PTYPE[pt]);
-    setT('[data-o="place"]',get('place'));
-    var t=get('title')||'all';
-    setT('[data-o="title"]',TITLES[t]);
-    setT('[data-o="pron"]',PRON[t]);
+    if(g===null||g==='ptype'){
+      show('[data-o="partyseg"]',!ind); show('[data-o="indseg"]',ind);
+      if(!ind) setT('[data-o="ptype"]',PTYPE[pt]);
+    }
+    if(g===null||g==='place') setT('[data-o="place"]',get('place'));
+    if(g===null||g==='title'){
+      var t=get('title')||'all';
+      setT('[data-o="title"]',TITLES[t]); setT('[data-o="pron"]',PRON[t]);
+    }
     root.querySelectorAll('[data-v]').forEach(function(e){
-      var v=get(e.getAttribute('data-v'));
+      var k=e.getAttribute('data-v');
+      if(g!==null && changed!==k) return;
+      var v=get(k);
       e.textContent=v;
       e.classList.toggle('empty',!v);
       e.style.minWidth=v?'0':(e.getAttribute('data-w')+'px');
     });
-    saveHTML();
-    save();
+    save(); saveHTML();
   }
 
   function save(){
@@ -274,6 +288,7 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
       var v=e.textContent.trim(); inp.value=v;
       e.classList.toggle('empty',!v); e.style.minWidth=v?'0':(e.getAttribute('data-w')+'px');
     });
+    var hd=q('[data-o="head"]'), hi=q('[data-k="headtxt"]'); if(hd&&hi&&document.activeElement===edit&&hd.contains(window.getSelection().anchorNode)) hi.value=hd.textContent.trim();
     save(); saveHTML();
   });
   // paste as plain text only
@@ -294,12 +309,12 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
     stage.style.height=(794*s)+'px';
   }
 
-  inputs.forEach(function(i){i.addEventListener('input',render);i.addEventListener('change',render);});
+  inputs.forEach(function(i){var h=function(){render(i.getAttribute('data-k'));};i.addEventListener('input',h);i.addEventListener('change',h);});
   document.getElementById('tc-printbtn').addEventListener('click',function(){window.print();});
   document.getElementById('tc-clearbtn').addEventListener('click',function(){
     inputs.forEach(function(i){
       var k=i.getAttribute('data-k');
-      if(k==='mandal'||k==='place'||k==='dist'||k==='body') return;   // keep mandal, district, place, election type
+      if(k==='mandal'||k==='place'||k==='dist'||k==='body'||k==='headtxt') return;   // keep title, mandal, district, place, election type
       i.value = (k==='title'||k==='ptype') ? (k==='title'?'all':'both') : '';
     });
     render();
@@ -307,13 +322,13 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   document.getElementById('tc-resetbtn').addEventListener('click',function(){
     edit.innerHTML=ORIG;
     try{localStorage.removeItem(KEYH);}catch(e){}
-    render();
+    render(null);
   });
   window.addEventListener('resize',fit);
   window.addEventListener('beforeprint',function(){document.getElementById('tc-scale').style.transform='none';});
   window.addEventListener('afterprint',fit);
 
-  load(); loadHTML(); render(); fit();
+  load(); var hadEdits=false; try{hadEdits=!!localStorage.getItem(KEYH);}catch(e){} loadHTML(); if(hadEdits){render('const');render('ro');render('edate');render('party');render('name');render('date');}else{render();} fit();
 })();
 </script>
 </body>
