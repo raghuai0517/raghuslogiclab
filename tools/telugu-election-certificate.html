@@ -229,8 +229,25 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   var root=document.getElementById('tcert-tool');
   if(!root) return;
   var inputs=root.querySelectorAll('[data-k]');
-  var KEY='tcert-tool-v1', KEYH='tcert-tool-html-v2';
-  var edit=document.getElementById('tc-edit'), ORIG=edit.innerHTML;
+  var KEY='tcert-tool-v1', KEYH='tcert-tool-html-v3';
+  try{localStorage.removeItem('tcert-tool-html-v2');}catch(e){}   // old saved copies could be broken
+  var edit=document.getElementById('tc-edit');
+  // Each part the form controls gets its own little editing box inside a locked wrapper,
+  // so deleting its text on the certificate can never delete the part itself.
+  function protect(container){
+    container.querySelectorAll('[data-o],[data-v]').forEach(function(el){
+      if(el.tagName==='H1'||el.getAttribute('data-locked')) return;
+      var w=document.createElement('span');
+      w.setAttribute('contenteditable','false');
+      el.parentNode.insertBefore(w,el); w.appendChild(el);
+      el.setAttribute('contenteditable','true');
+      el.setAttribute('data-locked','1');
+    });
+  }
+  protect(edit);
+  var ORIG=edit.innerHTML;
+  var NEED=['head','bodyname','bodyrest','ptype','partyseg','indseg','title','pron','place'];
+  var NEEDV=['const','ro','edate','party','name','date'];
   var TITLES={all:'శ్రీ / శ్రీమతి / కుమారి',sri:'శ్రీ',smt:'శ్రీమతి',kum:'కుమారి'};
   var PTYPE={both:'గుర్తింపు పొందిన / రిజిస్టరయిన',rec:'గుర్తింపు పొందిన',reg:'రిజిస్టరయిన'};
   var PRON={all:'అతనికి / ఆమెకు',sri:'అతనికి',smt:'ఆమెకు',kum:'ఆమెకు'};
@@ -280,7 +297,15 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
     try{var o={};inputs.forEach(function(i){o[i.getAttribute('data-k')]=i.value;});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}
   }
   function saveHTML(){try{localStorage.setItem(KEYH,edit.innerHTML);}catch(e){}}
-  function loadHTML(){try{var h=localStorage.getItem(KEYH);if(h)edit.innerHTML=h;}catch(e){}}
+  function loadHTML(){
+    try{var h=localStorage.getItem(KEYH); if(!h) return false;
+      var t=document.createElement('div'); t.innerHTML=h;
+      var ok=NEED.every(function(k){return t.querySelector('[data-o="'+k+'"]');}) &&
+             NEEDV.every(function(k){return t.querySelector('[data-v="'+k+'"]');});
+      if(!ok){localStorage.removeItem(KEYH); return false;}
+      edit.innerHTML=h; return true;
+    }catch(e){return false;}
+  }
   // typing directly on the certificate: keep the form boxes in step with the filled-in values
   edit.addEventListener('input',function(){
     edit.querySelectorAll('[data-v]').forEach(function(e){
@@ -328,7 +353,7 @@ header.app p{margin:4px 0 0;font-size:13px;color:#ddd}
   window.addEventListener('beforeprint',function(){document.getElementById('tc-scale').style.transform='none';});
   window.addEventListener('afterprint',fit);
 
-  load(); var hadEdits=false; try{hadEdits=!!localStorage.getItem(KEYH);}catch(e){} loadHTML(); if(hadEdits){render('const');render('ro');render('edate');render('party');render('name');render('date');}else{render();} fit();
+  load(); var hadEdits=loadHTML(); if(hadEdits){render('const');render('ro');render('edate');render('party');render('name');render('date');}else{render();} fit();
 })();
 </script>
 </body>
