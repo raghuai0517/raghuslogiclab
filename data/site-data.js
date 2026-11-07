@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-telugu-election-certificate",
+      "date": "2026-11-07",
+      "type": "launch",
+      "title": "New: Election Certificate Maker (Telugu)",
+      "body": "Fill and print the Telugu MPTC/ZPTC Certificate of Election (ఎన్నిక ధ్రువపత్రం, Form XXIX) with a decorative border on A4 landscape. Choose MPTC / ZPTC and recognised / registered party; the certificate fills in as you type. Free; data stays in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-election-id-card-maker",
       "date": "2026-11-06",
       "type": "launch",
@@ -193,6 +201,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-telugu-election-certificate",
+      "slug": "telugu-election-certificate",
+      "name": "Election Certificate Maker (Telugu) · ఎన్నిక ధ్రువపత్రం",
+      "tagline": "Fill and print the Telugu MPTC/ZPTC Certificate of Election (Form XXIX, Rule 63) on A4 landscape.",
+      "description": "Type the constituency, Returning Officer, date, party and winning candidate and the Telugu certificate fills in as you type. Choose MPTC, ZPTC or both; recognised or registered party; and శ్రీ / శ్రీమతి / కుమారి (అతనికి / ఆమెకు changes to match). Empty fields print as dotted lines to fill by hand. Prints only the certificate on A4 landscape. Free; data stays in your browser.",
+      "category": "ELECTIONS",
+      "badge": "Free tool",
+      "url": "tools/telugu-election-certificate.html",
+      "color": "#7A1F1F",
+      "visibility": "public",
+      "added": "2026-11-07"
+    },
     {
       "id": "t-election-id-card-maker",
       "slug": "election-id-card-maker",
