@@ -23,6 +23,7 @@
         <p class="lead" id="hero-intro"></p>
         <div class="btn-row" style="margin-top:24px">
           <a class="btn btn-primary" href="#projects">Explore projects</a>
+          <a class="btn btn-census" href="#census">Census 2027</a>
           <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
           <a class="btn btn-gold" href="#swsg">SWSG tools</a>
           <a class="btn btn-pink" href="#dsc">DSC Exam Hall</a>
@@ -31,6 +32,20 @@
           <a class="btn" href="#lab-log">Today in the lab</a>
         </div>
         <div class="stats" id="stats"></div>
+      </div>
+    </section>
+
+    <!-- CENSUS 2027 (deep blue) -->
+    <section class="section census-section" id="census" style="padding-top:8px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-census">// census 2027</span>
+            <h2 class="census-group-title">CENSUS 2027</h2>
+            <p class="muted" style="margin:0">Field help for Census of India 2027 enumerators and supervisors. Clear your doubts from the Population Enumeration Instruction Manual before you fill the PE App. Free; works on phone.</p>
+          </div>
+        </div>
+        <div class="grid" id="census-grid"></div>
       </div>
     </section>
 
@@ -250,7 +265,8 @@
     var isDsc = function (t) { return (t.category || "").toUpperCase() === "DSC"; };
     var isSwsg = function (t) { return (t.category || "").toUpperCase() === "SWSG"; };
     var isElec = function (t) { return (t.category || "").toUpperCase() === "ELECTIONS"; };
-    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t) && !isElec(t); });
+    var isCensus = function (t) { return (t.category || "").toUpperCase() === "CENSUS"; };
+    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t) && !isElec(t) && !isCensus(t); });
     tools.forEach(function (t) {
       var c = t.category || "Other";
       if (!byCat[c]) { byCat[c] = []; groups.push(c); }
@@ -268,6 +284,18 @@
             "</a>";
         }).join("") + "</div></div>";
     }).join("") : '<p class="muted">Tools are on the way.</p>';
+
+    /* CENSUS 2027 (deep blue) */
+    var census = allTools.filter(isCensus);
+    document.getElementById("census-grid").innerHTML = census.length ? census.map(function (t) {
+      return '<a class="card tool-card census" href="' + esc(t.url) + '">' +
+        '<div class="card-top"><div class="p-icon">' + esc(RLL.initials(t.name)) + '</div><span class="badge badge-census">' + esc(t.badge || "Free tool") + '</span></div>' +
+        '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
+        "<p>" + esc(t.tagline || "") + "</p>" +
+        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+        '<div class="meta"><span class="tag">Census 2027</span><span class="tool-open">Open tool &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">Census tools are on the way.</p>';
 
     /* SWSG RELATED (gold) */
     var swsg = allTools.filter(isSwsg);

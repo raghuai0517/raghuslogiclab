@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-pe-phase2-guide",
+      "date": "2026-11-11",
+      "type": "launch",
+      "title": "New: CENSUS 2027 with the Population Enumeration Phase-II Guide",
+      "body": "A new blue CENSUS 2027 section on the home page. First tool: a doubt-clearing guide for Census 2027 enumerators and supervisors, built from the Population Enumeration Instruction Manual. Ask a doubt or a question number and get the answer with the manual page; guides for Q.1 to Q.40, a which-questions-apply checker, field doubts, a quiz, codes and calculators. Free; works on phone.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-telugu-election-certificate",
       "date": "2026-11-07",
       "type": "launch",
@@ -201,6 +209,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-pe-phase2-guide",
+      "slug": "pe-phase2-guide",
+      "name": "Population Enumeration Phase-II Guide",
+      "tagline": "Clear Census 2027 Population Enumeration doubts from the Instruction Manual before you fill the PE App.",
+      "description": "Type a doubt in your own words or a question number (Q 18) and get the answer with the exact manual page. Guide for every question Q.1 to Q.40 (who is asked, how to fill, rules, common mistakes), a 'which questions apply' checker, about 150 field doubts, a practice quiz, code lists, all State/District and mother tongue codes, and age and local-calendar converters. Free; works on phone, even offline once opened.",
+      "category": "CENSUS",
+      "badge": "Free tool",
+      "url": "tools/pe-phase2-guide/index.html",
+      "color": "#1d4ed8",
+      "visibility": "public",
+      "added": "2026-11-11"
+    },
     {
       "id": "t-telugu-election-certificate",
       "slug": "telugu-election-certificate",
