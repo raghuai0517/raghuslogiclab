@@ -36,6 +36,10 @@ To add a tool:
 3. Set `"visibility": "unlisted"` to hide a tool from the menu without deleting it.
 4. Optional `"badge"` sets the label on the tool's card (default: "Free to fill · ₹10 PDF"), e.g. `"badge": "Free tool"`.
 
+Tools with `"category": "CENSUS"` appear in their own deep-blue **CENSUS 2027** section at the top of the home page.
+
+**Population Enumeration Phase-II Guide** (`tools/pe-phase2-guide/`) — doubt-clearing tool for Census of India 2027 enumerators and supervisors, built from the Population Enumeration Instruction Manual (209 pages, OCR'd). Ask a doubt in plain words or a question number and get matching answers, the question guide and the exact manual text with page numbers; Q.1–Q.40 guides; a which-questions-apply checker; about 150 field doubts; a 10-question practice quiz; Annexure V code lists, relationship/country codes, all State/District codes and the mother tongue directory; age ↔ year of birth and local-calendar year converters. `index.html` is self-contained (the manual text and search run in the browser, no CDN needed except Google Fonts); `pg/` holds the original page scans shown under "Original page". Marked `noindex` because the manual is marked "Restricted – For Official Use Only". An AI-written answer appears only when the page is opened inside Claude; on this site it runs in manual-search mode.
+
 Tools with `"category": "SWSG"` appear in their own gold **SWSG RELATED** section on the home page.
 
 **SADAREM Security Paper Print** (`tools/sadarem-security-print.html`) — upload SADAREM disability certificate PDFs and get a print-ready A4 PDF moved down (1.5 in by default) to print below the header on security paper. Inches/mm, left/right shift, size, shrink to fit, keeps the digitally-signed box (flattened for print), several certificates in one PDF. Free; runs in the browser (pdf-lib and pdf.js from cdnjs). The output file's digital signature is no longer verifiable, which the page tells users.

@@ -309,3 +309,15 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: up
 .badge-orange { color: var(--orange-light); }
 .btn-orange { background: var(--orange-dark); border-color: var(--orange-dark); color: #fff; }
 .btn-orange:hover { background: var(--orange); border-color: var(--orange); }
+
+/* ---------- Census 2027 (deep blue tool cards) ---------- */
+:root { --census: #1d4ed8; --census-dark: #1e3a8a; --census-light: #a5c8ff; --census-title: #5b9cff; }
+.eyebrow-census { color: var(--census-title); }
+.census-group-title { color: var(--census-title); letter-spacing: .06em; font-size: clamp(1.5rem, 3.4vw, 2.2rem); margin: 0 0 6px; }
+.tool-card.census { background: linear-gradient(180deg, rgba(29,78,216,.42), rgba(30,58,138,.16)); border-color: rgba(91,156,255,.7); }
+.tool-card.census:hover { border-color: var(--census-light); }
+.tool-card.census .p-icon { background: linear-gradient(135deg, #3b82f6, #1e3a8a); color: #fff; }
+.tool-card.census .tool-open { color: var(--census-light); }
+.badge-census { color: var(--census-light); }
+.btn-census { background: var(--census); border-color: var(--census); color: #fff; }
+.btn-census:hover { background: #2563eb; border-color: #2563eb; }
