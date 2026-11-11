@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-pe-phase2-guide-telugu",
+      "date": "2026-11-11",
+      "type": "launch",
+      "title": "New: Telugu edition of the Population Enumeration Phase-II Guide",
+      "body": "The CENSUS 2027 section now has a Telugu guide built from the Telugu PE Instruction Manual: ask doubts in Telugu, Q.1–Q.40 guides, field doubts, quiz, codes and calculators, with Telugu manual page numbers. Each guide has a one-tap switch to the other language. Free; works on phone.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-pe-phase2-guide",
       "date": "2026-11-11",
       "type": "launch",
@@ -209,6 +217,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-pe-phase2-guide-telugu",
+      "slug": "pe-phase2-guide-telugu",
+      "name": "జనాభా గణన దశ-II మార్గదర్శి (Telugu)",
+      "tagline": "తెలుగు సూచనల మాన్యువల్ నుండి జనాభా గణన 2027 సందేహాలు తీర్చుకోండి — PE యాప్ పూరించే ముందు.",
+      "description": "మీ సందేహాన్ని తెలుగులో లేదా ప్రశ్న సంఖ్యతో (ప్ర 18) టైప్ చేయండి; తెలుగు మాన్యువల్ పేజీతో సమాధానం వస్తుంది. ప్ర.1 నుండి ప్ర.40 వరకు మార్గదర్శి (ఎవరికి అడగాలి, ఎలా పూరించాలి, నియమాలు, సాధారణ తప్పులు), 'ఏ ప్రశ్నలు వర్తిస్తాయి' తనిఖీ, సుమారు 170 క్షేత్ర సందేహాలు, అభ్యాస క్విజ్, కోడ్‌లు, వయస్సు మరియు క్యాలెండర్ కన్వర్టర్‌లు. ఉచితం; ఫోన్‌లో పని చేస్తుంది.",
+      "category": "CENSUS",
+      "badge": "Free tool · తెలుగు",
+      "url": "tools/pe-phase2-guide-telugu/index.html",
+      "color": "#1e40af",
+      "visibility": "public",
+      "added": "2026-11-11"
+    },
     {
       "id": "t-pe-phase2-guide",
       "slug": "pe-phase2-guide",
