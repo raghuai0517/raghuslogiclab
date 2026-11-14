@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pahani Village Report (Excel + PDF) · RaghusLogicLab</title>
+<meta name="description" content="Free Revenue tool: upload the Pahani / Adangal of any village and get a bilingual (English + Telugu) Excel and PDF report with a summary sheet, land-nature-wise sheets, Govt & poramboke register, khata abstract and remarks for VRO / VS. The file is read only in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: "RLL Telugu"; font-weight: 400; font-display: swap; src: url(fonts/noto-sans-telugu-telugu-400-normal.woff2) format("woff2"); unicode-range: U+0951-0952,U+0964-0965,U+0C00-0C7F,U+1CDA,U+1CF2,U+200C-200D,U+25CC; }
+@font-face { font-family: "RLL Telugu"; font-weight: 700; font-display: swap; src: url(fonts/noto-sans-telugu-telugu-700-normal.woff2) format("woff2"); unicode-range: U+0951-0952,U+0964-0965,U+0C00-0C7F,U+1CDA,U+1CF2,U+200C-200D,U+25CC; }
+@font-face { font-family: "RLL Telugu"; font-weight: 400; font-display: swap; src: url(fonts/noto-sans-telugu-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+20B9,U+2122,U+2212,U+2215; }
+@font-face { font-family: "RLL Telugu"; font-weight: 700; font-display: swap; src: url(fonts/noto-sans-telugu-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+20B9,U+2122,U+2212,U+2215; }
+:root {
+  /* REVENUE theme: deep red with gold borders. */
+  --bg: #fbf5f0; --surface: #fff; --ink: #24110d; --muted: #6e5650; --line: #ead8cf;
+  --red: #b91c1c; --red-dark: #7f1d1d; --red-soft: #fdecec; --gold: #d4a017; --gold-light: #fcefc2; --gold-ink: #6b4e00;
+  --ok: #1d7a46; --ok-soft: #e3f3e9; --warn-soft: #fff4cc;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Public Sans", "RLL Telugu", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-te: "RLL Telugu", "Nirmala UI", "Gautami", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; overflow-x: hidden; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 22px 18px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+header.top { display: grid; gap: 6px; border: 2px solid var(--gold); border-left-width: 8px; background: linear-gradient(135deg, #7f1d1d, #b91c1c); color: #fff; border-radius: 14px; padding: 16px 18px; }
+.rll-bar { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fde7c0; flex-wrap: wrap; }
+.rll-bar a { color: #ffe08a; text-decoration: none; font-weight: 700; }
+.rll-bar a:hover { text-decoration: underline; }
+.rll-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--gold); color: #3b0a0a; font-size: 11px; font-weight: 800; margin-right: 6px; }
+.tagpill { justify-self: start; background: var(--gold); color: #3b0a0a; font: 800 11px/1 var(--font-display); letter-spacing: .14em; padding: 5px 9px; border-radius: 4px; }
+h1 { font: 800 26px/1.2 var(--font-display); margin: 0; letter-spacing: -0.01em; }
+h1 .te { display: block; font: 700 19px/1.4 var(--font-te); color: #ffe08a; margin-top: 2px; }
+header.top p { margin: 0; color: #fde7dc; max-width: 80ch; font-size: 14.5px; }
+.panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--red); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+.panel.gold { border-top-color: var(--gold); }
+.panel > * { min-width: 0; }
+h2 { font: 700 14px/1.3 var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--red-dark); margin: 0; }
+h2 .te { font-family: var(--font-te); text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 600; margin-left: 6px; }
+.drop { position: relative; border: 2px dashed var(--gold); border-radius: 12px; padding: 20px; display: grid; gap: 6px; justify-items: center; text-align: center; cursor: pointer; background: #fffaf0; transition: background .15s; }
+.drop:hover, .drop.over { background: var(--gold-light); }
+.drop strong { font: 700 17px/1.3 var(--font-display); color: var(--red-dark); }
+.drop span { color: var(--muted); font-size: 13.5px; }
+.drop .te { font-family: var(--font-te); }
+h3.bt { font: 700 14.5px/1.45 var(--font-body); color: var(--red-dark); margin: 16px 0 6px; padding-left: 8px; border-left: 4px solid var(--gold); }
+input[type=file] { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; }
+@media (max-width: 760px) { .form { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .form { grid-template-columns: 1fr; } }
+label.f { display: grid; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+label.f input { font: 15px var(--font-body); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+label.f input:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+.chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { appearance: none; border: 2px solid var(--gold); background: var(--red); color: #fff; font: 700 15px/1 var(--font-body); padding: 12px 16px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover { background: var(--red-dark); }
+.btn.alt { background: #fff; color: var(--red-dark); }
+.btn.alt:hover { background: var(--gold-light); }
+.btn:disabled { opacity: .5; cursor: wait; }
+.btn .te { font-family: var(--font-te); font-weight: 600; font-size: 13px; opacity: .9; }
+.status { font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--red-soft); color: var(--red-dark); display: none; }
+.status.ok { background: var(--ok-soft); color: var(--ok); }
+.status.show { display: block; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.card { border: 1.5px solid var(--gold); border-radius: 10px; padding: 10px 12px; background: linear-gradient(180deg, #fff, #fff8ef); }
+.card b { display: block; font: 800 21px/1.2 var(--font-display); color: var(--red-dark); }
+.card span { font-size: 12.5px; color: var(--muted); }
+.card span.te { display: block; font-family: var(--font-te); }
+.tw { overflow-x: auto; border: 1px solid var(--gold); border-radius: 8px; }
+table.t { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.t th { background: var(--red); color: #fff; font-weight: 700; padding: 6px 7px; border: 1px solid var(--gold); text-align: center; vertical-align: middle; line-height: 1.25; }
+table.t th small { display: block; font-family: var(--font-te); font-weight: 600; color: #ffe8b0; font-size: 11.5px; }
+table.t td { padding: 5px 7px; border: 1px solid #ecd9a6; vertical-align: top; }
+table.t td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.t tr:nth-child(even) td { background: #fff8f8; }
+table.t tr.tot td { background: var(--gold-light); font-weight: 700; color: var(--red-dark); border-top: 2px solid var(--gold); }
+table.t td.rem { color: #8a1c1c; }
+table.t tr.flag td.rem { background: var(--warn-soft); }
+.te { font-family: var(--font-te); }
+h3.bt { font: 700 14.5px/1.45 var(--font-body); color: var(--red-dark); margin: 16px 0 6px; padding-left: 8px; border-left: 4px solid var(--gold); }
+.sheetbar { display: flex; flex-wrap: wrap; gap: 6px; }
+.sheetbar button { border: 1.5px solid var(--gold); background: #fff; color: var(--red-dark); border-radius: 999px; padding: 6px 11px; font: 600 13px var(--font-body); cursor: pointer; }
+.sheetbar button.on { background: var(--red); color: #fff; }
+.sheetbar button small { opacity: .8; margin-left: 4px; }
+.muted { color: var(--muted); font-size: 13.5px; }
+.pdfopts { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
+.pdfopts label { display: flex; gap: 6px; align-items: center; }
+ul.help { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.foot { color: var(--muted); font-size: 12.5px; text-align: center; border-top: 2px solid var(--gold); padding-top: 12px; }
+.foot b { color: var(--red-dark); }
+#overlay { position: fixed; inset: 0; background: rgba(40, 8, 8, .78); display: none; place-items: center; z-index: 50; }
+#overlay.show { display: grid; }
+#overlay .box { background: #fff; border: 3px solid var(--gold); border-radius: 14px; padding: 22px; width: min(420px, 92vw); display: grid; gap: 12px; text-align: center; }
+#overlay .bar { height: 10px; background: var(--red-soft); border-radius: 99px; overflow: hidden; }
+#overlay .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--red), var(--gold)); }
+#hidden { display: none; }
+
+/* ---------- Report pages (PDF + print), A4 landscape ---------- */
+#pages { width: 297mm; }
+@media screen { #pages { position: fixed; left: 0; top: 0; z-index: -5; opacity: 0; pointer-events: none; } }
+.pg { width: 297mm; height: 209.6mm; background: #fff; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 7mm 8mm 5mm; font-family: var(--font-te); color: #1f1308; }
+.pg-wm { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%) rotate(-24deg); font: 800 120px/1 var(--font-te); color: rgba(185, 28, 28, .045); white-space: nowrap; pointer-events: none; }
+.pg-head { display: flex; justify-content: space-between; gap: 10px; border-bottom: 2px solid #d4a017; padding-bottom: 3px; font-size: 9.5px; font-weight: 700; color: #7f1d1d; }
+.pg-head .c { flex: 1; text-align: center; }
+.pg-body { flex: 1; overflow: hidden; padding-top: 4px; position: relative; }
+.pg-foot { display: flex; justify-content: space-between; gap: 10px; border-top: 2px solid #d4a017; padding-top: 3px; font-size: 8.5px; color: #6b4e00; font-weight: 600; }
+.pg .band { border: 1.5px solid #d4a017; text-align: center; padding: 4px 6px; margin-bottom: 3px; }
+.pg .band.title { background: #b91c1c; color: #fff; font-weight: 700; font-size: 15px; padding: 6px; }
+.pg .band.info { background: #fdecec; color: #7f1d1d; font-weight: 700; font-size: 10.5px; }
+.pg .band.line { background: #fdecec; color: #7f1d1d; font-size: 9.5px; }
+.pg .band.copy { background: #fcefc2; color: #6b4e00; font-weight: 700; font-style: italic; font-size: 9px; }
+.pg .band.btitle { background: #7f1d1d; color: #fff; font-weight: 700; font-size: 11px; margin-top: 6px; }
+.pg .note { font-size: 8.5px; font-style: italic; color: #6b4e00; margin: 2px 0 4px; }
+.pg table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+.pg th { background: #b91c1c; color: #fff; border: 1px solid #d4a017; font-size: 8.6px; line-height: 1.2; padding: 2px 2px; font-weight: 700; vertical-align: middle; }
+.pg th small { display: block; color: #ffe8b0; font-weight: 600; font-size: 8px; }
+.pg td { border: 1px solid #e3c873; font-size: 8.6px; line-height: 1.3; padding: 1.5px 2.5px; vertical-align: top; overflow-wrap: anywhere; }
+.pg.sum th { font-size: 9.5px; } .pg.sum td { font-size: 9.8px; padding: 2px 4px; }
+.pg td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pg tr.alt td { background: #fff8f8; }
+.pg tr.flag td.rem { background: #fff4cc; }
+.pg td.rem { color: #8a1c1c; }
+.pg tr.tot td { background: #fcefc2; font-weight: 700; color: #7f1d1d; border-top: 1.5px solid #d4a017; }
+.pg .sign { display: flex; justify-content: space-between; gap: 30px; margin-top: 30px; font-size: 10.5px; font-weight: 700; color: #7f1d1d; }
+.pg .sign div { flex: 1; text-align: center; border-top: 1px solid #d4a017; padding-top: 4px; }
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  body { background: #fff; }
+  body > *:not(#pages) { display: none !important; }
+  #pages { position: static; z-index: auto; opacity: 1; }
+  .pg { page-break-after: always; break-after: page; }
+  .pg:last-child { page-break-after: auto; break-after: auto; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+<script defer src="../../assets/track.js?v=1"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <nav class="rll-bar" aria-label="Site"><a href="../../index.html"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../../index.html#revenue">Revenue tools</a></nav>
+    <span class="tagpill">REVENUE</span>
+    <h1>Pahani Village Report <span class="te">పహాణీ / అడంగల్ గ్రామ నివేదిక</span></h1>
+    <p>Upload the Pahani (Adangal) of any village. You get an Excel and a PDF report in English and Telugu: a summary sheet, one sheet for each land nature, the Government &amp; poramboke register, a khata abstract and remarks for the VRO and VS. Free. Your file is read only in this browser and is never uploaded.</p>
+  </header>
+
+  <section class="panel gold" id="step1">
+    <h2>1 · Upload Pahani <span class="te">పహాణీ అప్‌లోడ్ చేయండి</span></h2>
+    <label class="drop" id="drop" for="file">
+      <strong>Choose or drop the Pahani file</strong>
+      <span class="te">పహాణీ ఫైల్‌ను ఎంచుకోండి లేదా ఇక్కడ వదలండి</span>
+      <span>.xls / .xlsx / .html / .csv downloaded from Webland / MeeBhoomi (all survey numbers of the village)</span>
+      <input type="file" id="file" accept=".xls,.xlsx,.xlsm,.htm,.html,.csv,.ods">
+    </label>
+    <div class="status" id="status" role="status"></div>
+  </section>
+
+  <section class="panel" id="step2">
+    <h2>2 · Report details <span class="te">నివేదిక వివరాలు</span></h2>
+    <div class="form">
+      <label class="f">Village / గ్రామం<input id="m-village" autocomplete="off"></label>
+      <label class="f">Mandal / మండలం<input id="m-mandal" autocomplete="off"></label>
+      <label class="f">District / జిల్లా<input id="m-district" autocomplete="off"></label>
+      <label class="f">Report date / తేదీ<input id="m-date" autocomplete="off"></label>
+      <label class="f">VRO name / గ్రా.రె.అ. పేరు<input id="m-vro" autocomplete="off"></label>
+      <label class="f">VS name / గ్రామ సర్వేయర్ పేరు<input id="m-vs" autocomplete="off"></label>
+    </div>
+    <label class="chk"><input type="checkbox" id="m-mask" checked> Hide Aadhaar numbers in the report (show only the last 4 digits) <span class="te muted">— ఆధార్ చివరి 4 అంకెలు మాత్రమే</span></label>
+  </section>
+
+  <section class="panel" id="result" hidden>
+    <h2>3 · Report <span class="te">నివేదిక</span></h2>
+    <div class="cards" id="cards"></div>
+    <div class="btns">
+      <button class="btn" id="b-xlsx" type="button">⬇ Download Excel <span class="te">ఎక్సెల్</span></button>
+      <button class="btn" id="b-pdf" type="button">⬇ Download PDF <span class="te">పీడీఎఫ్</span></button>
+      <button class="btn alt" id="b-print" type="button">🖨 Print / Save as PDF <span class="te">ప్రింట్</span></button>
+    </div>
+    <div>
+      <div class="muted" style="margin-bottom:6px"><b>PDF / Print includes</b> (untick to make it shorter) <span class="te">· PDF లో ఉండే షీట్లు</span></div>
+      <div class="pdfopts" id="pdfopts"></div>
+      <p class="muted" style="margin:6px 0 0">Every sheet and every printed page carries <b>© RLL</b>. The PDF is a real text PDF (Telugu stays sharp at any zoom); a big village can take up to a minute on a phone.</p>
+    </div>
+    <div class="sheetbar" id="sheetbar"></div>
+    <div id="preview"></div>
+  </section>
+
+  <section class="panel gold">
+    <h2>How to use <span class="te">ఎలా వాడాలి</span></h2>
+    <ul class="help">
+      <li>Download the village Pahani / Adangal with all survey numbers as Excel from Webland / MeeBhoomi and upload it above. <span class="te">వెబ్‌ల్యాండ్ / మీభూమి నుండి గ్రామ పహాణీని ఎక్సెల్‌గా డౌన్‌లోడ్ చేసి పైన అప్‌లోడ్ చేయండి.</span></li>
+      <li>Fill the mandal, district, VRO and VS names; they are printed on every sheet and remembered in this browser. <span class="te">మండలం, జిల్లా, గ్రా.రె.అ, సర్వేయర్ పేర్లు ప్రతి షీట్‌లో వస్తాయి.</span></li>
+      <li>Rows under the same survey number with a second owner are kept with that survey number, so extents are not counted twice.</li>
+      <li>Remarks are automatic checks to help field verification (extent mismatches, Govt land in private names, mutation pending, Aadhaar not linked and more). Verify each with the original records before taking action. <span class="te">వ్యాఖ్యలు స్వయంచాలక తనిఖీలు; చర్యకు ముందు అసలు రికార్డులతో సరిచూడండి.</span></li>
+      <li>Excel opens in Microsoft Excel, Google Sheets and WPS. Print at A4 landscape; the © RLL header and footer print on every page.</li>
+    </ul>
+  </section>
+
+  <p class="foot"><b>© RLL – RaghusLogicLab.</b> All rights reserved. · కాపీరైట్ © RLL · Revenue tools</p>
+</div>
+
+<div id="overlay"><div class="box"><b id="ov-t">Preparing…</b><div class="bar"><i id="ov-bar"></i></div><span class="muted" id="ov-s"></span><button class="btn alt" id="ov-cancel" type="button" style="justify-self:center">Cancel</button></div></div>
+<div id="pages" aria-hidden="true"></div>
+
+<script src="pahani-core.js?v=1"></script>
+<script src="pahani-pdf.js?v=1"></script>
+<script src="pahani-app.js?v=1"></script>
+</body>
+</html>
