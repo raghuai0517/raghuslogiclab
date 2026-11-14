@@ -23,7 +23,17 @@
  *   POST /dsc/trial  {vid, ev, post, kind, src}      -> free-trial page reports a visit (no login; text/plain body)
  *   (/dsc/* calls send "Authorization: Bearer <session token>")
  *
- * 3) Site visits and downloads (whole raghuslogiclab.com, needs the D1 binding DB):
+ * 3) Pahani Village Report (tools/pahani-report/) — paid Excel download, admin-only PDF / print:
+ *   GET  /pahani/config                              -> public: Excel price (₹)
+ *   POST /pahani/order  {vid, village, surveys}      -> Razorpay order at the admin's price (default ₹500)
+ *   POST /pahani/verify {orderId, paymentId, signature} -> confirms payment, returns the Excel unlock key
+ *   GET  /pahani/status?order=order_xxx              -> paid yet? (UPI app round trip); returns the key while the
+ *                                                       order is fresh (24 h after payment, 30 unlocks)
+ *   GET  /pahani/admin                               -> admin: price + Excel and admin (PDF / print) keys
+ *   POST /pahani/admin/config {price}                -> admin: set the Excel price (₹1 – ₹1,00,000)
+ *   (admin = the same admin password / admin Gmail session as the DSC admin panel)
+ *
+ * 4) Site visits and downloads (whole raghuslogiclab.com, needs the D1 binding DB):
  *   POST /t  {vid, ev, path, title, item, ref, tok, pay, src}  -> assets/track.js reports a page view / download / print
  *   GET  /site/admin/summary?days=30                 -> admin: totals, daily chart, top pages/downloads, places, devices
  *   GET  /site/admin/visitors?days=30                -> admin: one row per visitor
@@ -42,6 +52,7 @@
  *   SESSION_SECRET      secret  long random text (signs the login sessions)
  *   DSC_CONTENT_KEY     secret  the content key printed when the site was built
  *   ADMIN_PASSWORD      secret  password for "Admin login" on the sign-in page
+ *   PAHANI_KEY          secret  Pahani Village Report unlock secret (given in the Claude chat; never in the repo)
  * Bindings: KV namespace bound as ORDERS; D1 database bound as DB (site visits and downloads, kept 180 days).
  */
 const RZP = "https://api.razorpay.com/v1";
@@ -62,6 +73,7 @@ export default {
       if (p === "/status" && req.method === "GET") return json(await status(url.searchParams.get("order"), env), cors);
       if (p === "/consume" && req.method === "POST") return json(await consume(await body(req), env), cors);
       if (p.startsWith("/dsc/")) return json(await dsc(p, req, url, env), cors);
+      if (p.startsWith("/pahani/")) return json(await pahani(p, req, url, env), cors);
       if (p === "/t" && req.method === "POST") return json(await siteHit(req, env), cors);
       if (p.startsWith("/site/")) return json(await site(p, req, url, env), cors);
       return json({ ok: false, error: "not_found" }, cors, 404);
@@ -107,7 +119,7 @@ async function status(orderId, env) {
 async function consume(b, env) {
   const rec = await load(env, b.orderId);
   if (!rec) return { ok: false, error: "unknown_order" };
-  if (rec.kind === "dsc") return { ok: false, error: "not_a_pdf_order" };
+  if (rec.kind === "dsc" || rec.kind === "pahani") return { ok: false, error: "not_a_pdf_order" };
   if (rec.status === "delivered") return { ok: false, error: "already_used", deliveredAt: rec.delivered };
   if (rec.status !== "paid") return { ok: false, error: "not_paid" };
   rec.status = "delivered"; rec.delivered = now();
@@ -144,6 +156,76 @@ async function markIfPaid(env, orderId, rec, p) {
   await sitePaid(env, orderId, rec);
   if (rec.kind === "dsc") await grantPaid(env, orderId, rec);
   return { ok: true, status: "paid" };
+}
+
+/* ================= Pahani Village Report ================= */
+const PAHANI_FRESH = DAY; // after payment the Excel can be unlocked again for 24 hours (same village file, re-downloads)
+async function pahaniCfg(env) {
+  const c = (await env.ORDERS.get("pahani:cfg", "json")) || {};
+  return { pricePaise: Number(c.pricePaise) || Number(env.PAHANI_PRICE_PAISE) || 50000, updated: c.updated || "", by: c.by || "" };
+}
+async function pahaniKeys(env) {
+  if (!env.PAHANI_KEY) return null;
+  return { xl: await hmacHex(env.PAHANI_KEY, "pahani-xl"), adm: await hmacHex(env.PAHANI_KEY, "pahani-admin") };
+}
+async function pahaniUnlock(env, orderId, rec) {
+  const paidAt = Date.parse(rec.paid || 0);
+  if (!(paidAt && Date.now() - paidAt < PAHANI_FRESH)) return { ok: true, status: "expired" };
+  if ((rec.unlocks || 0) >= 30) return { ok: true, status: "used_up" };
+  const k = await pahaniKeys(env);
+  if (!k) return { ok: false, error: "not_set" };
+  rec.unlocks = (rec.unlocks || 0) + 1;
+  await save(env, orderId, rec);
+  return { ok: true, status: "paid", key: k.xl, until: new Date(paidAt + PAHANI_FRESH).toISOString(), village: rec.village || "" };
+}
+async function pahani(p, req, url, env) {
+  if (p === "/pahani/config") { const c = await pahaniCfg(env); return { ok: true, price: c.pricePaise / 100, ready: !!env.PAHANI_KEY }; }
+  if (p === "/pahani/order" && req.method === "POST") {
+    if (!env.PAHANI_KEY) return { ok: false, error: "not_set" };
+    const b = await body(req), c = await pahaniCfg(env);
+    const village = clip(String(b.village || "").trim(), 60), vid = okVid(b.vid);
+    const r = await rzp(env, "/orders", {
+      method: "POST",
+      body: JSON.stringify({ amount: c.pricePaise, currency: "INR", receipt: "pahani_" + Date.now(), notes: { tool: "pahani-report", item: "Excel", village } }),
+    });
+    if (!r.id) return { ok: false, error: "order_failed" };
+    await save(env, r.id, { kind: "pahani", status: "created", amount: c.pricePaise, village, surveys: Math.round(Number(b.surveys)) || 0, vid, created: now() });
+    return { ok: true, orderId: r.id, amount: c.pricePaise, currency: "INR", keyId: env.RZP_KEY_ID };
+  }
+  if (p === "/pahani/verify" && req.method === "POST") {
+    const b = await body(req);
+    const rec = await load(env, b.orderId);
+    if (!rec || rec.kind !== "pahani") return { ok: false, error: "unknown_order" };
+    const r = await verify(b, env);
+    if (!(r.ok && r.status === "paid")) return r;
+    return await pahaniUnlock(env, b.orderId, await load(env, b.orderId));
+  }
+  if (p === "/pahani/status") {
+    const id = url.searchParams.get("order");
+    const rec = await load(env, id);
+    if (!rec || rec.kind !== "pahani") return { ok: false, error: "unknown_order" };
+    if (rec.status === "created") {
+      const r = await status(id, env);
+      if (!(r.ok && r.status === "paid")) return r;
+    }
+    return await pahaniUnlock(env, id, await load(env, id));
+  }
+  const email = await sessionEmail(req, env);
+  if (!email) return { ok: false, error: "signed_out" };
+  if (!isAdmin(email, env)) return { ok: false, error: "not_admin" };
+  if (p === "/pahani/admin") {
+    const c = await pahaniCfg(env), k = await pahaniKeys(env);
+    if (!k) return { ok: false, error: "not_set", price: c.pricePaise / 100 };
+    return { ok: true, admin: true, email, price: c.pricePaise / 100, updated: c.updated, by: c.by, key: k.xl, adminKey: k.adm };
+  }
+  if (p === "/pahani/admin/config" && req.method === "POST") {
+    const b = await body(req);
+    const price = Math.round(Number(b.price) * 100);
+    if (!(price >= 100 && price <= 10000000)) return { ok: false, error: "bad_price" };
+    await env.ORDERS.put("pahani:cfg", JSON.stringify({ pricePaise: price, updated: now(), by: email }));
+    return { ok: true, price: price / 100 };
+  }
+  return { ok: false, error: "not_found" };
 }
 
 /* ================= AP DSC 2026 membership ================= */
@@ -452,6 +534,11 @@ async function sitePaid(env, orderId, rec) {
     const u = await getUser(env, rec.email);
     return siteRow(env, null, { vid: (u && u.vid) || "", ev: "paid", path: "/tools/ap-dsc-2026/", title: "AP DSC 2026 Exam Hall",
       item: "Membership · " + (rec.days || "") + " days", email: rec.email, pay: rec.paymentId || orderId, amount: rec.amount / 100, contact: rec.payerPhone || (u && u.phone) || "" });
+  }
+  if (rec.kind === "pahani") {
+    return siteRow(env, null, { vid: rec.vid || "", ev: "paid", path: "/tools/pahani-report/", title: "Pahani Village Report",
+      item: "Excel · " + (rec.village || "village") + (rec.surveys ? " · " + rec.surveys + " survey nos" : ""), email: rec.payerEmail || "",
+      pay: rec.paymentId || orderId, amount: rec.amount / 100, contact: rec.payerPhone || "" });
   }
   const name = String(rec.tool || "").replace(/\.html$/, "").replace(/-/g, " ");
   return siteRow(env, null, { vid: rec.vid || "", ev: "paid", path: "/tools/" + (rec.tool || ""), title: name.charAt(0).toUpperCase() + name.slice(1), item: rec.item || "PDF",
