@@ -4,7 +4,7 @@
 
   rowsToModel(rows)  : array of string rows (first matching header row is found automatically) -> model
   buildSpec(model, meta) : model -> report spec (sheets -> blocks), used by both the Excel and the PDF writers
-  writeExcel(ExcelJS, spec, meta) : -> Promise<ArrayBuffer>
+  (The Excel writer and the PDF / print code are delivered encrypted: xl.enc after payment, adm.enc to the admin.)
 */
 (function (root) {
   "use strict";
@@ -458,133 +458,6 @@
     return { sheets: sheets, totals: T, meta: meta, counts: { surveys: heads.length, entries: recs.length, flagged: flagged.length, action: actionRows.length, khatas: kh.length, obs: obs } };
   }
 
-  /* ---------------- Excel writer (ExcelJS) ---------------- */
-  var RED = "FFB91C1C", DRED = "FF7F1D1D", GOLD = "FFD4A017", LGOLD = "FFFCEFC2", LRED = "FFFDECEC", WHITE = "FFFFFFFF", INK = "FF1F1308", FLAG = "FFFFF4CC";
-  var FONT = "Nirmala UI";
-  var COPY = "© RLL – RaghusLogicLab. All rights reserved. | కాపీరైట్ © RLL – అన్ని హక్కులు ప్రత్యేకించబడినవి.";
-  function fmtOf(f) { return f === "ac" ? "0.0000" : f === "rs" ? "#,##0.00" : f === "pct" ? "0.0%" : f === "int" ? "0" : null; }
-
-  function writeExcel(ExcelJS, spec, meta) {
-    var wb = new ExcelJS.Workbook();
-    wb.creator = "RLL – RaghusLogicLab"; wb.lastModifiedBy = "RLL – RaghusLogicLab"; wb.company = "RLL – RaghusLogicLab";
-    wb.title = (meta.village || "") + " Pahani Report"; wb.subject = "Pahani / Adangal village report"; wb.keywords = "© RLL";
-    wb.description = "© RLL – RaghusLogicLab. All rights reserved."; wb.created = new Date(); wb.modified = new Date();
-    var amp = function (s) { return String(s).replace(/&/g, "&&"); };
-    var gb = { style: "thin", color: { argb: GOLD } }, gbm = { style: "medium", color: { argb: GOLD } };
-    var allGold = { top: gb, left: gb, bottom: gb, right: gb };
-
-    spec.sheets.forEach(function (sh) {
-      var ncol = 0;
-      sh.blocks.forEach(function (b) { ncol = Math.max(ncol, b.type === "kv" ? 4 : b.cols.length); });
-      var ws = wb.addWorksheet(sh.name, {
-        properties: { tabColor: { argb: sh.kind === "summary" ? GOLD : RED } },
-        pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, horizontalCentered: true,
-          margins: { left: 0.35, right: 0.35, top: 0.7, bottom: 0.7, header: 0.3, footer: 0.3 } },
-        headerFooter: {
-          oddHeader: '&L&"' + FONT + ',Bold"&9' + amp(meta.village || "") + " – Pahani Report&C&\"" + FONT + ',Bold"&9' + amp(sh.title[0]) + '&R&"' + FONT + ',Bold"&9&K7F1D1D© RLL',
-          oddFooter: '&L&"' + FONT + '"&8© RLL – RaghusLogicLab. All rights reserved.&C&8Page &P of &N&R&"' + FONT + '"&8Generated ' + amp(meta.date || "") + " · raghuslogiclab.com"
-        }
-      });
-      var widths = [];
-      sh.blocks.forEach(function (b) { if (b.type === "table" && (b.detail || sh.kind === "summary")) b.cols.forEach(function (c, i) { widths[i] = Math.max(widths[i] || 0, c.w || 10); }); });
-      if (sh.kind === "summary") { widths[1] = Math.max(widths[1] || 0, 36); widths[2] = Math.max(widths[2] || 0, 32); }
-      for (var i = 0; i < ncol; i++) ws.getColumn(i + 1).width = widths[i] || 12;
-
-      var r = 1;
-      function band(text, fill, font, h) {
-        ws.mergeCells(r, 1, r, ncol);
-        var c = ws.getCell(r, 1); c.value = text; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
-        c.font = Object.assign({ name: FONT, size: 10, color: { argb: INK } }, font || {}); c.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-        c.border = { top: gbm, left: gbm, bottom: gbm, right: gbm };
-        if (h) ws.getRow(r).height = h; r++;
-      }
-      band(sh.title[0] + "  |  " + sh.title[1], RED, { size: 15, bold: true, color: { argb: WHITE } }, 30);
-      band(sh.info.filter(function (x) { return x[2]; }).map(function (x) { return x[0] + " / " + x[1] + ": " + x[2]; }).join("     "), LRED, { size: 10.5, bold: true, color: { argb: DRED } }, 20);
-      if (sh.line) band(sh.line, LRED, { size: 9.5, color: { argb: DRED } }, 18);
-      band(COPY, LGOLD, { size: 9, italic: true, bold: true, color: { argb: "FF7A5A00" } }, 16);
-      r++;
-      var headerRow = null;
-
-      sh.blocks.forEach(function (b) {
-        if (b.title) { band(b.title, DRED, { size: 11.5, bold: true, color: { argb: WHITE } }, 22); }
-        if (b.type === "kv") {
-          b.rows.forEach(function (kv, j) {
-            var row = ws.getRow(r);
-            row.getCell(1).value = j + 1; row.getCell(2).value = kv[0]; row.getCell(3).value = kv[1];
-            ws.mergeCells(r, 4, r, Math.max(4, Math.min(ncol, 6)));
-            var vc = row.getCell(4); vc.value = kv[2]; if (fmtOf(kv[3])) vc.numFmt = kv[3] === "int" ? "#,##0" : fmtOf(kv[3]);
-            for (var c = 1; c <= Math.max(4, Math.min(ncol, 6)); c++) {
-              var cc = row.getCell(c); cc.border = allGold; cc.font = { name: FONT, size: 10, bold: c === 4, color: { argb: c === 4 ? DRED : INK } };
-              cc.alignment = { vertical: "middle", horizontal: c === 4 ? "left" : c === 1 ? "center" : "left", wrapText: true };
-              if (j % 2) cc.fill = { type: "pattern", pattern: "solid", fgColor: { argb: LRED } };
-            }
-            r++;
-          });
-          r++; return;
-        }
-        var hr = ws.getRow(r);
-        b.cols.forEach(function (c, ci) {
-          var cell = hr.getCell(ci + 1); cell.value = c.en + "\n" + c.te;
-          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: RED } };
-          cell.font = { name: FONT, size: 9.5, bold: true, color: { argb: WHITE } };
-          cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-          cell.border = { top: gbm, left: gb, bottom: gbm, right: gb };
-        });
-        hr.height = b.detail ? 46 : 40;
-        if (b.detail && !headerRow) headerRow = r;
-        var first = r + 1; r++;
-        b.rows.forEach(function (row, j) {
-          var xr = ws.getRow(r), flag = b.flags && b.flags[j];
-          row.forEach(function (v, ci) {
-            var c = b.cols[ci], cell = xr.getCell(ci + 1);
-            cell.value = (v === null || v === undefined) ? null : v;
-            var nf = fmtOf(c.f); if (nf && typeof v === "number") cell.numFmt = nf;
-            cell.font = { name: FONT, size: b.detail ? 9 : 10, color: { argb: c.rem && v ? "FF8A1C1C" : INK } };
-            cell.alignment = { vertical: "top", horizontal: c.f ? "right" : (ci === 0 ? "center" : "left"), wrapText: !c.f };
-            cell.border = allGold;
-            if (c.rem && flag) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: FLAG } };
-            else if (j % 2) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF8F8" } };
-          });
-          r++;
-        });
-        var last = r - 1;
-        if (b.total) {
-          var tr = ws.getRow(r);
-          b.total.forEach(function (v, ci) {
-            var c = b.cols[ci], cell = tr.getCell(ci + 1), L = ws.getColumn(ci + 1).letter;
-            if (typeof v === "number" && (c.f === "ac" || c.f === "rs") && last >= first) {
-              cell.value = { formula: "SUBTOTAL(9," + L + first + ":" + L + last + ")", result: v };
-            } else cell.value = v === "" ? null : v;
-            var nf = fmtOf(c.f); if (nf && typeof v === "number") cell.numFmt = c.f === "int" ? "#,##0" : nf;
-            cell.font = { name: FONT, size: 10, bold: true, color: { argb: DRED } };
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: LGOLD } };
-            cell.alignment = { vertical: "middle", horizontal: c.f ? "right" : "left", wrapText: true };
-            cell.border = { top: gbm, left: gb, bottom: gbm, right: gb };
-          });
-          r++;
-        }
-        if (b.note) { ws.mergeCells(r, 1, r, ncol); var nc = ws.getCell(r, 1); nc.value = b.note; nc.font = { name: FONT, size: 8.5, italic: true, color: { argb: "FF6B4E00" } }; nc.alignment = { wrapText: true }; ws.getRow(r).height = 26; r++; }
-        r++;
-      });
-      if (headerRow) {
-        ws.views = [{ state: "frozen", ySplit: headerRow, xSplit: 0, topLeftCell: "A" + (headerRow + 1), activeCell: "A" + (headerRow + 1) }];
-        ws.autoFilter = { from: { row: headerRow, column: 1 }, to: { row: headerRow, column: ncol } };
-        ws.pageSetup.printTitlesRow = headerRow + ":" + headerRow;
-      }
-      if (sh.sign || sh.kind === "detail") {
-        r++;
-        var half = Math.floor(ncol / 2);
-        ws.mergeCells(r, 1, r, half); ws.mergeCells(r, half + 1, r, ncol);
-        ws.getCell(r, 1).value = "Signature of VRO / గ్రామ రెవెన్యూ అధికారి సంతకం\n\n\nName / పేరు: " + (meta.vro || "____________________");
-        ws.getCell(r, half + 1).value = "Signature of VS / గ్రామ సర్వేయర్ సంతకం\n\n\nName / పేరు: " + (meta.vs || "____________________");
-        [1, half + 1].forEach(function (c) { var x = ws.getCell(r, c); x.font = { name: FONT, size: 10, bold: true, color: { argb: DRED } }; x.alignment = { wrapText: true, vertical: "bottom", horizontal: "center" }; x.border = { top: gb }; });
-        ws.getRow(r).height = 62; r += 2;
-      }
-      band(COPY + "  Generated with RLL Pahani Report tool – raghuslogiclab.com", LGOLD, { size: 9, italic: true, bold: true, color: { argb: "FF7A5A00" } }, 18);
-    });
-    return wb.xlsx.writeBuffer();
-  }
-
   function fmt(v, f) {
     if (v === null || v === undefined || v === "") return "";
     if (typeof v !== "number") return String(v);
@@ -594,6 +467,6 @@
     if (f === "int") return Math.round(v).toLocaleString("en-IN");
     return String(v);
   }
-  var API = { fmt: fmt, rowsToModel: rowsToModel, buildSpec: buildSpec, writeExcel: writeExcel, RULES: RULES, f4: f4, norm: norm };
+  var API = { fmt: fmt, rowsToModel: rowsToModel, buildSpec: buildSpec, RULES: RULES, f4: f4, norm: norm };
   if (typeof module !== "undefined" && module.exports) module.exports = API; else root.PahaniCore = API;
 })(this);

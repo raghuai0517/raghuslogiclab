@@ -92,6 +92,14 @@ h3.bt { font: 700 14.5px/1.45 var(--font-body); color: var(--red-dark); margin: 
 ul.help { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
 .foot { color: var(--muted); font-size: 12.5px; text-align: center; border-top: 2px solid var(--gold); padding-top: 12px; }
 .foot b { color: var(--red-dark); }
+.linkbtn { border: 0; background: none; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; padding: 0; }
+.adminbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border: 2px dashed var(--gold); background: var(--gold-light); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.adminbar[hidden] { display: none; }
+.pricebox { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.pricebox input { width: 110px; font: 700 16px var(--font-body); padding: 7px 9px; border: 1.5px solid var(--gold); border-radius: 8px; }
+.btn.sm { padding: 8px 12px; font-size: 14px; }
+.btn[hidden], #pdfwrap[hidden], .paynote[hidden] { display: none; }
+.paynote { margin: 0; }
 #overlay { position: fixed; inset: 0; background: rgba(40, 8, 8, .78); display: none; place-items: center; z-index: 50; }
 #overlay.show { display: grid; }
 #overlay .box { background: #fff; border: 3px solid var(--gold); border-radius: 14px; padding: 22px; width: min(420px, 92vw); display: grid; gap: 12px; text-align: center; }
@@ -145,7 +153,7 @@ ul.help { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14p
     <nav class="rll-bar" aria-label="Site"><a href="../../index.html"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../../index.html#revenue">Revenue tools</a></nav>
     <span class="tagpill">REVENUE</span>
     <h1>Pahani Village Report <span class="te">పహాణీ / అడంగల్ గ్రామ నివేదిక</span></h1>
-    <p>Upload the Pahani (Adangal) of any village. You get an Excel and a PDF report in English and Telugu: a summary sheet, one sheet for each land nature, the Government &amp; poramboke register, a khata abstract and remarks for the VRO and VS. Free. Your file is read only in this browser and is never uploaded.</p>
+    <p>Upload the Pahani (Adangal) of any village, preview the summary free, then download the full Excel report in English and Telugu: a summary sheet, one sheet for each land nature, the Government &amp; poramboke register, a khata abstract and remarks for the VRO and VS. Your Pahani file is read only in this browser and is never uploaded.</p>
   </header>
 
   <section class="panel gold" id="step1">
@@ -175,12 +183,20 @@ ul.help { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14p
   <section class="panel" id="result" hidden>
     <h2>3 · Report <span class="te">నివేదిక</span></h2>
     <div class="cards" id="cards"></div>
+    <div class="adminbar" id="adminbar" hidden>
+      <b>🔑 Admin mode</b> <span class="muted" id="adm-who"></span>
+      <label class="pricebox">Excel price for customers ₹ <input type="number" id="adm-price" min="1" max="100000" step="1" inputmode="numeric"></label>
+      <button class="btn alt sm" id="adm-save" type="button">Save price</button>
+      <button class="btn alt sm" id="adm-out" type="button">Sign out</button>
+      <span class="muted" id="adm-pmsg"></span>
+    </div>
     <div class="btns">
       <button class="btn" id="b-xlsx" type="button">⬇ Download Excel <span class="te">ఎక్సెల్</span></button>
-      <button class="btn" id="b-pdf" type="button">⬇ Download PDF <span class="te">పీడీఎఫ్</span></button>
-      <button class="btn alt" id="b-print" type="button">🖨 Print / Save as PDF <span class="te">ప్రింట్</span></button>
+      <button class="btn" id="b-pdf" type="button" hidden>⬇ Download PDF <span class="te">పీడీఎఫ్</span></button>
+      <button class="btn alt" id="b-print" type="button" hidden>🖨 Print / Save as PDF <span class="te">ప్రింట్</span></button>
     </div>
-    <div>
+    <p class="muted paynote" id="paynote"></p>
+    <div id="pdfwrap" hidden>
       <div class="muted" style="margin-bottom:6px"><b>PDF / Print includes</b> (untick to make it shorter) <span class="te">· PDF లో ఉండే షీట్లు</span></div>
       <div class="pdfopts" id="pdfopts"></div>
       <p class="muted" style="margin:6px 0 0">Every sheet and every printed page carries <b>© RLL</b>. The PDF is a real text PDF (Telugu stays sharp at any zoom); a big village can take up to a minute on a phone.</p>
@@ -196,18 +212,28 @@ ul.help { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14p
       <li>Fill the mandal, district, VRO and VS names; they are printed on every sheet and remembered in this browser. <span class="te">మండలం, జిల్లా, గ్రా.రె.అ, సర్వేయర్ పేర్లు ప్రతి షీట్‌లో వస్తాయి.</span></li>
       <li>Rows under the same survey number with a second owner are kept with that survey number, so extents are not counted twice.</li>
       <li>Remarks are automatic checks to help field verification (extent mismatches, Govt land in private names, mutation pending, Aadhaar not linked and more). Verify each with the original records before taking action. <span class="te">వ్యాఖ్యలు స్వయంచాలక తనిఖీలు; చర్యకు ముందు అసలు రికార్డులతో సరిచూడండి.</span></li>
+      <li>The preview is free. The full Excel is a paid download through Razorpay (UPI, card or net banking); after paying, the same village can be downloaded again free for 24 hours on the same phone or computer. <span class="te">ప్రివ్యూ ఉచితం; పూర్తి ఎక్సెల్ కోసం Razorpay ద్వారా చెల్లించండి.</span></li>
       <li>Excel opens in Microsoft Excel, Google Sheets and WPS. Print at A4 landscape; the © RLL header and footer print on every page.</li>
     </ul>
   </section>
 
-  <p class="foot"><b>© RLL – RaghusLogicLab.</b> All rights reserved. · కాపీరైట్ © RLL · Revenue tools</p>
+  <section class="panel gold" id="adminlogin" hidden>
+    <h2>Admin login <span class="te">అడ్మిన్ లాగిన్</span></h2>
+    <div class="form" style="grid-template-columns:minmax(0,1fr) auto">
+      <label class="f">Admin password<input type="password" id="adm-pass" autocomplete="current-password"></label>
+      <button class="btn" id="adm-login" type="button" style="align-self:end">Sign in</button>
+    </div>
+    <span class="muted" id="adm-msg">The same admin password as the AP DSC 2026 admin panel.</span>
+  </section>
+
+  <p class="foot"><b>© RLL – RaghusLogicLab.</b> All rights reserved. · కాపీరైట్ © RLL · Revenue tools · <button type="button" class="linkbtn" id="adm-open">Admin login</button></p>
 </div>
 
 <div id="overlay"><div class="box"><b id="ov-t">Preparing…</b><div class="bar"><i id="ov-bar"></i></div><span class="muted" id="ov-s"></span><button class="btn alt" id="ov-cancel" type="button" style="justify-self:center">Cancel</button></div></div>
 <div id="pages" aria-hidden="true"></div>
 
-<script src="pahani-core.js?v=1"></script>
-<script src="pahani-pdf.js?v=1"></script>
-<script src="pahani-app.js?v=1"></script>
+<script src="../../assets/pay-config.js"></script>
+<script src="pahani-core.js?v=2"></script>
+<script src="pahani-app.js?v=2"></script>
 </body>
 </html>
