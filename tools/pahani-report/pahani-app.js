@@ -205,17 +205,28 @@
     return h + "</tbody></table>";
   }
   function renderPreview() {
-    var s = state.spec.sheets[state.sheet], LIM = state.admin ? 200 : 25, h = "";
+    var s = state.spec.sheets[state.sheet], adm = !!state.admin, h = "";
+    var FREE = 6; // customers see only the first 6 rows of every table; the full report is in the paid Excel
     h += '<div class="muted" style="margin:4px 0 8px"><b>' + esc(s.title[0]) + '</b> · <span class="te">' + esc(s.title[1]) + "</span>" + (s.line ? "<br>" + esc(s.line) : "") + "</div>";
     s.blocks.forEach(function (b) {
       if (b.type === "kv") b = kvTable(b);
+      var lim = adm ? (b.detail ? 200 : 0) : FREE;
       if (b.title) h += '<h3 class="bt">' + esc(b.title) + "</h3>";
-      h += '<div class="tw">' + htmlTable(b, b.detail ? LIM : 0) + "</div>";
-      if (b.detail && b.rows.length > LIM) h += '<p class="muted">Showing the first ' + LIM + " of " + b.rows.length.toLocaleString("en-IN") + " rows here. The Excel has all rows. <span class='te'>మొదటి " + LIM + " వరుసలు మాత్రమే చూపబడుతున్నాయి; అన్నీ ఎక్సెల్‌లో ఉంటాయి.</span></p>";
-      if (b.note) h += '<p class="muted">' + esc(b.note) + "</p>";
+      h += '<div class="tw">' + htmlTable(b, lim) + "</div>";
+      if (lim && b.rows.length > lim) {
+        h += adm
+          ? '<p class="muted">Showing the first ' + lim + " of " + b.rows.length.toLocaleString("en-IN") + " rows here. The Excel has all rows.</p>"
+          : '<p class="lockmsg">🔒 Showing the first ' + lim + " of " + b.rows.length.toLocaleString("en-IN") + " rows. " +
+            '<button type="button" class="linkbtn paylink">Pay' + (state.ready && state.price ? " " + rupees(state.price) : "") + " &amp; download the full Excel</button>" +
+            " <span class='te'>మొదటి " + lim + " వరుసలు మాత్రమే; పూర్తి వివరాలకు చెల్లించి ఎక్సెల్ డౌన్‌లోడ్ చేయండి.</span></p>";
+      }
+      if (b.note && (adm || b.rows.length <= FREE)) h += '<p class="muted">' + esc(b.note) + "</p>";
     });
     $("preview").innerHTML = h;
   }
+  $("preview").addEventListener("click", function (e) {
+    if (e.target.closest(".paylink")) { $("b-xlsx").scrollIntoView({ behavior: "smooth", block: "center" }); $("b-xlsx").click(); }
+  });
 
   /* ---------- overlay ---------- */
   function ov(show, title, sub, frac) {
@@ -311,7 +322,7 @@
   }
   function loadConfig() {
     if (!API) { state.ready = false; paintButtons(); return Promise.resolve(); }
-    return api("/pahani/config").then(function (c) { state.ready = !!(c && c.ok && c.ready); state.price = c && c.price; paintButtons(); },
+    return api("/pahani/config").then(function (c) { state.ready = !!(c && c.ok && c.ready); state.price = c && c.price; paintButtons(); if (state.spec) renderPreview(); },
       function () { state.ready = false; paintButtons(); });
   }
 
@@ -353,7 +364,7 @@
     $("adm-pmsg").textContent = "Saving…";
     try {
       var r = await api("/pahani/admin/config", { token: state.admin.token, body: { price: v } });
-      if (r && r.ok) { state.admin.price = r.price; state.price = r.price; paintButtons(); $("adm-pmsg").textContent = "✔ Saved. Customers now pay " + rupees(r.price) + "."; }
+      if (r && r.ok) { state.admin.price = r.price; state.price = r.price; paintButtons(); renderPreview(); $("adm-pmsg").textContent = "✔ Saved. Customers now pay " + rupees(r.price) + "."; }
       else $("adm-pmsg").textContent = r && r.error === "signed_out" ? "Session ended — sign in again." : "Could not save (" + ((r && r.error) || "error") + ").";
     } catch (e) { $("adm-pmsg").textContent = "Could not reach the server."; }
   });
