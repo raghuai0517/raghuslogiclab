@@ -13,7 +13,7 @@ A simple static website (no server, no database) that you can host on any domain
 | `assets/track.js` | Visit and download log used by Site Admin; loaded by every page except the two admin pages |
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
-| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker, DSC Exam Hall); `tools/ap-dsc-2026/` (paid, encrypted) and `tools/ap-dsc-2026-trial/` are folders |
+| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker, DSC Exam Hall); `tools/ap-dsc-2026/` (paid, encrypted), `tools/ap-dsc-2026-trial/` and `tools/pahani-report/` are folders |
 | `apps/` | Apps, one folder each (Sunshine Homes community app) |
 
 ## Try it now
@@ -35,6 +35,10 @@ To add a tool:
 2. Add an entry to `"tools"` in `data/site-data.js` (copy an existing one and change `id`, `slug`, `name`, `tagline`, `description`, `url`, `color`, `added`).
 3. Set `"visibility": "unlisted"` to hide a tool from the menu without deleting it.
 4. Optional `"badge"` sets the label on the tool's card (default: "Free to fill · ₹10 PDF"), e.g. `"badge": "Free tool"`.
+
+Tools with `"category": "REVENUE"` appear in their own red **REVENUE** section (gold-bordered cards) at the top of the home page.
+
+**Pahani Village Report** (`tools/pahani-report/`) — upload a village Pahani / Adangal (the HTML-table `.xls` from Webland / MeeBhoomi, or `.xlsx` / `.csv`) and download a bilingual (English + Telugu) report as Excel (ExcelJS) and PDF (pdfmake, real text), or print it. Sheets: Summary (village at a glance; land nature, Govt / private, classification, water source and enjoyment nature abstracts; observations for VRO / VS; sheet index; signature lines), one sheet per land nature (భూమి స్వభావం) found in the file, Govt & Poramboke register, Remarks – Action List and Khata Abstract (1-B). Columns are found by their Telugu/English headings; rows with a blank survey number (second owner of the same survey) are kept with the survey above so extents are not counted twice. Remarks come from rules in `pahani-core.js` (`RULES`): extent mismatches, Govt land in private names, pattadar ≠ enjoyer, Aadhaar not linked, nil sist, missing data, NALA, assigned / Inam / freehold notes, and more; notes are shown in the Remarks column but left out of the Action List. Every sheet has © RLL bands plus a © RLL print header and footer; every PDF page has a © RLL header, footer and watermark. Aadhaar is masked to the last 4 digits unless the visitor unticks it. Files: `index.html` (page), `pahani-core.js` (parsing, report spec, Excel writer; also runs in Node for tests), `pahani-pdf.js` (pdfmake document), `pahani-app.js` (page script). Libraries in `lib/` load only when needed (no CDN). `fonts/RLLTelugu-*.ttf` is Noto Sans (Latin subset) merged with Noto Sans Telugu, with one GPOS mark-to-base lookup split per mark class because pdfmake's fontkit crashes on its blank anchors (OFL; see `lib/LICENSES.txt`).
 
 Tools with `"category": "CENSUS"` appear in their own deep-blue **CENSUS 2027** section at the top of the home page.
 

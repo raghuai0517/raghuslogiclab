@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-pahani-report",
+      "date": "2026-11-14",
+      "type": "launch",
+      "title": "New: REVENUE section with the Pahani Village Report",
+      "body": "A new red REVENUE section on the home page. First tool: upload the Pahani / Adangal of any village and download an Excel and a PDF report in English and Telugu: summary, land-nature-wise sheets, Government & poramboke register, khata abstract and remarks for the VRO and VS. The file is read only in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-pe-phase2-guide-telugu",
       "date": "2026-11-11",
       "type": "launch",
@@ -217,6 +225,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-pahani-report",
+      "slug": "pahani-report",
+      "name": "Pahani Village Report (Excel + PDF)",
+      "tagline": "Upload the Pahani / Adangal of any village and get a ready report for the VRO and VS — పహాణీ నుండి గ్రామ నివేదిక.",
+      "description": "Excel and PDF in English and తెలుగు: a summary sheet (land nature, Govt / private, classification, water source and enjoyment abstracts with totals), one sheet for each land nature, the Government & poramboke register, a khata abstract and an action list with remarks for VRO / VS. © RLL on every sheet and printed page. Aadhaar is masked by default.",
+      "category": "REVENUE",
+      "badge": "Free tool · English + తెలుగు",
+      "url": "tools/pahani-report/index.html",
+      "color": "#b91c1c",
+      "visibility": "public",
+      "added": "2026-11-14"
+    },
     {
       "id": "t-pe-phase2-guide-telugu",
       "slug": "pe-phase2-guide-telugu",

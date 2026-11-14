@@ -321,3 +321,17 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: up
 .badge-census { color: var(--census-light); }
 .btn-census { background: var(--census); border-color: var(--census); color: #fff; }
 .btn-census:hover { background: #2563eb; border-color: #2563eb; }
+
+/* ---------- Revenue (red tool cards with a gold border) ---------- */
+:root { --rev: #b91c1c; --rev-dark: #7f1d1d; --rev-gold: #d4a017; --rev-gold-light: #fcd979; --rev-title: #ef4444; }
+.eyebrow-revenue { color: var(--rev-gold-light); }
+.revenue-group-title { color: var(--rev-title); letter-spacing: .06em; font-size: clamp(1.5rem, 3.4vw, 2.2rem); margin: 0 0 6px; text-shadow: 0 0 1px rgba(212,160,23,.6); }
+.revenue-section .section-head { border-left: 4px solid var(--rev-gold); padding-left: 14px; }
+.tool-card.revenue { background: linear-gradient(180deg, rgba(185,28,28,.58), rgba(127,29,29,.30)); border: 2px solid var(--rev-gold); box-shadow: inset 0 0 0 1px rgba(252,217,121,.18); }
+.tool-card.revenue:hover { border-color: var(--rev-gold-light); box-shadow: inset 0 0 0 1px rgba(252,217,121,.45), 0 8px 24px rgba(185,28,28,.25); }
+.tool-card.revenue .p-icon { background: linear-gradient(135deg, #ef4444, #7f1d1d); color: #fff; border: 1.5px solid var(--rev-gold); }
+.tool-card.revenue .tool-open { color: var(--rev-gold-light); }
+.tool-card.revenue .tag { border-color: rgba(212,160,23,.6); color: var(--rev-gold-light); }
+.badge-revenue { color: var(--rev-gold-light); }
+.btn-revenue { background: var(--rev); border: 2px solid var(--rev-gold); color: #fff; }
+.btn-revenue:hover { background: var(--rev-dark); border-color: var(--rev-gold-light); }
