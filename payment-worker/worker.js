@@ -51,6 +51,9 @@
  *   ADMIN_EMAILS        text    admin Gmail address(es), comma separated
  *   SESSION_SECRET      secret  long random text (signs the login sessions)
  *   DSC_CONTENT_KEY     secret  the content key printed when the site was built
+ *   DSC_SERVER_FILES    text    "1" = never send DSC_CONTENT_KEY to browsers; paid files are unlocked
+ *                               here, per signed-in member, through GET /dsc/file (see SETUP-DSC.md)
+ *   DSC_FILES_ORIGIN    text    optional, where the .enc files live (default https://raghuslogiclab.com)
  *   ADMIN_PASSWORD      secret  password for "Admin login" on the sign-in page
  *   PAHANI_KEY          secret  Pahani Village Report unlock secret (given in the Claude chat; never in the repo)
  * Bindings: KV namespace bound as ORDERS; D1 database bound as DB (site visits and downloads, kept 180 days).
@@ -72,6 +75,7 @@ export default {
       if (p === "/verify" && req.method === "POST") return json(await verify(await body(req), env), cors);
       if (p === "/status" && req.method === "GET") return json(await status(url.searchParams.get("order"), env), cors);
       if (p === "/consume" && req.method === "POST") return json(await consume(await body(req), env), cors);
+      if (p === "/dsc/file" && req.method === "GET") return await dscFile(req, url, env, cors);
       if (p.startsWith("/dsc/")) return json(await dsc(p, req, url, env), cors);
       if (p.startsWith("/pahani/")) return json(await pahani(p, req, url, env), cors);
       if (p === "/t" && req.method === "POST") return json(await siteHit(req, env), cors);
@@ -341,8 +345,45 @@ async function dscMe(email, env, u) {
   const c = await dscCfg(env);
   const active = admin || Date.parse(u.until || 0) > Date.now();
   const out = { ok: true, user: publicUser(u, admin), active, price: c.pricePaise / 100, days: c.days };
-  if (active) out.key = env.DSC_CONTENT_KEY || "";
+  if (active) {
+    if (env.DSC_SERVER_FILES === "1") out.serverFiles = true; // the key never leaves the worker
+    else out.key = env.DSC_CONTENT_KEY || "";
+  }
   return out;
+}
+
+/* Paid content unlocked per request: only for a signed-in member whose access is active.
+   Returns the AES-decrypted file (still gzip-compressed; the browser un-gzips it), so the
+   worker does very little CPU work and DSC_CONTENT_KEY is never sent to anyone. */
+let dscKeyP = null, dscKeyRaw = "";
+function dscKey(env) {
+  if (!dscKeyP || dscKeyRaw !== env.DSC_CONTENT_KEY) {
+    dscKeyRaw = env.DSC_CONTENT_KEY;
+    dscKeyP = crypto.subtle.importKey("raw", b64ToBytes(dscKeyRaw), "AES-GCM", false, ["decrypt"]);
+  }
+  return dscKeyP;
+}
+function b64ToBytes(t) { const bin = atob(String(t).trim()); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+async function dscFile(req, url, env, cors) {
+  const deny = (status, error) => json({ ok: false, error }, cors, status);
+  if (env.DSC_SERVER_FILES !== "1") return deny(404, "not_enabled");
+  if (!env.DSC_CONTENT_KEY) return deny(500, "not_set");
+  const email = await sessionEmail(req, env);
+  if (!email) return deny(401, "signed_out");
+  const u = await getUser(env, email);
+  const active = isAdmin(email, env) || !!(u && Date.parse(u.until || 0) > Date.now());
+  if (!active) return deny(403, "not_active");
+  const f = String(url.searchParams.get("f") || "");
+  if (!/^(?:[a-z0-9_-]+\/){0,3}[a-z0-9_-]+\.(?:enc|txt)$/i.test(f)) return deny(400, "bad_file");
+  const origin = String(env.DSC_FILES_ORIGIN || "https://raghuslogiclab.com").replace(/\/+$/, "");
+  const r = await fetch(origin + "/tools/ap-dsc-2026/" + f, { cf: { cacheTtl: 3600, cacheEverything: true } });
+  if (!r.ok) return deny(r.status === 404 ? 404 : 502, "fetch_failed");
+  let buf = new Uint8Array(await r.arrayBuffer());
+  if (/\.txt$/i.test(f)) buf = b64ToBytes(new TextDecoder().decode(buf));
+  let plain;
+  try { plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: buf.slice(0, 12) }, await dscKey(env), buf.slice(12)); }
+  catch (e) { return deny(500, "decrypt_failed"); }
+  return new Response(plain, { headers: { ...cors, "Content-Type": "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
 async function dscOrder(email, env) {
@@ -387,6 +428,9 @@ function applyProfile(u, b) {
   if (b.phone != null) u.phone = clip(String(b.phone).replace(/[^\d+]/g, ""), 15);
   if (b.district != null) u.district = clip(String(b.district).trim(), 40);
   if (b.post != null) u.post = clip(String(b.post).trim(), 40);
+  // DPDP: keep a record of the notice version the member accepted and their 18+ confirmation
+  if (b.consent && typeof b.consent === "object" && b.consent.v)
+    u.consent = { v: clip(b.consent.v, 20), age18: !!b.consent.age18, at: now() };
 }
 function publicUser(u, admin) {
   return { email: u.email, name: u.name, picture: u.picture, phone: u.phone, district: u.district, post: u.post,

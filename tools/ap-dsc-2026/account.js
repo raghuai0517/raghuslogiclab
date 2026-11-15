@@ -10,6 +10,9 @@
   var C = Object.assign({ api: "", googleClientId: "", trialUrl: "", demo: false, demoKey: "", demoAdmins: [] }, window.DSC_CFG || {});
   var API = String(C.api || "").replace(/\/+$/, "");
   var SK = "ap26.session", PK = "ap26.pendingOrder";
+  var NOTICE_V = "2026-11-15";            // version of the privacy notice shown at sign-up (DPDP record)
+  var SITE = "../../", CONTACT = "raghuslogiclab@gmail.com";
+  function legal(items) { return '<p class="dga-muted g-small dga-legal">' + items.map(function (x) { return '<a href="' + SITE + x[0] + '" target="_blank" rel="noopener">' + esc(x[1]) + "</a>"; }).join(" · ") + "</p>"; }
   var mem = {};
   var store = {
     get: function (k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return mem[k] || null; } },
@@ -27,6 +30,8 @@
 
   /* ---------------- styles ---------------- */
   var css = "\
+.dga-ck{display:flex;gap:10px;align-items:flex-start;margin:4px 0 12px;font-size:13px;line-height:1.45;cursor:pointer}.dga-ck input{width:18px;height:18px;margin-top:2px;flex:none}\
+.dga-legal a{color:inherit;text-decoration:underline}.dga-note{background:var(--dga-bg2,#F4F6FB);border-radius:10px;padding:10px 12px;margin:0 0 12px}\
 .dga-te{display:block;font-family:'Noto Sans Telugu','Noto Sans',sans-serif;font-size:.86em;opacity:.85;font-weight:inherit;margin-top:1px}\
 .dga-ov{position:fixed;inset:0;z-index:1000;background:rgba(10,16,32,.55);display:grid;place-items:center;padding:14px;overflow:auto}\
 .dga-box{background:var(--dga-bg,#fff);color:var(--dga-ink,#141A2E);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.35);width:min(100%,460px);max-height:calc(100vh - 28px);overflow:auto;font-family:'Noto Sans','Noto Sans Telugu',system-ui,sans-serif}\
@@ -111,17 +116,33 @@
     }
     return keyP;
   }
+  function gunzipText(plain) {
+    var ds = new Blob([plain]).stream().pipeThrough(new DecompressionStream("gzip"));
+    return new Response(ds).text();
+  }
   function decrypt(buf, b64) {
     return cryptoKey(b64).then(function (k) {
       return crypto.subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(buf.slice(0, 12)) }, k, buf.slice(12));
-    }).then(function (plain) {
-      var ds = new Blob([plain]).stream().pipeThrough(new DecompressionStream("gzip"));
-      return new Response(ds).text();
-    });
+    }).then(gunzipText);
+  }
+  /* Server mode (worker setting DSC_SERVER_FILES = "1"): the content key is never sent to the browser.
+     Each paid file is unlocked by the worker for the signed-in member and only un-gzipped here. */
+  var serverFiles = false;
+  function serverMode(b64) { return !C.demo && !b64 && !window.DSC_KEY && (serverFiles || window.DSC_SERVER === 1); }
+  function serverFetch(url) {
+    var path = new URL(url, location.href).pathname, base = "/tools/ap-dsc-2026/", i = path.indexOf(base);
+    var f = i >= 0 ? path.slice(i + base.length) : path.replace(/^\/+/, "");
+    var s = session() || {};
+    return fetch(API + "/dsc/file?f=" + encodeURIComponent(f), { headers: s.token ? { Authorization: "Bearer " + s.token } : {}, cache: "no-store" })
+      .then(function (r) {
+        if (r.ok) return r.arrayBuffer();
+        throw new Error(r.status === 401 ? "signed out — reload the page and sign in again" : r.status === 403 ? "your access has ended — reload the page to renew" : "HTTP " + r.status);
+      });
   }
   var EXT = C.ext || ".enc";
   function b64buf(t) { var bin = atob(t.trim()), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
   function loadText(url, b64) {
+    if (serverMode(b64)) return serverFetch(url).then(gunzipText);
     return fetch(url).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return /\.txt$/.test(url) ? r.text().then(b64buf) : r.arrayBuffer(); })
       .then(function (buf) { return decrypt(buf, b64); });
   }
@@ -282,15 +303,24 @@
     var body = gate.querySelector("#gBody");
     if (tab === "signin") {
       body.innerHTML = "<h2>" + bi("Welcome back", "మళ్ళీ స్వాగతం") + '</h2><p class="dga-muted">' + bi("Sign in with the Gmail account you used to join.", "మీరు చేరిన Gmail ఖాతాతో సైన్ ఇన్ చేయండి.") + '</p><div id="gBtn" class="g-gbtn"></div><p class="dga-err" id="gErr" hidden></p>' +
-        '<p class="dga-muted g-small">' + bi("New here? Choose “Create account”.", "కొత్తవారా? “ఖాతా తెరవండి” ఎంచుకోండి.") + '</p><button class="g-adm" id="gAdm" type="button">Admin login</button>';
+        '<p class="dga-muted g-small">' + bi("New here? Choose “Create account”.", "కొత్తవారా? “ఖాతా తెరవండి” ఎంచుకోండి.") + '</p>' +
+        '<p class="dga-muted g-small">' + bi("By signing in you agree to our Terms and Privacy Policy.", "సైన్ ఇన్ చేయడం ద్వారా మా నిబంధనలు, గోప్యతా విధానానికి అంగీకరిస్తున్నారు.") + "</p>" +
+        legal([["terms.html", "Terms"], ["privacy.html", "Privacy Policy"]]) + '<button class="g-adm" id="gAdm" type="button">Admin login</button>';
       googleButton(body.querySelector("#gBtn"), "signin", function (cred) { doLogin(cred, null); });
       body.querySelector("#gAdm").onclick = function () { adminForm(body); };
     } else {
       body.innerHTML = "<h2>" + bi("Create your account", "మీ ఖాతా తెరవండి") + '</h2><p class="dga-muted">' + bi("Step 1 of 2 · your details", "దశ 1/2 · మీ వివరాలు") + "</p>" + profileFields({}) +
+        '<div class="dga-note dga-muted g-small">' + bi("We use your name, Gmail, mobile, district and post only to run your account and to contact you about your access. For security, sign-ins are logged with the approximate city and device type and deleted after 180 days. You can ask us to show, correct or delete your data at any time.",
+          "మీ పేరు, Gmail, మొబైల్, జిల్లా, పోస్టు వివరాలను మీ ఖాతా నిర్వహణకు, యాక్సెస్ గురించి మిమ్మల్ని సంప్రదించడానికి మాత్రమే ఉపయోగిస్తాం. భద్రత కోసం సైన్-ఇన్‌లు సుమారు నగరం, పరికరం రకంతో నమోదై 180 రోజుల తర్వాత తొలగించబడతాయి. మీ వివరాలు చూపమని, సరిచేయమని లేదా తొలగించమని ఎప్పుడైనా అడగవచ్చు.") +
+        legal([["privacy.html", "Privacy Policy"], ["terms.html", "Terms"], ["refund.html", "Refund Policy"]]) + "</div>" +
+        '<label class="dga-ck"><input type="checkbox" id="pfAge"><span>' + bi("I am 18 or older (or have my parent’s or guardian’s consent) and I agree to the Terms and Privacy Policy.",
+          "నా వయసు 18 సంవత్సరాలు పైబడి ఉంది (లేదా తల్లిదండ్రులు/సంరక్షకుల అనుమతి ఉంది). నిబంధనలు, గోప్యతా విధానానికి అంగీకరిస్తున్నాను.") + "</span></label>" +
         '<button class="dga-btn pri" id="gNext" style="width:100%">' + bi("Continue", "కొనసాగండి") + '</button><p class="dga-err" id="gErr" hidden></p>';
       body.querySelector("#gNext").onclick = function () {
         var r = readProfile(body); var er = body.querySelector("#gErr");
         if (r.err) { er.hidden = false; er.textContent = r.err; return; }
+        if (!body.querySelector("#pfAge").checked) { er.hidden = false; er.textContent = "Please confirm you are 18 or older and accept the Terms. / దయచేసి 18 ఏళ్లు నిండాయని నిర్ధారించి, నిబంధనలను అంగీకరించండి."; return; }
+        r.p.consent = { v: NOTICE_V, age18: true };
         body.innerHTML = "<h2>" + bi("Create your account", "మీ ఖాతా తెరవండి") + '</h2><p class="dga-muted">' + bi("Step 2 of 2 · confirm with your Gmail", "దశ 2/2 · మీ Gmailతో నిర్ధారించండి") + '</p><div class="dga-card" style="margin:10px 0 14px"><b>' + esc(r.p.name) + '</b><br><span class="dga-muted">' + esc(r.p.phone) + " · " + esc(r.p.district) + (r.p.post ? " · " + esc(r.p.post) : "") +
           '</span></div><div id="gBtn" class="g-gbtn"></div><p class="dga-err" id="gErr" hidden></p><button class="dga-btn sm" id="gBack" style="margin-top:12px">← ' + bi("Edit details", "వివరాలు మార్చండి") + "</button>";
         body.querySelector("#gBack").onclick = function () { authScreen("signup"); };
@@ -343,7 +373,10 @@
       '<div class="g-plan"><div class="g-plan-k">' + bi("Full access", "పూర్తి యాక్సెస్") + '</div><div class="g-plan-p">' + rupees(me.price) + '</div><div class="g-plan-d">' + bi(me.days + " days of full access", me.days + " రోజుల పూర్తి యాక్సెస్") + "</div>" +
       '<ul class="g-list"><li>' + bi("All 83 AP textbooks · 972 chapters · notes, tiles, tests", "83 AP పాఠ్యపుస్తకాలు · 972 అధ్యాయాలు · నోట్స్, టైల్స్, పరీక్షలు") + "</li><li>" + bi("Full CBT mock exams for every post", "ప్రతి పోస్టుకు పూర్తి CBT మాదిరి పరీక్షలు") + "</li><li>" + bi("Every question bank, explained answers, A4 PDFs", "అన్ని ప్రశ్నల బ్యాంకులు, వివరణలు, A4 PDFలు") + "</li></ul>" +
       '<button class="dga-btn sky" id="gPay" style="width:100%;font-size:17px">' + bi((expired ? "Renew · Pay " : "Pay ") + rupees(me.price) + " & unlock", (expired ? "రెన్యూ · " : "") + rupees(me.price) + " చెల్లించి తెరవండి") + '</button>' +
-      '<p class="dga-muted g-small">' + bi("Secure payment by Razorpay · UPI (PhonePe, Google Pay, Paytm), cards, netbanking. Access starts right after payment.", "Razorpay ద్వారా సురక్షిత చెల్లింపు · UPI, కార్డులు, నెట్‌బ్యాంకింగ్. చెల్లించిన వెంటనే యాక్సెస్.") + '</p><p class="dga-err" id="gErr" hidden></p></div></div>';
+      '<p class="dga-muted g-small">' + bi("Secure payment by Razorpay · UPI (PhonePe, Google Pay, Paytm), cards, netbanking. Access starts right after payment.", "Razorpay ద్వారా సురక్షిత చెల్లింపు · UPI, కార్డులు, నెట్‌బ్యాంకింగ్. చెల్లించిన వెంటనే యాక్సెస్.") + "</p>" +
+      '<p class="dga-muted g-small">' + bi("One-time payment for " + me.days + " days · no automatic renewal · access is for your Gmail account only. Once access is active the payment is not refundable — try the free trial first.",
+        me.days + " రోజులకు ఒకేసారి చెల్లింపు · ఆటోమేటిక్ రెన్యూవల్ లేదు · మీ Gmail ఖాతాకు మాత్రమే. యాక్సెస్ మొదలైన తర్వాత రీఫండ్ ఉండదు — ముందు ఉచిత ట్రయల్ చూడండి.") + "</p>" +
+      legal([["refund.html", "Refund Policy"], ["terms.html", "Terms"], ["privacy.html", "Privacy Policy"]]) + '<p class="dga-err" id="gErr" hidden></p></div></div>';
     gate.querySelector("#gOut").onclick = signOut;
     gate.querySelector("#gPay").onclick = function () {
       var b = this, er = gate.querySelector("#gErr"); b.disabled = true; er.hidden = true;
@@ -358,6 +391,7 @@
   function unlockApp(me) {
     loading("Opening the Exam Hall…");
     var s = session() || {}; s.until = me.user.until; s.admin = !!me.user.admin; store.set(SK, s);
+    serverFiles = !!me.serverFiles;
     Promise.resolve(onUnlock(me.key)).catch(function (e) { errorScreen("The tool could not open (" + (e && e.message || "error") + "). Reload the page to try again."); });
   }
   function signOut() {
@@ -381,7 +415,11 @@
     var o = overlay('<div class="dga-hd"><span class="dga-av">' + avatar(s) + "</span><h2>" + esc(s.name || "Account") + '<br><span class="dga-muted" style="font-weight:400">' + esc(s.email || "") + '</span></h2><button class="dga-x" data-close aria-label="Close">×</button></div>' +
       '<div class="dga-bd"><p>' + (s.admin ? '<span class="dga-chip adm">Admin</span>' : '<span class="dga-chip">' + bi("Full access", "పూర్తి యాక్సెస్") + "</span>") + "</p>" +
       (s.until && !s.admin ? '<p class="dga-muted">' + bi("Access until " + fmtDate(s.until), fmtDate(s.until) + " వరకు యాక్సెస్") + "</p>" : "") +
-      '<div class="dga-row" style="margin-top:14px">' + (s.admin ? '<button class="dga-btn sky" id="dgaAdm">Admin panel</button>' : "") + '<button class="dga-btn" id="dgaOut">' + bi("Sign out", "సైన్ అవుట్") + "</button></div></div>");
+      '<div class="dga-row" style="margin-top:14px">' + (s.admin ? '<button class="dga-btn sky" id="dgaAdm">Admin panel</button>' : "") + '<button class="dga-btn" id="dgaOut">' + bi("Sign out", "సైన్ అవుట్") + "</button></div>" +
+      '<p class="dga-muted g-small" style="margin-top:16px"><a href="mailto:' + CONTACT + '?subject=' + encodeURIComponent("Data request — AP DSC 2026 account") +
+        "&body=" + encodeURIComponent("Account Gmail: " + (s.email || "") + "\n\nPlease (tick one): show my data / correct my data / delete my account and data.\n") + '">' +
+        esc("Show, correct or delete my data") + "</a> · " + esc("మీ వివరాలు చూపించండి / సరిచేయండి / తొలగించండి") + "</p>" +
+      legal([["privacy.html", "Privacy Policy"], ["terms.html", "Terms"], ["refund.html", "Refund Policy"]]) + "</div>");
     o.box.querySelector("#dgaOut").onclick = signOut;
     var a = o.box.querySelector("#dgaAdm"); if (a) a.onclick = function () { o.close(); openAdmin(); };
   }
@@ -566,5 +604,5 @@
     }
   };
 
-  window.DSCAcc = { startGate: startGate, mountBar: mountBar, openAdmin: openAdmin, signOut: signOut, loadJSON: loadJSON, loadText: loadText, ext: EXT, session: session, config: C };
+  window.DSCAcc = { startGate: startGate, mountBar: mountBar, openAdmin: openAdmin, signOut: signOut, loadJSON: loadJSON, loadText: loadText, ext: EXT, session: session, config: C, serverMode: function () { return serverMode(); } };
 })();

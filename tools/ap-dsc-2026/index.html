@@ -108,7 +108,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height
   }
   DSCAcc.startGate(document.getElementById("gate"), function (key) {
     return DSCAcc.loadText("app" + DSCAcc.ext, key).then(function (html) {
-      html = html.replace("<head>", "<head><script>window.DSC_KEY=" + JSON.stringify(key) + "<\/script>");
+      // Old mode: hand the key to the tool. Server mode: no key; the tool's files are unlocked by the worker.
+      html = html.replace("<head>", "<head><script>" + (key ? "window.DSC_KEY=" + JSON.stringify(key) : "window.DSC_SERVER=1") + "<\/script>");
       if (window.RLLT) RLLT.ev("open", "Full tool unlocked");
       document.open(); document.write(html); document.close();
       if (window.RLLT) RLLT.rebind();
