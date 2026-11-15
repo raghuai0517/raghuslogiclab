@@ -146,6 +146,13 @@
     }, 3500);
   }
 
+  /* Admin shortcuts (Project Studio, Create Project) are shown only in the owner's browser.
+     Opening admin.html once marks this browser as the owner's; public visitors never see the links. */
+  function isOwner() {
+    try { if (/(?:^|\/)admin\.html$/.test(location.pathname)) localStorage.setItem("rll.owner", "1"); return localStorage.getItem("rll.owner") === "1"; }
+    catch (e) { return false; }
+  }
+
   function currentSlug() {
     var q = new URLSearchParams(location.search).get("p");
     if (q) return q;
@@ -203,8 +210,7 @@
           '<li class="dropdown" id="projects-dd">' +
             '<button type="button" aria-haspopup="true" aria-expanded="false" class="' + (active === "projects" ? "active" : "") + '">Projects <span class="caret">&#9660;</span></button>' +
             '<div class="dropdown-menu" role="menu">' +
-              '<a class="dd-create" href="admin.html#create">+ Create Project</a>' +
-              '<div class="dd-sep"></div>' +
+              (isOwner() ? '<a class="dd-create" href="admin.html#create">+ Create Project</a><div class="dd-sep"></div>' : "") +
               '<div class="dd-label">Our projects</div>' + items +
               '<div class="dd-sep"></div>' +
               '<a href="index.html#projects">View all projects &rarr;</a>' +
@@ -274,7 +280,7 @@
     var last = ups.length ? fmtDate(ups[0].date) : "";
     el.innerHTML = '<div class="wrap">' +
       "<span>&copy; " + new Date().getFullYear() + " " + esc(site.name || "RaghusLogicLab") + ". Built one day at a time.</span>" +
-      "<span>" + (last ? "Last lab update: " + esc(last) + " &middot; " : "") + '<a href="admin.html">Project Studio</a></span>' +
+      "<span>" + (last ? "Last lab update: " + esc(last) : "") + (isOwner() ? (last ? " &middot; " : "") + '<a href="admin.html">Project Studio</a>' : "") + "</span>" +
       '<nav class="policy-links" aria-label="Policies"><a href="terms.html">Terms &amp; Conditions</a><a href="privacy.html">Privacy Policy</a><a href="refund.html">Refund &amp; Cancellation</a><a href="shipping.html">Shipping &amp; Delivery</a><a href="contact.html">Contact Us</a></nav>' +
       "</div>";
   }
@@ -286,6 +292,6 @@
     statusBadge: statusBadge, projectLink: projectLink, publicProjects: publicProjects, publicTools: publicTools, publicApps: publicApps,
     sortedUpdates: sortedUpdates, iconHtml: iconHtml, toast: toast, copy: copy,
     renderHeader: renderHeader, renderFooter: renderFooter, clone: clone,
-    confirmClick: confirmClick, currentSlug: currentSlug
+    confirmClick: confirmClick, currentSlug: currentSlug, isOwner: isOwner
   };
 })();
