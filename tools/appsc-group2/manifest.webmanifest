@@ -1,0 +1,15 @@
+{
+  "name": "APPSC Group 2 Prep Hall",
+  "short_name": "APPSC G2",
+  "description": "Free APPSC Group 2 preparation in English and Telugu: notes, mock tests, mental ability practice and revision.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f5ec",
+  "theme_color": "#1f3b2f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

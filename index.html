@@ -23,6 +23,7 @@
         <p class="lead" id="hero-intro"></p>
         <div class="btn-row" style="margin-top:24px">
           <a class="btn btn-primary" href="#projects">Explore projects</a>
+          <a class="btn btn-appsc" href="#appsc">APPSC</a>
           <a class="btn btn-revenue" href="#revenue">Revenue tools</a>
           <a class="btn btn-census" href="#census">Census 2027</a>
           <a class="btn btn-blue" href="#tools">Aadhaar tools</a>
@@ -33,6 +34,20 @@
           <a class="btn" href="#lab-log">Today in the lab</a>
         </div>
         <div class="stats" id="stats"></div>
+      </div>
+    </section>
+
+    <!-- APPSC (deep green with gold border) -->
+    <section class="section appsc-section" id="appsc" style="padding-top:8px">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow eyebrow-appsc">// appsc exam prep</span>
+            <h2 class="appsc-group-title">APPSC</h2>
+            <p class="muted" style="margin:0">Preparation for APPSC exams in English and తెలుగు: syllabus notes, mock tests with negative marking, mental ability practice with visual solutions, flashcards and a daily planner. Free, no login, works offline once opened.</p>
+          </div>
+        </div>
+        <div class="grid" id="appsc-grid"></div>
       </div>
     </section>
 
@@ -282,7 +297,8 @@
     var isElec = function (t) { return (t.category || "").toUpperCase() === "ELECTIONS"; };
     var isCensus = function (t) { return (t.category || "").toUpperCase() === "CENSUS"; };
     var isRev = function (t) { return (t.category || "").toUpperCase() === "REVENUE"; };
-    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t) && !isElec(t) && !isCensus(t) && !isRev(t); });
+    var isAppsc = function (t) { return (t.category || "").toUpperCase() === "APPSC"; };
+    var tools = allTools.filter(function (t) { return !isDsc(t) && !isSwsg(t) && !isElec(t) && !isCensus(t) && !isRev(t) && !isAppsc(t); });
     tools.forEach(function (t) {
       var c = t.category || "Other";
       if (!byCat[c]) { byCat[c] = []; groups.push(c); }
@@ -300,6 +316,18 @@
             "</a>";
         }).join("") + "</div></div>";
     }).join("") : '<p class="muted">Tools are on the way.</p>';
+
+    /* APPSC (deep green with gold border) */
+    var appsc = allTools.filter(isAppsc);
+    document.getElementById("appsc-grid").innerHTML = appsc.length ? appsc.map(function (t) {
+      return '<a class="card tool-card appsc" href="' + esc(t.url) + '">' +
+        '<div class="card-top"><div class="p-icon">' + esc(t.icon || RLL.initials(t.name)) + '</div><span class="badge badge-appsc">' + esc(t.badge || "Free tool") + '</span></div>' +
+        '<h3 style="margin:4px 0 0">' + esc(t.name) + "</h3>" +
+        "<p>" + esc(t.tagline || "") + "</p>" +
+        (t.description ? '<p class="tool-desc">' + esc(t.description) + "</p>" : "") +
+        '<div class="meta"><span class="tag">APPSC</span><span class="tool-open">Open &rarr;</span></div>' +
+        "</a>";
+    }).join("") : '<p class="muted">APPSC tools are on the way.</p>';
 
     /* REVENUE (red with gold border) */
     var rev = allTools.filter(isRev);

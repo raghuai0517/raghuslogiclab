@@ -13,7 +13,7 @@ A simple static website (no server, no database) that you can host on any domain
 | `assets/track.js` | Visit and download log used by Site Admin; loaded by every page except the two admin pages |
 | `data/site-data.js` | All your content: settings, projects and updates |
 | `assets/style.css`, `assets/app.js` | Design and shared code |
-| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker, DSC Exam Hall); `tools/ap-dsc-2026/` (paid, encrypted), `tools/ap-dsc-2026-trial/` and `tools/pahani-report/` are folders |
+| `tools/` | Tools, one HTML page each (Aadhaar DoB Annexure Maker, Aadhaar Name Update Affidavit Maker, Aadhaar Services Report for AP Seva, e-Aadhaar A4 Print Maker, DSC Exam Hall); `tools/ap-dsc-2026/` (paid, encrypted), `tools/ap-dsc-2026-trial/` and `tools/pahani-report/` are folders, as is `tools/appsc-group2/` (APPSC Group 2 Prep Hall) |
 | `apps/` | Apps, one folder each (Sunshine Homes community app) |
 
 ## Try it now
@@ -35,6 +35,18 @@ To add a tool:
 2. Add an entry to `"tools"` in `data/site-data.js` (copy an existing one and change `id`, `slug`, `name`, `tagline`, `description`, `url`, `color`, `added`).
 3. Set `"visibility": "unlisted"` to hide a tool from the menu without deleting it.
 4. Optional `"badge"` sets the label on the tool's card (default: "Free to fill · ₹10 PDF"), e.g. `"badge": "Free tool"`.
+
+Tools with `"category": "APPSC"` appear in their own deep-green, gold-bordered **APPSC** section at the top of the home page. An optional `"icon"` (for example `"G2"`) sets the letters on the card.
+
+**APPSC Group 2 Prep Hall** (`tools/appsc-group2/`) — free APPSC Group 2 preparation in English and Telugu (one tap switches every screen), in the green / gold / cream theme with a night mode. No login and no server: progress (XP, streak, topic accuracy, test history, bookmarks) is saved only in the visitor's browser under the key `appscg2.v1`, with backup / restore as a file in Progress → Settings.
+- **Learn:** 30 topics with five key points each in History, Geography, Indian Society, Polity, Economy and Science & Technology, plus method notes for 8 mental ability topics.
+- **Tests:** Prelims pattern mock (120 questions, 120 minutes: History 30, Geography 30, Indian Society 30, Mental Ability 30; Current Affairs is left out on purpose), Mini prelims (40), Mains Paper I and II practice (50 each). Timer, question palette, mark for review, ⅓ negative marking, section-wise marks and a full answer review. Quick 10-question practice shows the explanation at once. Mistake notebook and bookmarks.
+- **Mental ability lab:** `reasoning.js` builds a fresh question every time (number series, clocks, calendars, direction sense, coding, arithmetic, blood relations, data interpretation) with an explanation and a drawn solution (clock face, walked path, family tree, bar chart).
+- **Revise:** 10-card flashcard sprints, 16 economy story cards, a 34-event history timeline.
+- **Home:** daily goal ring, today's plan, exam-date countdown, streak, XP / level and a study heatmap.
+- **Question bank:** 165 original questions in `data/history.js`, `geography.js`, `society.js`, `polity.js`, `economy.js`, `science.js` (format is described at the top of `data/history.js`: the correct option is written first and the app shuffles options on screen). Add new questions only at the end of a list so saved progress stays matched. `data/extras.js` holds the timeline and story cards. These are practice questions written for the syllabus, not APPSC previous-year papers. Facts that change every year (schemes, budget and survey figures, current affairs) are left out.
+- **Offline / install:** `manifest.webmanifest`, `sw.js` and the icons make it installable and usable without internet after the first visit. After changing any file, raise the `?v=` numbers in `index.html` and `sw.js` and change `CACHE` in `sw.js` so phones pick up the new copy.
+- It is an independent practice tool and says so on its home screen; it is not affiliated with APPSC.
 
 Tools with `"category": "REVENUE"` appear in their own red **REVENUE** section (gold-bordered cards) at the top of the home page.
 
