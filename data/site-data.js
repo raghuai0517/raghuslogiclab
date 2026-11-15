@@ -13,7 +13,7 @@ window.RLL_DATA = {
     "tagline": "Where logic becomes products.",
     "intro": "A growing lab of tools, websites and experiments. Every project lives here and links out to its own subdomain or site — and the lab gets a little bigger every day.",
     "baseUrl": "",
-    "email": "raghusreenivas.pudeti@gmail.com",
+    "email": "raghuslogiclab@gmail.com",
     "about": "RaghusLogicLab is the home base for everything I build. Each project starts as an idea, gets its own page and customer link, and grows into a live product on its own subdomain."
   },
   "projects": [
