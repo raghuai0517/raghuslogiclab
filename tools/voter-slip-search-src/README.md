@@ -6,7 +6,7 @@ Builds `../voter-slip-search.html` (one self-contained page).
 - `search.js` — Telugu normalisation, English transliteration and sound-alike keys for name search.
 - `exporter.js` — Excel workbook (Voters + Summary sheets) with SheetJS.
 - `index.src.html` — the page; `/*PDFLIB*/`, `/*XLSX*/`, `/*EXTRACT*/`, `/*SEARCH*/`, `/*EXPORT*/`, `/*DATA*/` are filled in by the build.
-- `ps16.json` — built-in data for PS 16 (made with `extract.js` from the PS 16 PDF).
+- No voter data is bundled. Never commit voter PDFs or extracted JSON to this public repo; the page reads PDFs in the user's browser only.
 
 Rebuild (needs Node.js):
 
@@ -16,8 +16,5 @@ npm install --no-save pdf-lib@1.17.1 xlsx@0.18.5
 node build.cjs site ../voter-slip-search.html
 ```
 
-To change the built-in polling station, regenerate `ps16.json` from a PDF:
-
-```
-node -e "const X=require('./extract.js'),P=require('pdf-lib'),fs=require('fs');X.extract(P,fs.readFileSync('PS.pdf')).then(r=>fs.writeFileSync('ps16.json',JSON.stringify(r)))"
-```
+Privacy: this public repo must never hold voter PDFs or data extracted from them (names, EPIC numbers, house numbers).
+Users upload their own polling-station PDF; it is read in their browser and kept only in that browser.
