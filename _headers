@@ -1,0 +1,27 @@
+# Security and caching headers for Cloudflare Pages.
+# GitHub Pages ignores this file; it takes effect only if the site is moved to Cloudflare Pages
+# (same GitHub repo, free plan). See the "Cloudflare Pages" section in README.md.
+#
+# The Content-Security-Policy is in REPORT-ONLY mode: browsers log violations in the console
+# but block nothing. After a week of no violations, rename the header to
+# "Content-Security-Policy" to enforce it.
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(self), payment=(self "https://api.razorpay.com")
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://rll-pay.raghusreenivas-pudeti.workers.dev https://api.razorpay.com https://lumberjack.razorpay.com https://accounts.google.com; frame-src https://api.razorpay.com https://checkout.razorpay.com https://accounts.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
+
+/admin.html
+  X-Robots-Tag: noindex, nofollow
+/site-admin.html
+  X-Robots-Tag: noindex, nofollow
+
+/assets/lib/*
+  Cache-Control: public, max-age=31536000, immutable
+/tools/pahani-report/lib/*
+  Cache-Control: public, max-age=31536000, immutable
+/tools/pahani-report/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

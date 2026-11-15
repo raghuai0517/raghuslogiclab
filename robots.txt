@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /site-admin.html
+Disallow: /payment-worker/
+Disallow: /tools/voter-slip-search-src/
+
+Sitemap: https://raghuslogiclab.com/sitemap.xml

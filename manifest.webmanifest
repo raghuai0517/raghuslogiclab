@@ -1,0 +1,13 @@
+{
+  "name": "RaghusLogicLab",
+  "short_name": "LogicLab",
+  "description": "Free Telugu & English tools for VROs, Census 2027, Aadhaar affidavits, SWSG, elections and DSC / APPSC preparation.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e16",
+  "theme_color": "#0a0e16",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
