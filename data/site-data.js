@@ -48,6 +48,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-appsc-group2",
+      "date": "2026-11-15",
+      "type": "launch",
+      "title": "New: APPSC section with the Group 2 Prep Hall",
+      "body": "A new green-and-gold APPSC section on the home page. First tool: the APPSC Group 2 Prep Hall, in English and Telugu. Topic-wise notes for six subjects, 165 explained questions, a 120-question prelims pattern mock with ⅓ negative marking, Mains paper practice, unlimited mental ability questions with visual solutions, flashcards, economy story cards, a history timeline, daily goal and streak. Free, no login; works offline once opened.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-pahani-report",
       "date": "2026-11-14",
       "type": "launch",
@@ -225,6 +233,20 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-appsc-group2",
+      "slug": "appsc-group2",
+      "name": "APPSC Group 2 Prep Hall",
+      "tagline": "Prelims and Mains practice in English and తెలుగు: notes, mock tests with ⅓ negative marking, and mental ability with visual solutions.",
+      "description": "30 syllabus topics with key points in History, Geography, Indian Society, Polity, Economy and Science & Technology; 165 explained questions; a 120-question prelims pattern mock and Mains paper practice with timer, question palette and section-wise marks; unlimited mental ability questions (clocks, calendars, directions, series, coding, arithmetic, blood relations, data interpretation) with step-by-step visuals; flashcards, economy story cards, a history timeline, daily goal, streak and study heatmap. Free, no login; progress stays in your browser and it works offline once opened.",
+      "category": "APPSC",
+      "badge": "Free · English + తెలుగు",
+      "icon": "G2",
+      "url": "tools/appsc-group2/index.html",
+      "color": "#c9a95a",
+      "visibility": "public",
+      "added": "2026-11-15"
+    },
     {
       "id": "t-pahani-report",
       "slug": "pahani-report",

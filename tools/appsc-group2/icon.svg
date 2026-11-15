@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1f3b2f"/>
+  <rect x="40" y="40" width="432" height="432" fill="none" stroke="#c9a95a" stroke-width="10"/>
+  <rect x="62" y="62" width="388" height="388" fill="none" stroke="#c9a95a" stroke-width="3"/>
+  <text x="256" y="208" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="74" letter-spacing="8" fill="#c9a95a">APPSC</text>
+  <text x="256" y="352" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="150" fill="#f3eedc">G2</text>
+  <text x="256" y="416" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="30" letter-spacing="10" fill="#c9a95a">PREP HALL</text>
+</svg>

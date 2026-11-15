@@ -335,3 +335,20 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: up
 .badge-revenue { color: var(--rev-gold-light); }
 .btn-revenue { background: var(--rev); border: 2px solid var(--rev-gold); color: #fff; }
 .btn-revenue:hover { background: var(--rev-dark); border-color: var(--rev-gold-light); }
+
+/* ---------- APPSC (deep green tool cards with a gold border) ---------- */
+:root { --appsc: #1f3b2f; --appsc-dark: #17291f; --appsc-gold: #a8873a; --appsc-gold-light: #d9bd77; --appsc-cream: #f3eedc; }
+.eyebrow-appsc { color: var(--appsc-gold-light); }
+.appsc-group-title { font-family: Georgia, "Times New Roman", serif; letter-spacing: .14em; font-size: clamp(1.5rem, 3.4vw, 2.2rem); margin: 0 0 6px;
+  background: linear-gradient(180deg, #e2c77c, #a8873a 60%, #7d6224); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.appsc-section .section-head { border-left: 4px solid var(--appsc-gold); padding-left: 14px; }
+.tool-card.appsc { background: var(--appsc); border: 2px solid var(--appsc-gold); box-shadow: inset 0 0 0 4px var(--appsc), inset 0 0 0 5px rgba(201,169,90,.55); color: var(--appsc-cream); }
+.tool-card.appsc:hover { border-color: var(--appsc-gold-light); box-shadow: inset 0 0 0 4px var(--appsc), inset 0 0 0 5px rgba(201,169,90,.9), 0 8px 24px rgba(31,59,47,.45); }
+.tool-card.appsc h3 { font-family: Georgia, "Times New Roman", serif; color: var(--appsc-cream); }
+.tool-card.appsc p { color: #c9d1c3; }
+.tool-card.appsc .p-icon { background: var(--appsc-dark); color: var(--appsc-gold-light); border: 1.5px solid var(--appsc-gold); font-family: Georgia, serif; }
+.tool-card.appsc .tool-open { color: var(--appsc-gold-light); }
+.tool-card.appsc .tag { border-color: rgba(201,169,90,.6); color: var(--appsc-gold-light); }
+.badge-appsc { color: var(--appsc-gold-light); }
+.btn-appsc { background: var(--appsc); border: 2px solid var(--appsc-gold); color: var(--appsc-cream); }
+.btn-appsc:hover { background: var(--appsc-dark); border-color: var(--appsc-gold-light); }
