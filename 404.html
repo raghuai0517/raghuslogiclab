@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found · RaghusLogicLab</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/assets/style.css">
+  <style>
+    .nf { min-height: 80vh; display: flex; align-items: center; }
+    .nf .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+    .nf code { font-family: var(--mono); color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="section nf">
+    <div class="wrap">
+      <span class="eyebrow">// 404</span>
+      <h1>This page isn&rsquo;t in the lab.</h1>
+      <p class="lead">The link may be old or mistyped. <span lang="te">ఈ పేజీ కనబడలేదు — కింద ఉన్న టూల్స్ చూడండి.</span></p>
+      <p class="muted">You asked for <code id="nf-path"></code></p>
+      <div class="links">
+        <a class="btn btn-primary" href="/">Home</a>
+        <a class="btn btn-revenue" href="/#revenue">Revenue tools</a>
+        <a class="btn btn-census" href="/#census">Census 2027</a>
+        <a class="btn btn-blue" href="/#tools">Aadhaar tools</a>
+        <a class="btn btn-gold" href="/#swsg">SWSG tools</a>
+        <a class="btn btn-pink" href="/#dsc">DSC Exam Hall</a>
+        <a class="btn btn-appsc" href="/#appsc">APPSC</a>
+        <a class="btn" href="/contact.html">Contact us</a>
+      </div>
+    </div>
+  </main>
+  <script>document.getElementById("nf-path").textContent = location.pathname;</script>
+</body>
+</html>

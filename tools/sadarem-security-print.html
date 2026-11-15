@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SADAREM Security Paper Print · RaghusLogicLab</title>
 <meta name="description" content="Free tool: move a SADAREM disability certificate PDF down the page so it prints below the header on security paper. Get a print-ready A4 PDF. Files never leave your browser.">
+  <!-- share preview, canonical & icons -->
+  <link rel="canonical" href="https://raghuslogiclab.com/tools/sadarem-security-print.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RaghusLogicLab">
+  <meta property="og:title" content="SADAREM Security Paper Print · RaghusLogicLab">
+  <meta property="og:description" content="Free tool: move a SADAREM disability certificate PDF down the page so it prints below the header on security paper. Get a print-ready A4 PDF. Files never leave your browser.">
+  <meta property="og:url" content="https://raghuslogiclab.com/tools/sadarem-security-print.html">
+  <meta property="og:image" content="https://raghuslogiclab.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0e16">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -216,8 +233,8 @@ canvas#sheet { width: 100%; max-width: 440px; height: auto; border-radius: 3px; 
   <p class="foot">RaghusLogicLab · SWSG tools</p>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="../assets/lib/pdf-lib-1.17.1.min.js"></script>
+<script src="../assets/lib/pdf-3.11.174.min.js"></script>
 <script>
 // Core PDF transform. Works in browser (window.PDFLib) and Node (require).
 // Exposes: processPdfs(fileBuffers, opts) -> Uint8Array
@@ -349,7 +366,7 @@ canvas#sheet { width: 100%; max-width: 440px; height: auto; border-radius: 3px; 
   const state = { unit: 'in', files: [], outBytes: null, pdf: null, page: 1, pages: 0, job: 0, downloads: null };
 
   if (window.pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '../assets/lib/pdf.worker-3.11.174.min.js';
   }
 
   // ---------- settings ----------
@@ -483,7 +500,7 @@ canvas#sheet { width: 100%; max-width: 440px; height: auto; border-radius: 3px; 
       report.forEach((r, i) => { state.files[i].pages = r.pages; state.files[i].flattened = r.flattened; });
       renderList();
       if (window.pdfjsLib) {
-        const pdf = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
+        const pdf = await pdfjsLib.getDocument({ data: bytes.slice(0), isEvalSupported: false }).promise;
         if (job !== state.job) return;
         if (state.pdf) { try { state.pdf.destroy(); } catch (e) {} }
         state.pdf = pdf; state.pages = pdf.numPages; state.page = Math.min(state.page, state.pages) || 1;

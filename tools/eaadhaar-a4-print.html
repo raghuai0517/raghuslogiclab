@@ -1,6 +1,23 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <title>e-Aadhaar A4 Print Maker · RaghusLogicLab</title>
 <meta name="description" content="Free tool: upload the e-Aadhaar PDF and get one A4 page with the full Aadhaar letter plus the cut-out card at real ID-card size, with the photo enhanced. Download a 300 dpi JPEG or PDF for glossy photo paper.">
+  <!-- share preview, canonical & icons -->
+  <link rel="canonical" href="https://raghuslogiclab.com/tools/eaadhaar-a4-print.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RaghusLogicLab">
+  <meta property="og:title" content="e-Aadhaar A4 Print Maker · RaghusLogicLab">
+  <meta property="og:description" content="Free tool: upload the e-Aadhaar PDF and get one A4 page with the full Aadhaar letter plus the cut-out card at real ID-card size, with the photo enhanced. Download a 300 dpi JPEG or PDF for glossy photo paper.">
+  <meta property="og:url" content="https://raghuslogiclab.com/tools/eaadhaar-a4-print.html">
+  <meta property="og:image" content="https://raghuslogiclab.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0e16">
+
 <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,6 +115,7 @@ details.adj[open] summary { margin-bottom: 10px; }
 @media (max-width: 600px) { header.top h1 { font-size: 1.3rem; } .panel { padding: 14px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style><meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>
+<style>.rll-disclaimer{margin:12px 0 4px;padding:10px 14px;border:1px solid #f0c36d;border-left:4px solid #d97706;background:#fff8e6;color:#3d2c00;border-radius:10px;font-size:.86rem;line-height:1.5}.rll-disclaimer b{color:#7c2d12}.rll-disclaimer a{color:#9a3412;font-weight:600}@media print{.rll-disclaimer{display:none!important}}</style>
 </head><body>
 
 <div class="wrap" id="eap-app">
@@ -109,6 +127,7 @@ details.adj[open] summary { margin-bottom: 10px; }
     </div>
     <div class="src">Free · no login · nothing is uploaded</div>
   </header>
+  <div class="rll-disclaimer" role="note"><b>Independent tool — not from UIDAI.</b> RaghusLogicLab is not affiliated with, endorsed by or acting for UIDAI or any government office. It only helps you format your own document; your details stay on your device. Aadhaar updates are made only at <a href="https://myaadhaar.uidai.gov.in" target="_blank" rel="noopener">myAadhaar</a> or an authorised Aadhaar centre.</div>
 
   <section class="panel" aria-labelledby="s1">
     <p class="step" id="s1">Step 1 · Upload the e-Aadhaar</p>
@@ -195,8 +214,8 @@ details.adj[open] summary { margin-bottom: 10px; }
 (function(){
   var root=document.getElementById('eap-app'); if(!root) return;
   var $=function(id){return document.getElementById(id)};
-  var PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
-  var JSPDF="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+  var PDFJS="../assets/lib/";
+  var JSPDF="../assets/lib/jspdf-2.5.1.umd.min.js";
   var DPI=300, MM=DPI/25.4, A4W=Math.round(210*MM), A4H=Math.round(297*MM);
   var CARD_W=85.6, CARD_H=54;   // ID-1 card size in mm
 
@@ -207,7 +226,7 @@ details.adj[open] summary { margin-bottom: 10px; }
   function status(msg,err){var s=$("eap-status");s.textContent=msg||"";s.classList.toggle("err",!!err)}
   function chip(msg,err){$("eap-files").innerHTML='<span class="chip'+(err?' err':'')+'">'+esc(msg)+'</span>'}
   function loadScript(src){return new Promise(function(ok,bad){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=function(){bad(new Error("Couldn't load "+src.split("/").pop()+" — check the internet connection"))};document.head.appendChild(s)})}
-  async function needPdfJs(){if(window.pdfjsLib)return;await loadScript(PDFJS+"pdf.min.js");window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js"}
+  async function needPdfJs(){if(window.pdfjsLib)return;await loadScript(PDFJS+"pdf-3.11.174.min.js");window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker-3.11.174.min.js"}
   function canvas(w,h){var c=document.createElement("canvas");c.width=w;c.height=h;return c}
   function nextFrame(){return new Promise(function(r){setTimeout(r,20)})}
 
@@ -226,7 +245,7 @@ details.adj[open] summary { margin-bottom: 10px; }
   async function openPdf(pw){
     try{
       await needPdfJs();
-      var doc=await pdfjsLib.getDocument({data:st.bytes.slice(0),password:pw||undefined}).promise;
+      var doc=await pdfjsLib.getDocument({data:st.bytes.slice(0),password:pw||undefined,isEvalSupported:false}).promise;
       $("eap-pw").classList.add("hide");
       var page=await doc.getPage(1);
       var vp1=page.getViewport({scale:1});

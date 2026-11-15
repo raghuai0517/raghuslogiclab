@@ -64,7 +64,7 @@ Tools with `"category": "SWSG"` appear in their own gold **SWSG RELATED** sectio
 
 Tools with `"category": "ELECTIONS"` appear in their own orange **LOCAL BODY ELECTIONS** section on the home page.
 
-**Voter Slip Search** (`tools/voter-slip-search.html`) — search AP SEC MPTC/ZPTC photo voter slip PDFs (ఓటరు స్లిప్) by voter or father/husband name in Telugu or English spelling, EPIC number, serial number or range, house number, age, gender and relation; "ఇంటి సభ్యులు" shows everyone in the same house. Downloads the search results or the full list as Excel (Voters sheet + Summary sheet per polling station). PS 16 (చేనిగుంట, serials 691–1384, 694 voters) is built in; visitors upload any other PS PDF and it is read in their browser (uploaded stations are remembered only in that browser). pdf-lib and SheetJS are built into the page, so it needs no CDN. The PDFs keep Telugu conjunct letters in `/ActualText` tags, which pdf.js ignores, so the page reads the PDF content itself. Marked `noindex` because it carries voter names. Source and build steps: `tools/voter-slip-search-src/` — rebuild rather than hand-editing the 1 MB page.
+**Voter Slip Search** (`tools/voter-slip-search.html`) — search AP SEC MPTC/ZPTC photo voter slip PDFs (ఓటరు స్లిప్) by voter or father/husband name in Telugu or English spelling, EPIC number, serial number or range, house number, age, gender and relation; "ఇంటి సభ్యులు" shows everyone in the same house. Downloads the search results or the full list as Excel (Voters sheet + Summary sheet per polling station). No voter data is built in (removed for privacy): visitors upload a PS PDF and it is read in their browser (uploaded stations are remembered only in that browser). pdf-lib and SheetJS are built into the page, so it needs no CDN. The PDFs keep Telugu conjunct letters in `/ActualText` tags, which pdf.js ignores, so the page reads the PDF content itself. Marked `noindex`. Never commit voter PDFs or extracted data to this repo. Source and build steps: `tools/voter-slip-search-src/` — rebuild rather than hand-editing the 1 MB page.
 
 **Election Duty ID Card & Agent Pass Maker** (`tools/election-id-card-maker.html`) — makes MPTC/ZPTC Election Duty ID cards (name, designation, department, appointed as) and Agent Passes (name, party affiliation / independent, MPTC/ZPTC segment), 10.5 × 7.5 cm, printed 5 per A4 sheet (3 flat + 2 turned) with crop marks. Add people one by one or import a CSV (template download in the page), then upload photos in bulk — matched by the `photo` column file name or the person's name; photos are cropped to the box. Mandal name, election line and colour are editable; extra blank cards can be added. Data is saved only in that browser (localStorage). Print at A4, 100%, with Background graphics on.
 
@@ -137,9 +137,25 @@ To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `
 Open `site-admin.html` and sign in with the AP DSC 2026 admin password. It shows visitors, pages opened, downloads, prints and Razorpay payments for the whole site (last 180 days), with CSV export. Every new page must load `assets/track.js` (one `<script defer>` line before `</head>`) to be counted. Switch-on steps: `payment-worker/SETUP-SITE-ADMIN.md`.
 
 ## Good to know
-- `admin.html` can't change the live site on its own — only uploading `site-data.js` does — so visitors who open it can't alter anything. It is marked `noindex` so search engines skip it. If you prefer, don't upload `admin.html` at all and keep it only on your computer.
+- `admin.html` can't change the live site on its own — only uploading `site-data.js` does — so visitors who open it can't alter anything. It is marked `noindex` (and blocked in `robots.txt`) so search engines skip it, and it is no longer linked for public visitors. If you prefer, don't upload `admin.html` at all and keep it only on your computer.
 - Unlisted links are hidden, not password-protected. Don't put secrets in project descriptions.
 - Drafts live in one browser. Use **Import site-data.js** to continue on another computer.
+
+## Rules for every new page (privacy, security, SEO)
+- **Never commit real personal data** — voter lists, Aadhaar numbers, Pahani files, names from customers. This repo is public. Tools must read such files in the visitor's browser only.
+- **No CDN scripts.** Put libraries in `assets/lib/` (see `assets/lib/LICENSES.txt`) and load them from there. Every PDF.js `getDocument()` call must pass `isEvalSupported: false` (CVE-2024-4367) until PDF.js is upgraded to 4.2.67+.
+- **Head tags:** title, meta description, canonical, Open Graph/Twitter tags, favicon and `assets/track.js`. Easiest: copy the `<!-- share preview, canonical & icons -->` block from any tool page and change the title, description and URLs. The shared preview image is `assets/og-image.png` (1200×630).
+- **Government-related tools** (Aadhaar, census, elections, SWSG): show the "Independent tool" notice near the top (see `.rll-disclaimer` in the Aadhaar tools), never use official logos or emblems, and link to the official portal.
+- **New paid product?** Update `terms.html`, `refund.html` and `privacy.html` before it goes live.
+- Add the page to `sitemap.xml` (skip `noindex` pages).
+- Admin shortcuts (Project Studio, + Create Project) appear only in a browser where `admin.html` has been opened once; public visitors don't see them.
+
+## Moving to Cloudflare Pages (recommended, optional)
+GitHub Pages cannot send security headers. Cloudflare Pages (free) can deploy this same repo and reads the `_headers` file in the root:
+1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → pick this repo. Build command: none. Output directory: `/`.
+2. After the first deploy works on the `*.pages.dev` address, add the custom domain `raghuslogiclab.com` in the Pages project (and remove it from GitHub Pages settings).
+3. The Content-Security-Policy in `_headers` starts in report-only mode. Open the main tools with the browser console open; if no "Content-Security-Policy" warnings appear for a week, rename the header to `Content-Security-Policy` to enforce it.
+4. Optional: move `admin.html` and `site-admin.html` behind Cloudflare Access (Zero Trust → Access → Applications → self-hosted, path `/admin.html` and `/site-admin.html`, allow only your Gmail).
 
 ## Ideas to add next (scope for daily growth)
 Project screenshots/gallery · search box · customer enquiry form (Formspree/Netlify Forms) · per-project changelog pages · RSS feed of the Lab Log · real login for private client areas (needs a backend such as Supabase/Firebase).

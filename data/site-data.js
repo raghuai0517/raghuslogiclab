@@ -13,7 +13,7 @@ window.RLL_DATA = {
     "tagline": "Where logic becomes products.",
     "intro": "A growing lab of tools, websites and experiments. Every project lives here and links out to its own subdomain or site — and the lab gets a little bigger every day.",
     "baseUrl": "",
-    "email": "raghusreenivas.pudeti@gmail.com",
+    "email": "raghuslogiclab@gmail.com",
     "about": "RaghusLogicLab is the home base for everything I build. Each project starts as an idea, gets its own page and customer link, and grows into a live product on its own subdomain."
   },
   "projects": [
@@ -28,20 +28,6 @@ window.RLL_DATA = {
       "visibility": "public",
       "url": "",
       "color": "#22d3ee",
-      "started": "2026-09-30",
-      "created": "2026-09-30"
-    },
-    {
-      "id": "p-sample-tools",
-      "slug": "logic-tools",
-      "name": "Logic Tools (sample)",
-      "tagline": "Sample project — edit or delete it in the admin page.",
-      "description": "This is a placeholder to show how an in-progress project looks. Open admin.html → Manage Projects to change it, or delete it once you have real projects.",
-      "category": "Tool",
-      "status": "progress",
-      "visibility": "public",
-      "url": "https://tools.raghuslogiclab.com",
-      "color": "#a78bfa",
       "started": "2026-09-30",
       "created": "2026-09-30"
     }
@@ -317,7 +303,7 @@ window.RLL_DATA = {
       "slug": "voter-slip-search",
       "name": "Voter Slip Search (ఓటరు స్లిప్ శోధన)",
       "tagline": "Search MPTC/ZPTC photo voter slip PDFs by name in Telugu or English, EPIC number, serial number or house number, and download the list as Excel.",
-      "description": "PS 16 (చేనిగుంట) is built in. Upload the AP SEC photo voter slip PDF of any other polling station and it is read in your browser: search by voter or father/husband name (తెలుగు or English spelling), EPIC, serial number or range, house number, age, gender and relation, see everyone in the same house, and download results or the full list as Excel with a summary sheet. Free; PDFs never leave your browser.",
+      "description": "Upload the AP SEC photo voter slip PDF of your polling station and it is read in your browser: search by voter or father/husband name (తెలుగు or English spelling), EPIC, serial number or range, house number, age, gender and relation, see everyone in the same house, and download results or the full list as Excel with a summary sheet. Free; PDFs never leave your browser.",
       "category": "ELECTIONS",
       "badge": "Free tool",
       "url": "tools/voter-slip-search.html",

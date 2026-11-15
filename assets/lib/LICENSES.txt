@@ -1,0 +1,11 @@
+Self-hosted third-party libraries (served from raghuslogiclab.com instead of a CDN,
+so no outside server can change the code that runs on pages handling Aadhaar data).
+
+html2canvas-1.4.1.min.js      html2canvas 1.4.1   MIT License        https://github.com/niklasvh/html2canvas
+jspdf-2.5.1.umd.min.js        jsPDF 2.5.1         MIT License        https://github.com/parallax/jsPDF
+pdf-3.11.174.min.js           PDF.js 3.11.174     Apache-2.0 License https://github.com/mozilla/pdf.js
+pdf.worker-3.11.174.min.js    PDF.js 3.11.174     Apache-2.0 License https://github.com/mozilla/pdf.js
+pdf-lib-1.17.1.min.js         pdf-lib 1.17.1      MIT License        https://github.com/Hopding/pdf-lib
+
+Copied from the npm packages of the same versions. Every getDocument() call must pass
+isEvalSupported:false (CVE-2024-4367) until PDF.js is upgraded to 4.2.67 or later.

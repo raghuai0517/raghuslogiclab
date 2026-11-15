@@ -1,6 +1,7 @@
 const fs=require('fs');
 let h=fs.readFileSync('index.src.html','utf8');
-const data=JSON.parse(fs.readFileSync('ps16.json','utf8'));
+// No voter data is bundled: the page works only on PDFs the user uploads (read in the browser).
+const data=[];
 const rep={'/*PDFLIB*/':fs.readFileSync('node_modules/pdf-lib/dist/pdf-lib.min.js','utf8'),
 '/*XLSX*/':fs.readFileSync('node_modules/xlsx/dist/xlsx.mini.min.js','utf8'),
 '/*EXTRACT*/':fs.readFileSync('extract.js','utf8'),'/*SEARCH*/':fs.readFileSync('search.js','utf8'),
@@ -9,7 +10,7 @@ for(const [k,v] of Object.entries(rep)){ if(/<\/script/i.test(v)) throw k; h=h.s
 h=h.split('\uFFFD').join('\\uFFFD');
 const site=process.argv[2]==='site';
 if(site){
-  h=h.replace('<!--SITE-HEAD-->','<meta name="description" content="Free tool: search AP SEC MPTC/ZPTC photo voter slip PDFs by Telugu or English name, EPIC number, serial number or house number, and download an Excel list. Upload any polling station PDF.">\n<meta name="robots" content="noindex">\n<meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>\n')
+  h=h.replace('<!--SITE-HEAD-->','<meta name="description" content="Free tool: search AP SEC MPTC/ZPTC photo voter slip PDFs by Telugu or English name, EPIC number, serial number or house number, and download an Excel list. Upload any polling station PDF.">\n  <!-- share preview, canonical & icons -->\n  <link rel="canonical" href="https://raghuslogiclab.com/tools/voter-slip-search.html">\n  <meta property="og:type" content="website">\n  <meta property="og:site_name" content="RaghusLogicLab">\n  <meta property="og:title" content="ఓటరు స్లిప్ శోధన · Voter Slip Search · RaghusLogicLab">\n  <meta property="og:description" content="Free tool: search AP SEC MPTC/ZPTC photo voter slip PDFs by Telugu or English name, EPIC number, serial number or house number, and download an Excel list. Upload any polling station PDF.">\n  <meta property="og:url" content="https://raghuslogiclab.com/tools/voter-slip-search.html">\n  <meta property="og:image" content="https://raghuslogiclab.com/assets/og-image.png">\n  <meta property="og:image:width" content="1200">\n  <meta property="og:image:height" content="630">\n  <meta property="og:locale" content="te_IN">\n  <meta name="twitter:card" content="summary_large_image">\n  <link rel="icon" href="/favicon.svg" type="image/svg+xml">\n  <link rel="icon" href="/favicon.ico" sizes="any">\n  <link rel="apple-touch-icon" href="/apple-touch-icon.png">\n  <meta name="theme-color" content="#0a0e16">\n<meta name="robots" content="noindex">\n<meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>\n')
    .replace('<!--SITE-NAV-->','    <nav class="rll-bar" aria-label="Site"><a href="../index.html"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#elections">Local body elections</a></nav>\n')
    .replace('<title>ఓటరు స్లిప్ శోధన · Voter Slip Search</title>','<title>ఓటరు స్లిప్ శోధన · Voter Slip Search · RaghusLogicLab</title>');
 } else h=h.replace('<!--SITE-HEAD-->','').replace('<!--SITE-NAV-->','');
