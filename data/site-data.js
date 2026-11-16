@@ -34,6 +34,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-resurvey-correlation",
+      "date": "2026-11-16",
+      "type": "launch",
+      "title": "New in REVENUE: Resurvey Correlation Check & 9(2) Notices",
+      "body": "For AP Resurvey 2.0. Upload a village correlation statement and get every problem to fix before it goes to the Tahsildar: old vs new extent mismatches, survey numbers with no LP, duplicate rows, pattadar name changes and more, with an Excel report. Then print the Section 9(2) notices in Telugu and English with a tear-off acknowledgement, and download the notice register. Free; the file is read only in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-appsc-group2",
       "date": "2026-11-15",
       "type": "launch",
@@ -219,6 +227,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-resurvey-correlation",
+      "slug": "resurvey-correlation",
+      "name": "Resurvey Correlation Check & 9(2) Notices",
+      "tagline": "Check the village correlation statement and print 9(2) notices for AP Resurvey 2.0 — రీసర్వే కోరిలేషన్ తనిఖీ & 9(2) నోటీసులు.",
+      "description": "For mandal surveyors, village surveyors and VROs. Upload the correlation statement (old survey numbers against new LP numbers) as Excel or CSV: it matches the columns, checks old vs new extents for every survey number and LP, finds survey numbers with no LP, duplicate rows, pattadar name changes and classification mismatches, and gives an Excel check report. Then print bilingual Telugu + English notices under Section 9(2) of the AP Survey and Boundaries Act, 1923 — one per LP or per pattadar, with a tear-off acknowledgement — and download the notice register. Free; the file is read only in your browser.",
+      "category": "REVENUE",
+      "badge": "Free tool · English + తెలుగు",
+      "url": "tools/resurvey-correlation/index.html",
+      "color": "#b91c1c",
+      "visibility": "public",
+      "added": "2026-11-16"
+    },
     {
       "id": "t-appsc-group2",
       "slug": "appsc-group2",
