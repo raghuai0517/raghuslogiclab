@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resurvey Correlation Check &amp; 9(2) Notices · RaghusLogicLab</title>
+<meta name="description" content="Free Revenue tool for AP Resurvey 2.0: check a village correlation statement (old survey numbers against new LP numbers) and print bilingual Telugu + English notices under Section 9(2) of the AP Survey and Boundaries Act, 1923. The file is read only in your browser.">
+  <link rel="canonical" href="https://raghuslogiclab.com/tools/resurvey-correlation/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RaghusLogicLab">
+  <meta property="og:title" content="Resurvey Correlation Check &amp; 9(2) Notices · RaghusLogicLab">
+  <meta property="og:description" content="Check a village correlation statement and print bilingual 9(2) notices for AP Resurvey 2.0. Free; the file is read only in your browser.">
+  <meta property="og:url" content="https://raghuslogiclab.com/tools/resurvey-correlation/">
+  <meta property="og:image" content="https://raghuslogiclab.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0e16">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@font-face { font-family: "RLL Telugu"; font-weight: 400; font-display: swap; src: url(../pahani-report/fonts/noto-sans-telugu-telugu-400-normal.woff2) format("woff2"); unicode-range: U+0951-0952,U+0964-0965,U+0C00-0C7F,U+1CDA,U+1CF2,U+200C-200D,U+25CC; }
+@font-face { font-family: "RLL Telugu"; font-weight: 700; font-display: swap; src: url(../pahani-report/fonts/noto-sans-telugu-telugu-700-normal.woff2) format("woff2"); unicode-range: U+0951-0952,U+0964-0965,U+0C00-0C7F,U+1CDA,U+1CF2,U+200C-200D,U+25CC; }
+@font-face { font-family: "RLL Telugu"; font-weight: 400; font-display: swap; src: url(../pahani-report/fonts/noto-sans-telugu-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+20B9,U+2122,U+2212,U+2215; }
+@font-face { font-family: "RLL Telugu"; font-weight: 700; font-display: swap; src: url(../pahani-report/fonts/noto-sans-telugu-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+20B9,U+2122,U+2212,U+2215; }
+:root {
+  /* REVENUE theme: deep red with gold borders (same as the Pahani Village Report). */
+  --bg: #fbf5f0; --surface: #fff; --ink: #24110d; --muted: #6e5650; --line: #ead8cf;
+  --red: #b91c1c; --red-dark: #7f1d1d; --red-soft: #fdecec; --gold: #d4a017; --gold-light: #fcefc2; --gold-ink: #6b4e00;
+  --ok: #1d7a46; --ok-soft: #e3f3e9; --warn: #8a5a00; --warn-soft: #fff4cc; --info: #3f4f86; --info-soft: #eceff9;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Public Sans", "RLL Telugu", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-te: "RLL Telugu", "Nirmala UI", "Gautami", sans-serif;
+  color-scheme: light;
+  /* layout: one column of numbered panels: load → match → check → 9(2) notices; wide tables scroll in their own boxes */
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; overflow-x: hidden; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 22px 16px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+header.top { display: grid; gap: 6px; border: 2px solid var(--gold); border-left-width: 8px; background: linear-gradient(135deg, #7f1d1d, #b91c1c); color: #fff; border-radius: 14px; padding: 16px 18px; }
+.rll-bar { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fde7c0; flex-wrap: wrap; }
+.rll-bar a { color: #ffe08a; text-decoration: none; font-weight: 700; }
+.rll-bar a:hover { text-decoration: underline; }
+.rll-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--gold); color: #3b0a0a; font-size: 11px; font-weight: 800; margin-right: 6px; }
+.tagpill { justify-self: start; background: var(--gold); color: #3b0a0a; font: 800 11px/1 var(--font-display); letter-spacing: .14em; padding: 5px 9px; border-radius: 4px; }
+h1 { font: 800 26px/1.2 var(--font-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h1 .te { display: block; font: 700 19px/1.4 var(--font-te); color: #ffe08a; margin-top: 2px; }
+header.top p { margin: 0; color: #fde7dc; max-width: 80ch; font-size: 14.5px; }
+.panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--red); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+.panel.gold { border-top-color: var(--gold); }
+.panel > * { min-width: 0; }
+h2 { font: 700 14px/1.3 var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--red-dark); margin: 0; }
+h2 .te { font-family: var(--font-te); text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 600; margin-left: 6px; }
+h3 { font: 700 14.5px/1.45 var(--font-body); color: var(--red-dark); margin: 0; padding-left: 8px; border-left: 4px solid var(--gold); }
+.te { font-family: var(--font-te); }
+.muted { color: var(--muted); font-size: 13.5px; }
+.small { font-size: 13px; }
+.drop { position: relative; border: 2px dashed var(--gold); border-radius: 12px; padding: 18px; display: grid; gap: 6px; justify-items: center; text-align: center; cursor: pointer; background: #fffaf0; transition: background .15s; }
+.drop:hover, .drop.over, .drop:focus-within { background: var(--gold-light); }
+.drop strong { font: 700 17px/1.3 var(--font-display); color: var(--red-dark); }
+.drop span { color: var(--muted); font-size: 13.5px; }
+.drop input[type=file] { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.btn { appearance: none; border: 2px solid var(--gold); background: var(--red); color: #fff; font: 700 15px/1 var(--font-body); padding: 12px 16px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn:hover { background: var(--red-dark); }
+.btn.alt { background: #fff; color: var(--red-dark); }
+.btn.alt:hover { background: var(--gold-light); }
+.btn.sm { padding: 8px 12px; font-size: 14px; }
+.btn .te { font-weight: 600; font-size: 13px; opacity: .9; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible, .drop:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
+.source { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--gold-light); border: 1px solid #ecd9a6; font-size: 14px; }
+.badge { display: inline-block; font: 800 11px/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; padding: 4px 7px; border-radius: 4px; background: var(--red); color: #fff; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+select, input[type=number], input[type=search], input[type=text], input[type=date] { font: 14px var(--font-body); color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-height: 38px; max-width: 100%; }
+.form { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px 14px; }
+label.f { display: grid; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--muted); align-content: start; }
+label.f .te { font-weight: 500; }
+label.f select, label.f input { width: 100%; min-width: 0; }
+label.f.missing select { border-color: var(--red); background: var(--red-soft); }
+.req { color: var(--red); }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.chk input { margin-top: 4px; }
+.sub { padding-top: 12px; border-top: 1px dashed var(--line); display: grid; gap: 10px; }
+.tw { overflow: auto; border: 1px solid var(--gold); border-radius: 8px; max-height: 540px; }
+table.t { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.t th { background: var(--red); color: #fff; font-weight: 700; padding: 6px 8px; border: 1px solid var(--gold); text-align: left; vertical-align: middle; line-height: 1.25; position: sticky; top: 0; white-space: nowrap; }
+table.t td { padding: 6px 8px; border: 1px solid #ecd9a6; vertical-align: top; }
+table.t td.n, table.t th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.t tr:nth-child(even) td { background: #fff8f8; }
+table.t td.detail { min-width: 280px; max-width: 520px; }
+table.t td.rows { color: var(--muted); font-variant-numeric: tabular-nums; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.card { border: 1.5px solid var(--gold); border-radius: 10px; padding: 10px 12px; background: linear-gradient(180deg, #fff, #fff8ef); }
+.card b { display: block; font: 800 24px/1.15 var(--font-display); color: var(--red-dark); font-variant-numeric: tabular-nums; }
+.card span { font-size: 12.5px; color: var(--muted); }
+.card.err { border-color: var(--red); background: var(--red-soft); } .card.err b { color: var(--red); }
+.card.warn { background: var(--warn-soft); } .card.warn b { color: var(--warn); }
+.card.ok b { color: var(--ok); }
+.totals { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); font-variant-numeric: tabular-nums; font-size: 14px; }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.error { background: var(--red-soft); color: var(--red); }
+.pill.warning { background: var(--warn-soft); color: var(--warn); }
+.pill.info { background: var(--info-soft); color: var(--info); }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+tr.sev-error td:first-child { box-shadow: inset 4px 0 0 var(--red); }
+tr.sev-warning td:first-child { box-shadow: inset 4px 0 0 var(--gold); }
+tr.sev-info td:first-child { box-shadow: inset 4px 0 0 var(--info); }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab { border: 1.5px solid var(--gold); background: #fff; color: var(--red-dark); border-radius: 999px; padding: 7px 12px; font: 600 13.5px var(--font-body); cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--red); color: #fff; }
+.chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 5px 11px; font: 500 13px var(--font-body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.tabpanel { display: grid; gap: 10px; }
+.err-text { color: var(--red); }
+.status { font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--red-soft); color: var(--red-dark); }
+.status.ok { background: var(--ok-soft); color: var(--ok); }
+.nlist { display: grid; gap: 0; max-height: 360px; overflow: auto; border: 1px solid var(--gold); border-radius: 8px; }
+.nitem { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 10px; border-bottom: 1px solid #f1e3c4; font-size: 13.5px; cursor: pointer; }
+.nitem:last-child { border-bottom: 0; }
+.nitem:hover { background: #fffaf0; }
+.nitem.cur { background: var(--gold-light); }
+.nitem b { color: var(--red-dark); }
+.nitem .meta { color: var(--muted); font-size: 12.5px; }
+.nitem .no { font-variant-numeric: tabular-nums; color: var(--gold-ink); font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.pv-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; }
+.pv-box { border: 1px solid var(--gold); border-radius: 8px; background: #e9e1d8; padding: 10px; overflow: hidden; }
+.pv-scale { transform-origin: top left; width: 210mm; }
+.pv-scale .notice { box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 8px 24px rgba(0,0,0,.12); margin: 0; }
+details.help summary { cursor: pointer; font: 700 14px var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--red-dark); }
+ul.help { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+dl.checks { display: grid; grid-template-columns: minmax(150px, 230px) 1fr; gap: 6px 14px; margin: 10px 0 0; font-size: 14px; }
+dl.checks dt { font-weight: 700; color: var(--red-dark); }
+dl.checks dd { margin: 0; color: var(--muted); }
+.copybox { width: 100%; min-height: 110px; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.foot { color: var(--muted); font-size: 12.5px; text-align: center; border-top: 2px solid var(--gold); padding-top: 12px; }
+.foot b { color: var(--red-dark); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--red-dark); color: #fff; border: 2px solid var(--gold); padding: 9px 16px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); z-index: 60; }
+.toast.show { opacity: 1; }
+@media (max-width: 560px) { h1 { font-size: 22px; } dl.checks { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .toast, .drop { transition: none; } }
+
+/* ---------- 9(2) notice, A4 portrait ---------- */
+.notice { width: 210mm; min-height: 296mm; background: #fff; color: #1d1209; padding: 11mm 13mm 9mm; font: 11.3px/1.45 var(--font-te); position: relative; display: flex; flex-direction: column; gap: 7px; }
+.notice .gov { text-align: center; border-bottom: 2.5px double #7f1d1d; padding-bottom: 5px; }
+.notice .gov .l1 { font-weight: 700; font-size: 13.5px; color: #7f1d1d; letter-spacing: .02em; }
+.notice .gov .l2 { font-weight: 700; font-size: 12px; }
+.notice .ttl { text-align: center; border: 1.5px solid #7f1d1d; background: #fbeeee; padding: 5px 8px; }
+.notice .ttl .te1 { font-weight: 700; font-size: 13.5px; color: #7f1d1d; }
+.notice .ttl .en1 { font-weight: 700; font-size: 11.5px; letter-spacing: .03em; }
+.notice .meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 12px; font-size: 11px; }
+.notice .meta b { font-weight: 700; }
+.notice .to { border: 1px solid #d9c8a0; border-radius: 3px; padding: 5px 8px; display: grid; gap: 1px; }
+.notice .to .nm { font-weight: 700; font-size: 12.5px; }
+.notice p { margin: 0; text-align: justify; }
+.notice p.e { color: #3a2b20; }
+.notice table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.notice th { border: 1px solid #7f1d1d; background: #f6e7e7; font-size: 9.6px; line-height: 1.25; padding: 3px 3px; font-weight: 700; text-align: center; vertical-align: middle; }
+.notice th .e { display: block; font-weight: 600; color: #4a3328; }
+.notice .l3 { font-size: 10.5px; }
+.notice .small { font-size: 10.5px; color: #4a3328; }
+.notice td { border: 1px solid #b9a27a; font-size: 10.8px; padding: 3px 4px; vertical-align: top; text-align: center; font-variant-numeric: tabular-nums; }
+.notice tr.tot td { font-weight: 700; background: #fbf3dc; }
+.notice tr { break-inside: avoid; page-break-inside: avoid; }
+.notice .sig { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; font-size: 10.5px; text-align: center; }
+.notice .sig div { border-top: 1px solid #555; padding-top: 3px; }
+.notice .sig b { display: block; font-size: 11px; }
+.notice .cut { border-top: 1.5px dashed #777; margin-top: auto; padding-top: 6px; position: relative; }
+.notice .cut::before { content: "✂"; position: absolute; top: -10px; left: 0; font-size: 13px; background: #fff; padding-right: 4px; color: #555; }
+.notice .ack { display: grid; gap: 4px; font-size: 10.6px; }
+.notice .ack .h { text-align: center; font-weight: 700; font-size: 11.5px; color: #7f1d1d; }
+.notice .ack .ln { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin-top: 4px; }
+.notice .ack .ln span { border-bottom: 1px dotted #555; padding-bottom: 12px; }
+.notice .ack .modes { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.notice .blank { display: inline-block; min-width: 26px; border-bottom: 1px dotted #333; }
+.notice .rll { text-align: center; font-size: 8px; color: #8a6d2a; margin-top: 4px; }
+.notice.lang-te .e, .notice.lang-en .t { display: none !important; }
+#pages { display: none; }
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+  html, body { background: #fff; overflow: visible; }
+  body > *:not(#pages) { display: none !important; }
+  #pages { display: block; }
+  #pages .notice { min-height: 296mm; break-after: page; page-break-after: always; }
+  #pages .notice:last-child { break-after: auto; page-break-after: auto; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+<meta name="rll-track-files" content="type-only"><script defer src="../../assets/track.js?v=1"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <nav class="rll-bar" aria-label="Site"><a href="../../index.html"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../../index.html#revenue">Revenue tools</a></nav>
+    <span class="tagpill">REVENUE · RESURVEY 2.0</span>
+    <h1>Resurvey Correlation Check &amp; 9(2) Notices <span class="te">రీసర్వే కోరిలేషన్ తనిఖీ &amp; 9(2) నోటీసులు</span></h1>
+    <p>For mandal surveyors, village surveyors and VROs. Upload the village correlation statement (old survey numbers against new LP numbers), fix the problems it finds, then print the notices under Section 9(2) of the AP Survey and Boundaries Act, 1923 in Telugu and English. Your file is read only in this browser and is never uploaded.</p>
+  </header>
+
+  <section class="panel gold" aria-labelledby="h1s">
+    <h2 id="h1s">1 · Load the correlation statement <span class="te">కోరిలేషన్ స్టేట్‌మెంట్ అప్‌లోడ్</span></h2>
+    <label class="drop" id="drop" for="file">
+      <strong>Choose or drop the Excel / CSV file</strong>
+      <span class="te">ఫైల్‌ను ఎంచుకోండి లేదా ఇక్కడ వదలండి</span>
+      <span>.xlsx / .xls / .csv with old survey numbers, old extent, LP numbers, LP extent and pattadar names</span>
+      <input type="file" id="file" accept=".xlsx,.xls,.xlsm,.csv,.ods">
+    </label>
+    <div class="btns">
+      <button type="button" class="btn alt sm" id="btn-sample">Use example village</button>
+      <button type="button" class="btn alt sm" id="btn-template">Download blank template</button>
+    </div>
+    <div class="source" id="source"></div>
+    <div class="row small">
+      <label for="sheet">Sheet</label><select id="sheet"></select>
+      <label for="hdr">Header row</label><input type="number" id="hdr" min="1" step="1" style="width:80px">
+      <span class="muted">Picked automatically. Change it if the column titles are on another row.</span>
+    </div>
+    <p class="status" id="loaderr" hidden></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h2s">
+    <h2 id="h2s">2 · Match the columns <span class="te">కాలమ్‌లు సరిచూడండి</span></h2>
+    <p class="muted" style="margin:0">Columns were matched from their titles. Check each one. <span class="req">*</span> fields are needed for the extent checks; the others switch on more checks and fill the notices.</p>
+    <div class="form" id="mapgrid"></div>
+    <div class="sub">
+      <div class="form">
+        <label class="f" for="u-old">Old extent is in<select id="u-old"></select></label>
+        <label class="f" for="u-new">LP and correlated extent are in<select id="u-new"></select></label>
+        <label class="f" for="tol-pct">Allowed difference (%)<input type="number" id="tol-pct" min="0" step="0.5" value="2"></label>
+        <label class="f" for="tol-abs">Or up to (cents)<input type="number" id="tol-abs" min="0" step="0.5" value="1"></label>
+        <label class="f" for="name-thr">Flag names that match less than<select id="name-thr"><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.75" selected>75%</option><option value="0.8">80%</option><option value="0.9">90%</option></select></label>
+        <label class="f" for="disp">Show extents in<select id="disp"><option value="ac" selected>Acres (Ac)</option><option value="ha">Hectares (Ha)</option></select></label>
+      </div>
+      <label class="chk" for="fill"><input type="checkbox" id="fill" checked><span>A blank survey number under a filled one is a merged cell: repeat the survey number, old extent and old pattadar from the row above.</span></label>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h3s">
+    <h2 id="h3s">3 · Check results <span class="te">తనిఖీ ఫలితాలు</span></h2>
+    <div class="cards" id="tiles"></div>
+    <div class="totals" id="totals"></div>
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" role="tab" id="t-issues" aria-controls="p-issues" aria-selected="true">Problems</button>
+      <button type="button" class="tab" role="tab" id="t-sy" aria-controls="p-sy" aria-selected="false">By survey number</button>
+      <button type="button" class="tab" role="tab" id="t-lp" aria-controls="p-lp" aria-selected="false">By LP number</button>
+    </div>
+    <div class="tabpanel" id="p-issues" role="tabpanel" aria-labelledby="t-issues">
+      <div class="row"><div class="row" id="sevchips"></div><select id="checkfilter" aria-label="Filter by check"></select><input type="search" id="q" placeholder="Search Sy.No, LP or name" aria-label="Search problems"></div>
+      <div class="tw"><table class="t" id="tbl-issues"></table></div>
+    </div>
+    <div class="tabpanel" id="p-sy" role="tabpanel" aria-labelledby="t-sy" hidden>
+      <div class="row"><input type="search" id="q-sy" placeholder="Search survey number" aria-label="Search survey numbers"><label class="chk" for="only-sy"><input type="checkbox" id="only-sy"><span>Only rows with a problem</span></label></div>
+      <div class="tw"><table class="t" id="tbl-sy"></table></div>
+    </div>
+    <div class="tabpanel" id="p-lp" role="tabpanel" aria-labelledby="t-lp" hidden>
+      <div class="row"><input type="search" id="q-lp" placeholder="Search LP number or pattadar" aria-label="Search LP numbers"><label class="chk" for="only-lp"><input type="checkbox" id="only-lp"><span>Only rows with a problem</span></label></div>
+      <div class="tw"><table class="t" id="tbl-lp"></table></div>
+    </div>
+    <div class="btns">
+      <button type="button" class="btn" id="btn-xlsx">Download check report (Excel)</button>
+      <button type="button" class="btn alt" id="btn-csv">Problems as CSV</button>
+      <button type="button" class="btn alt" id="btn-copy">Copy problems</button>
+    </div>
+    <textarea class="copybox" id="copybox" hidden aria-label="Problems to copy"></textarea>
+  </section>
+
+  <section class="panel gold" aria-labelledby="h4s" id="notices">
+    <h2 id="h4s">4 · 9(2) notices <span class="te">సెక్షన్ 9(2) నోటీసులు</span></h2>
+    <p class="muted" style="margin:0">Fill these once; they print on every notice and are remembered in this browser.</p>
+    <div class="form">
+      <label class="f" for="n-village">Village <span class="te">గ్రామం</span><input type="text" id="n-village" placeholder="e.g. Kondapalem"></label>
+      <label class="f" for="n-mandal">Mandal <span class="te">మండలం</span><input type="text" id="n-mandal"></label>
+      <label class="f" for="n-district">District <span class="te">జిల్లా</span><input type="text" id="n-district"></label>
+      <label class="f" for="n-date">Notice date <span class="te">తేదీ</span><input type="date" id="n-date"></label>
+      <label class="f" for="n-prefix">Notice number starts with<input type="text" id="n-prefix" value="RS/9(2)/"></label>
+      <label class="f" for="n-start">First serial number<input type="number" id="n-start" min="1" step="1" value="1"></label>
+      <label class="f" for="n-officer">Survey officer's name <span class="te">సర్వే అధికారి</span><input type="text" id="n-officer"></label>
+      <label class="f" for="n-desig">Survey officer's designation<input type="text" id="n-desig" value="Mandal Surveyor"></label>
+      <label class="f" for="n-vs">Village Surveyor <span class="te">గ్రామ సర్వేయర్</span><input type="text" id="n-vs"></label>
+      <label class="f" for="n-vro">VRO <span class="te">గ్రామ రెవెన్యూ అధికారి</span><input type="text" id="n-vro"></label>
+      <label class="f" for="n-auth">Appeal to (Sec. 11) <span class="te">అప్పీలు అధికారి</span><input type="text" id="n-auth" value="Mandal Mobile Magistrate"></label>
+      <label class="f" for="n-days">Appeal within (days) <span class="te">రోజులు</span><input type="number" id="n-days" min="1" step="1" placeholder="leave blank to write by hand"></label>
+    </div>
+    <div class="form">
+      <label class="f" for="n-mode">One notice for<select id="n-mode"><option value="lp" selected>Each LP number (joint pattadars on one notice)</option><option value="owner">Each pattadar (all their LPs on one notice)</option></select></label>
+      <label class="f" for="n-lang">Language<select id="n-lang"><option value="both" selected>Telugu + English</option><option value="te">Telugu only</option><option value="en">English only</option></select></label>
+    </div>
+    <div class="row">
+      <label class="chk" for="n-skiperr"><input type="checkbox" id="n-skiperr" checked><span>Leave out LPs that still have errors in step 3</span></label>
+      <label class="chk" for="n-skipgovt"><input type="checkbox" id="n-skipgovt"><span>Leave out Government / poramboke LPs</span></label>
+      <label class="chk" for="n-rll"><input type="checkbox" id="n-rll" checked><span>Small © RLL line at the foot</span></label>
+    </div>
+    <div class="status ok" id="n-status"></div>
+    <div class="row">
+      <input type="search" id="n-q" placeholder="Search name, LP or survey no." aria-label="Search notices">
+      <button type="button" class="btn alt sm" id="n-all">Tick all</button>
+      <button type="button" class="btn alt sm" id="n-none">Untick all</button>
+    </div>
+    <div class="nlist" id="n-list" role="list"></div>
+    <div class="pv-head">
+      <h3 id="pv-title">Preview</h3>
+      <div class="btns"><button type="button" class="btn alt sm" id="pv-prev" aria-label="Previous notice">‹ Prev</button><button type="button" class="btn alt sm" id="pv-next" aria-label="Next notice">Next ›</button></div>
+    </div>
+    <div class="pv-box" id="pv-box"><div class="pv-scale" id="pv-scale"></div></div>
+    <div class="btns">
+      <button type="button" class="btn" id="n-print">Print / Save as PDF <span class="te">ప్రింట్</span></button>
+      <button type="button" class="btn alt" id="n-reg">Notice register (Excel) <span class="te">రిజిస్టర్</span></button>
+    </div>
+    <p class="muted" style="margin:0">Print on A4, portrait, scale 100%, with <b>Background graphics</b> on. To get a PDF, choose <b>Save as PDF</b> as the printer. Each notice has a tear-off acknowledgement for the pattadar's signature and the mode of service.</p>
+  </section>
+
+  <section class="panel gold">
+    <details class="help">
+      <summary>How to use and what each check means <span class="te">ఎలా వాడాలి</span></summary>
+      <ul class="help">
+        <li>Download the correlation statement of the village as Excel and upload it. Titles like "Old Sy.No", "RSR Extent", "LP No", "LP Extent", "Correlated Extent" and the pattadar columns are found by themselves; check them in step 2.</li>
+        <li>Clear the errors in step 3 before the statement goes to the Tahsildar. Warnings need a look at the records (sale, succession, mutation papers) but may be correct.</li>
+        <li>Notices are made from the same data. By default an LP with an open error gets no notice, so a wrong extent is never served.</li>
+        <li>The appeal period and appellate authority print as you enter them. Fill them as per the current orders for Resurvey 2.0; leave the days blank to write them by hand.</li>
+        <li>Keep the notice register (Excel) to record the date and mode of service and the acknowledgement for each notice.</li>
+      </ul>
+      <dl class="checks">
+        <dt>Missing value</dt><dd>No survey number, LP number, old extent or LP extent. A survey number with no LP has not been correlated.</dd>
+        <dt>Extent not a number</dt><dd>The cell can't be read as an area, or is zero or negative. Acre–cent entries such as 1-25 are read as 1.25 Ac.</dd>
+        <dt>Old extent differs between rows</dt><dd>The same survey number (with sub-division) has two different old extents.</dd>
+        <dt>LP extent differs between rows</dt><dd>The same LP has two different LP extents.</dd>
+        <dt>Survey no. extent does not match</dt><dd>Old extent differs from the new extent correlated to it by more than the allowed difference.</dd>
+        <dt>LP parts do not add up</dt><dd>An LP made from several survey numbers has parts whose total differs from the LP extent.</dd>
+        <dt>Part extent needed</dt><dd>An LP covers more than one survey number but no correlated extent is given.</dd>
+        <dt>Duplicate row</dt><dd>The same survey number, LP, pattadar and extent appear more than once.</dd>
+        <dt>Pattadar name differs</dt><dd>The pattadar after resurvey doesn't resemble any old pattadar of that survey number. Initials and word order are allowed for; Government land is skipped.</dd>
+        <dt>Classification differs</dt><dd>One LP is marked with more than one land classification.</dd>
+        <dt>Several pattadars on one LP</dt><dd>For information: joint holdings to confirm against the 1B.</dd>
+        <dt>LP numbers not in statement</dt><dd>For information: gaps in the LP number sequence.</dd>
+      </dl>
+    </details>
+  </section>
+
+  <p class="foot"><b>© RLL – RaghusLogicLab.</b> All rights reserved. · కాపీరైట్ © RLL · Revenue tools · This is a helper for checking your own data; it is not an official SS&amp;LR application.</p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="pages" aria-hidden="true"></div>
+
+<script src="../pahani-report/lib/xlsx.full.min.js"></script>
+<script src="resurvey-core.js?v=1"></script>
+<script src="resurvey-app.js?v=1"></script>
+</body>
+</html>
