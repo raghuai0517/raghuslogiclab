@@ -247,6 +247,7 @@ td .sub{display:block;font-size:12.5px;color:var(--muted)}
     <div class="tools">
       <input type="search" id="q" placeholder="Search name, GP, ward, ref ID…" aria-label="Search register">
       <select id="fPost" aria-label="Filter by post"><option value="">All posts</option></select>
+      <select id="fGp" aria-label="Filter by Gram Panchayat" hidden><option value="">All Gram Panchayats</option></select>
       <select id="fScr" aria-label="Filter by scrutiny"><option value="">All decisions</option></select>
       <button type="button" class="btn" id="refreshBtn">Refresh</button>
       <a class="btn primary" id="sheetLink" href="#" target="_blank" rel="noopener" hidden>Open Google Sheet</a>
@@ -284,7 +285,7 @@ td .sub{display:block;font-size:12.5px;color:var(--muted)}
 </div>
 
 <script>
-const SCHEMA = {"lists": {"ELECTION": ["Ordinary Elections", "Casual Elections"], "POST": ["Sarpanch", "Ward Member"], "RESERVATION": ["ST(W)", "ST(G)", "SC(W)", "SC(G)", "BC(W)", "BC(G)", "UR(W)", "UR(G)"], "GENDER": ["Male", "Female", "Others"], "SOCIAL": ["OC", "BC-A", "BC-B", "BC-C", "BC-D", "BC-E", "SC", "ST"], "PARTY": ["Independent", "Recognised National Party", "Recognised State Party", "Registered Unrecognised Party"], "PAYMENT": ["Cash", "Treasury Challan", "Demand Draft", "Online"], "SCRUTINY": ["Pending", "Accepted", "Rejected"], "YESNO": ["No", "Yes"]}, "groups": [{"key": "loc", "label": "Election & Location"}, {"key": "rec", "label": "Receipt of Nomination"}, {"key": "cand", "label": "Candidate (items 1-16)"}, {"key": "prop", "label": "Proposer (items 18-24)"}, {"key": "dep", "label": "Party & Deposit (items 26-27)"}, {"key": "stat", "label": "Scrutiny & Withdrawal"}, {"key": "meta", "label": "Scan & Record"}], "fields": [{"key": "election", "label": "Election", "group": "loc", "type": "select", "list": "ELECTION", "req": true, "w": 18}, {"key": "district", "label": "District", "group": "loc", "type": "text", "req": true, "w": 18}, {"key": "revenue_division", "label": "Revenue Division", "group": "loc", "type": "text", "w": 18}, {"key": "ac_no_name", "label": "AC No. & Name", "group": "loc", "type": "text", "w": 18}, {"key": "mandal", "label": "Mandal", "group": "loc", "type": "text", "req": true, "w": 16}, {"key": "gram_panchayat", "label": "Gram Panchayat", "group": "loc", "type": "text", "req": true, "w": 18}, {"key": "post", "label": "Name of the Post", "group": "loc", "type": "select", "list": "POST", "req": true, "w": 14}, {"key": "ward_no", "label": "Ward No.", "group": "loc", "type": "int", "w": 8, "hint": "Only for Ward Member"}, {"key": "reservation", "label": "Reservation", "group": "loc", "type": "select", "list": "RESERVATION", "w": 12}, {"key": "nom_ref_id", "label": "Nomination Reference ID", "group": "rec", "type": "text", "w": 16}, {"key": "nom_sl_no", "label": "Nomination Sl. No.", "group": "rec", "type": "int", "w": 10}, {"key": "receipt_date", "label": "14(a) Date of Receipt", "group": "rec", "type": "date", "w": 13}, {"key": "receipt_time", "label": "14(b) Time of Receipt", "group": "rec", "type": "time", "w": 11}, {"key": "cand_name_en", "label": "1. Full Name of Candidate", "group": "cand", "type": "text", "req": true, "w": 24}, {"key": "cand_name_te", "label": "2. అభ్యర్థి పేరు (Telugu)", "group": "cand", "type": "te", "w": 22}, {"key": "rel_name_en", "label": "3. Father's/Mother's/Husband's Name", "group": "cand", "type": "text", "w": 24}, {"key": "rel_name_te", "label": "4. తండ్రి / భర్త పేరు (Telugu)", "group": "cand", "type": "te", "w": 22}, {"key": "cand_er_slno", "label": "5. Sl. No. in GP Electoral Roll", "group": "cand", "type": "int", "req": true, "w": 11}, {"key": "cand_er_gp", "label": "5. GP of Electoral Roll", "group": "cand", "type": "text", "w": 16}, {"key": "age", "label": "6. Age", "group": "cand", "type": "int", "req": true, "w": 7, "hint": "Must be 21 or above"}, {"key": "gender", "label": "7. Gender", "group": "cand", "type": "select", "list": "GENDER", "req": true, "w": 9}, {"key": "education", "label": "8. Educational Qualification", "group": "cand", "type": "text", "w": 16}, {"key": "social_status", "label": "9. Social Status", "group": "cand", "type": "select", "list": "SOCIAL", "req": true, "w": 10}, {"key": "sub_caste", "label": "9. Sub Caste", "group": "cand", "type": "text", "req": true, "w": 14}, {"key": "occupation_en", "label": "10. Occupation", "group": "cand", "type": "text", "w": 16}, {"key": "occupation_te", "label": "11. వృత్తి (Telugu)", "group": "cand", "type": "te", "w": 16}, {"key": "addr1", "label": "12. Address Line 1", "group": "cand", "type": "text", "w": 22}, {"key": "addr2", "label": "12. Address Line 2", "group": "cand", "type": "text", "w": 18}, {"key": "addr3", "label": "12. Address Line 3", "group": "cand", "type": "text", "w": 18}, {"key": "pin", "label": "12. Pin Code", "group": "cand", "type": "pin", "w": 9}, {"key": "address_te", "label": "13. చిరునామా (Telugu)", "group": "cand", "type": "te", "w": 30}, {"key": "mobile", "label": "15. Mobile No.", "group": "cand", "type": "mobile", "w": 12}, {"key": "email", "label": "16. Email", "group": "cand", "type": "email", "w": 20}, {"key": "prop_er_slno", "label": "20. Proposer Sl. No. in Electoral Roll", "group": "prop", "type": "int", "w": 11}, {"key": "prop_er_gp", "label": "20. Proposer GP", "group": "prop", "type": "text", "w": 16}, {"key": "prop_name_en", "label": "18. Full Name of Proposer", "group": "prop", "type": "text", "w": 24}, {"key": "prop_name_te", "label": "19. ప్రతిపాదకుని పేరు (Telugu)", "group": "prop", "type": "te", "w": 22}, {"key": "prop_addr1", "label": "21. Address Line 1", "group": "prop", "type": "text", "w": 22}, {"key": "prop_addr2", "label": "21. Address Line 2", "group": "prop", "type": "text", "w": 18}, {"key": "prop_addr3", "label": "21. Address Line 3", "group": "prop", "type": "text", "w": 18}, {"key": "prop_pin", "label": "21. Pin Code", "group": "prop", "type": "pin", "w": 9}, {"key": "prop_address_te", "label": "22. చిరునామా (Telugu)", "group": "prop", "type": "te", "w": 30}, {"key": "prop_mobile", "label": "23. Mobile No.", "group": "prop", "type": "mobile", "w": 12}, {"key": "prop_email", "label": "24. Email", "group": "prop", "type": "email", "w": 20}, {"key": "party_type", "label": "Political Party Type", "group": "dep", "type": "select", "list": "PARTY", "req": true, "w": 16}, {"key": "party_name", "label": "Party Name", "group": "dep", "type": "text", "w": 16}, {"key": "deposit_amount", "label": "26. Amount of Deposit (Rs.)", "group": "dep", "type": "num", "w": 11}, {"key": "payment_mode", "label": "27. Mode of Payment", "group": "dep", "type": "select", "list": "PAYMENT", "w": 14}, {"key": "receipt_no", "label": "Receipt / Challan No.", "group": "dep", "type": "text", "w": 14}, {"key": "scrutiny", "label": "Scrutiny Decision", "group": "stat", "type": "select", "list": "SCRUTINY", "w": 11, "default": "Pending"}, {"key": "rejection_reason", "label": "Reason for Rejection", "group": "stat", "type": "long", "w": 22}, {"key": "withdrawn", "label": "Withdrawn", "group": "stat", "type": "select", "list": "YESNO", "w": 10, "default": "No"}, {"key": "symbol", "label": "Symbol Allotted", "group": "stat", "type": "text", "w": 14}, {"key": "remarks", "label": "Remarks", "group": "stat", "type": "long", "w": 22}, {"key": "scan_file", "label": "Scan File Name", "group": "meta", "type": "text", "w": 22}, {"key": "scan_link", "label": "Scan Link", "group": "meta", "type": "text", "w": 22}, {"key": "entered_on", "label": "Entered On", "group": "meta", "type": "text", "w": 17}, {"key": "record_id", "label": "Record ID", "group": "meta", "type": "text", "w": 14}]}
+const SCHEMA = {"lists": {"ELECTION": ["Ordinary Elections", "Casual Elections"], "POST": ["Sarpanch", "Ward Member"], "RESERVATION": ["UR", "UR-W", "BC", "BC-W", "SC", "SC-W", "ST", "ST-W"], "GENDER": ["Male", "Female", "Others"], "SOCIAL": ["OC", "BC-A", "BC-B", "BC-C", "BC-D", "BC-E", "SC", "ST"], "PARTY": ["Independent", "Recognised National Party", "Recognised State Party", "Registered Unrecognised Party"], "PAYMENT": ["Cash", "Treasury Challan", "Demand Draft", "Online"], "SCRUTINY": ["Pending", "Accepted", "Rejected"], "YESNO": ["No", "Yes"]}, "groups": [{"key": "loc", "label": "Election & Location"}, {"key": "rec", "label": "Receipt of Nomination"}, {"key": "cand", "label": "Candidate (items 1-16)"}, {"key": "prop", "label": "Proposer (items 18-24)"}, {"key": "dep", "label": "Party & Deposit (items 26-27)"}, {"key": "stat", "label": "Scrutiny & Withdrawal"}, {"key": "meta", "label": "Scan & Record"}], "fields": [{"key": "election", "label": "Election", "group": "loc", "type": "select", "list": "ELECTION", "req": true, "w": 18}, {"key": "district", "label": "District", "group": "loc", "type": "text", "req": true, "w": 18}, {"key": "revenue_division", "label": "Revenue Division", "group": "loc", "type": "text", "w": 18}, {"key": "ac_no_name", "label": "AC No. & Name", "group": "loc", "type": "text", "w": 18}, {"key": "mandal", "label": "Mandal", "group": "loc", "type": "text", "req": true, "w": 16}, {"key": "gram_panchayat", "label": "Gram Panchayat", "group": "loc", "type": "text", "req": true, "w": 18}, {"key": "post", "label": "Name of the Post", "group": "loc", "type": "select", "list": "POST", "req": true, "w": 14}, {"key": "ward_no", "label": "Ward No.", "group": "loc", "type": "int", "w": 8, "hint": "Only for Ward Member"}, {"key": "reservation", "label": "Reservation", "group": "loc", "type": "select", "list": "RESERVATION", "w": 12}, {"key": "nom_ref_id", "label": "Nomination Reference ID", "group": "rec", "type": "text", "w": 16}, {"key": "nom_sl_no", "label": "Nomination Sl. No.", "group": "rec", "type": "int", "w": 10}, {"key": "receipt_date", "label": "14(a) Date of Receipt", "group": "rec", "type": "date", "w": 13}, {"key": "receipt_time", "label": "14(b) Time of Receipt", "group": "rec", "type": "time", "w": 11}, {"key": "cand_name_en", "label": "1. Full Name of Candidate", "group": "cand", "type": "text", "req": true, "w": 24}, {"key": "cand_name_te", "label": "2. అభ్యర్థి పేరు (Telugu)", "group": "cand", "type": "te", "w": 22}, {"key": "rel_name_en", "label": "3. Father's/Mother's/Husband's Name", "group": "cand", "type": "text", "w": 24}, {"key": "rel_name_te", "label": "4. తండ్రి / భర్త పేరు (Telugu)", "group": "cand", "type": "te", "w": 22}, {"key": "cand_er_slno", "label": "5. Sl. No. in GP Electoral Roll", "group": "cand", "type": "int", "req": true, "w": 11}, {"key": "cand_er_gp", "label": "5. GP of Electoral Roll", "group": "cand", "type": "text", "w": 16}, {"key": "age", "label": "6. Age", "group": "cand", "type": "int", "req": true, "w": 7, "hint": "Must be 21 or above"}, {"key": "gender", "label": "7. Gender", "group": "cand", "type": "select", "list": "GENDER", "req": true, "w": 9}, {"key": "education", "label": "8. Educational Qualification", "group": "cand", "type": "text", "w": 16}, {"key": "social_status", "label": "9. Social Status", "group": "cand", "type": "select", "list": "SOCIAL", "req": true, "w": 10}, {"key": "sub_caste", "label": "9. Sub Caste", "group": "cand", "type": "text", "req": true, "w": 14}, {"key": "occupation_en", "label": "10. Occupation", "group": "cand", "type": "text", "w": 16}, {"key": "occupation_te", "label": "11. వృత్తి (Telugu)", "group": "cand", "type": "te", "w": 16}, {"key": "addr1", "label": "12. Address Line 1", "group": "cand", "type": "text", "w": 22}, {"key": "addr2", "label": "12. Address Line 2", "group": "cand", "type": "text", "w": 18}, {"key": "addr3", "label": "12. Address Line 3", "group": "cand", "type": "text", "w": 18}, {"key": "pin", "label": "12. Pin Code", "group": "cand", "type": "pin", "w": 9}, {"key": "address_te", "label": "13. చిరునామా (Telugu)", "group": "cand", "type": "te", "w": 30}, {"key": "mobile", "label": "15. Mobile No.", "group": "cand", "type": "mobile", "w": 12}, {"key": "email", "label": "16. Email", "group": "cand", "type": "email", "w": 20}, {"key": "prop_er_slno", "label": "20. Proposer Sl. No. in Electoral Roll", "group": "prop", "type": "int", "w": 11}, {"key": "prop_er_gp", "label": "20. Proposer GP", "group": "prop", "type": "text", "w": 16}, {"key": "prop_name_en", "label": "18. Full Name of Proposer", "group": "prop", "type": "text", "w": 24}, {"key": "prop_name_te", "label": "19. ప్రతిపాదకుని పేరు (Telugu)", "group": "prop", "type": "te", "w": 22}, {"key": "prop_addr1", "label": "21. Address Line 1", "group": "prop", "type": "text", "w": 22}, {"key": "prop_addr2", "label": "21. Address Line 2", "group": "prop", "type": "text", "w": 18}, {"key": "prop_addr3", "label": "21. Address Line 3", "group": "prop", "type": "text", "w": 18}, {"key": "prop_pin", "label": "21. Pin Code", "group": "prop", "type": "pin", "w": 9}, {"key": "prop_address_te", "label": "22. చిరునామా (Telugu)", "group": "prop", "type": "te", "w": 30}, {"key": "prop_mobile", "label": "23. Mobile No.", "group": "prop", "type": "mobile", "w": 12}, {"key": "prop_email", "label": "24. Email", "group": "prop", "type": "email", "w": 20}, {"key": "party_type", "label": "Political Party Type", "group": "dep", "type": "select", "list": "PARTY", "req": true, "w": 16}, {"key": "party_name", "label": "Party Name", "group": "dep", "type": "text", "w": 16}, {"key": "deposit_amount", "label": "26. Amount of Deposit (Rs.)", "group": "dep", "type": "num", "w": 11}, {"key": "payment_mode", "label": "27. Mode of Payment", "group": "dep", "type": "select", "list": "PAYMENT", "w": 14}, {"key": "receipt_no", "label": "Receipt / Challan No.", "group": "dep", "type": "text", "w": 14}, {"key": "scrutiny", "label": "Scrutiny Decision", "group": "stat", "type": "select", "list": "SCRUTINY", "w": 11, "default": "Pending"}, {"key": "rejection_reason", "label": "Reason for Rejection", "group": "stat", "type": "long", "w": 22}, {"key": "withdrawn", "label": "Withdrawn", "group": "stat", "type": "select", "list": "YESNO", "w": 10, "default": "No"}, {"key": "symbol", "label": "Symbol Allotted", "group": "stat", "type": "text", "w": 14}, {"key": "remarks", "label": "Remarks", "group": "stat", "type": "long", "w": 22}, {"key": "scan_file", "label": "Scan File Name", "group": "meta", "type": "text", "w": 22}, {"key": "scan_link", "label": "Scan Link", "group": "meta", "type": "text", "w": 22}, {"key": "entered_on", "label": "Entered On", "group": "meta", "type": "text", "w": 17}, {"key": "record_id", "label": "Record ID", "group": "meta", "type": "text", "w": 14}]}
 ;
 const F = SCHEMA.fields, BY = Object.fromEntries(F.map(f => [f.key, f]));
 const LISTS = SCHEMA.lists;
@@ -299,7 +300,7 @@ const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catc
 
 /* ---------- backend (Google Apps Script web app that writes to the Google Sheet) ---------- */
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwQAvbpf2d3jhcfvn6VQRDj9b9kXx_Jk46tFkYQtWIUNUMN8JRbhfv56kjson2cxJux/exec";
-const S = { records: [], mode: "locked", code: "", ai: false, sheetUrl: "", editingId: null,
+const S = { records: [], mode: "locked", code: "", ai: false, sheetUrl: "", master: null, editingId: null,
             files: [], pages: [], existingScans: [], current: 0, ctl: null };
 async function api(action, payload, signal){
   let res;
@@ -378,16 +379,81 @@ function clearMarks(){
 function fillForm(rec){
   clearMarks();
   for (const f of F){ if ($("#f-" + f.key)) setVal(f.key, rec?.[f.key] ?? f.default ?? ""); }
-  toggles(); groupMeta();
+  if ($("#f-reservation")) $("#f-reservation").dataset.auto = rec?.reservation ? "0" : "1";
+  toggles(); groupMeta(); if (typeof syncSeat === "function" && S.master) syncSeat();
 }
 function applyDefaults(){
   const d = store.get("gpnom.defaults") || {};
   for (const k of STICKY) if (d[k]) setVal(k, d[k]);
   for (const f of F) if (f.default && !val(f.key)) setVal(f.key, f.default);
+  if (S.master){ masterDefaults(); syncSeat(); }
   toggles(); groupMeta();
 }
 
-/* ---------- validation (mirrors Excel 'Entry Check') ---------- */
+/* ---------- SEC master: GP list, reservations, RO / ARO (sent by the backend from the Sheet's GP Master tab) ---------- */
+function gpInfo(name){
+  if (!S.master || !name) return null; const n = norm(name);
+  return S.master.gps.find(g => norm(g.gp) === n || String(g.aliases || "").split(",").some(a => a.trim() && norm(a) === n)) || null;
+}
+function secRes(r){
+  const g = gpInfo(r.gram_panchayat); if (!g) return null;
+  if (r.post === "Sarpanch") return { g, res: g.sarpanch, seat: "Sarpanch" };
+  if (r.post === "Ward Member"){
+    const w = Number(r.ward_no); if (!w) return { g, res: "", seat: "" };
+    if (w < 1 || w > g.ward_res.length) return { g, res: "", seat: "Ward " + w, bad: true };
+    return { g, res: g.ward_res[w-1], seat: "Ward " + w };
+  }
+  return { g, res: "" };
+}
+const resWords = res => !res ? "" : res + " — " + ({UR:"Unreserved", BC:"BC", SC:"SC", ST:"ST"}[res.slice(0,2)] || res.slice(0,2)) + (res.endsWith("-W") ? ", women" : res.startsWith("UR") ? "" : ", general");
+function eligibility(r, res){
+  const out = []; if (!res) return out; const cat = res.slice(0,2);
+  if (res.endsWith("-W") && r.gender && r.gender !== "Female") out.push({k:"gender", m:`Seat is ${res}: reserved for women`});
+  if (cat === "SC" && r.social_status && r.social_status !== "SC") out.push({k:"social_status", m:`Seat is ${res}: reserved for SC`});
+  if (cat === "ST" && r.social_status && r.social_status !== "ST") out.push({k:"social_status", m:`Seat is ${res}: reserved for ST`});
+  if (cat === "BC" && r.social_status && !r.social_status.startsWith("BC")) out.push({k:"social_status", m:`Seat is ${res}: reserved for BC`});
+  return out;
+}
+function note(k, html, cls){ const n = $("#n-" + k); if (!n) return; n.innerHTML = html; n.className = "note " + (cls || ""); }
+function syncSeat(){
+  if (!S.master) return;
+  const r = collect();
+  const g = gpInfo(r.gram_panchayat);
+  if (g && g.gp !== r.gram_panchayat){ setVal("gram_panchayat", g.gp); r.gram_panchayat = g.gp; }
+  if (g) note("gram_panchayat", `${g.wards} wards · ${g.voters.toLocaleString("en-IN")} voters<br>RO: ${esc(g.ro.name)}${g.ro.phone ? " (" + esc(g.ro.phone) + ")" : ""} · ARO: ${esc(g.aro.name)}${g.aro.phone ? " (" + esc(g.aro.phone) + ")" : ""}<br>${esc(g.venue)}`, "");
+  else if (r.gram_panchayat) note("gram_panchayat", "Not in the SEC list for this mandal. Check the spelling.", "bad");
+  else note("gram_panchayat", "", "");
+  const s = secRes(r);
+  if (r.post === "Ward Member" && g) note("ward_no", s && s.bad ? `${esc(g.gp)} has only ${g.ward_res.length} wards` : `Wards 1–${g.ward_res.length}`, s && s.bad ? "bad" : "");
+  else note("ward_no", "", "");
+  if (s && s.res){
+    if (!r.reservation || $("#f-reservation").dataset.auto === "1"){ setVal("reservation", s.res); $("#f-reservation").dataset.auto = "1"; }
+    const bad = eligibility(collect(), s.res);
+    const differs = val("reservation") && val("reservation") !== s.res;
+    note("reservation", `SEC list: <b>${esc(resWords(s.res))}</b>` + (differs ? " — entered value differs" : "") + (bad.length ? "<br>" + bad.map(b => esc(b.m)).join("<br>") : ""), (bad.length || differs) ? "bad" : "ai");
+  } else {
+    if ($("#f-reservation").dataset.auto === "1") setVal("reservation", "");
+    note("reservation", "", "");
+  }
+  toggles(); groupMeta();
+}
+function applyMaster(){
+  if (!S.master) return;
+  let dl = $("#gpList");
+  if (!dl){ dl = document.createElement("datalist"); dl.id = "gpList"; document.body.appendChild(dl); }
+  dl.innerHTML = S.master.gps.map(g => `<option value="${esc(g.gp)}">`).join("");
+  for (const k of ["gram_panchayat","cand_er_gp","prop_er_gp"]) $("#f-" + k)?.setAttribute("list", "gpList");
+  const fg = $("#fGp"); fg.innerHTML = '<option value="">All Gram Panchayats</option>' + S.master.gps.map(g => `<option>${esc(g.gp)}</option>`).join(""); fg.hidden = false;
+}
+function masterDefaults(){
+  const d = S.master?.defaults || {};
+  for (const k of ["election","district","revenue_division","mandal"]) if (d[k] && !val(k)) setVal(k, d[k]);
+}
+// run after the form's own input handler (which clears the field's note)
+$("#entry").addEventListener("input", e => { if (["gram_panchayat","post","ward_no","gender","social_status"].includes(e.target.name)) setTimeout(syncSeat, 0); if (e.target.name === "reservation") { $("#f-reservation").dataset.auto = "0"; setTimeout(syncSeat, 0); } });
+$("#entry").addEventListener("change", e => { if (e.target.name === "gram_panchayat") setTimeout(syncSeat, 0); });
+
+/* ---------- validation (mirrors Excel 'Entry Check' and 'Reservation Check') ---------- */
 function issuesFor(r, others){
   const out = [];
   for (const f of F) if (f.req && !String(r[f.key] ?? "").trim()) out.push({k:f.key, m:`${f.label} is required`, hard:true});
@@ -400,6 +466,15 @@ function issuesFor(r, others){
   for (const k of ["nom_sl_no","cand_er_slno","prop_er_slno","ward_no"]) if (r[k] && !/^\d+$/.test(r[k])) out.push({k, m:`${BY[k].label}: digits only`});
   if (r.deposit_amount && isNaN(Number(r.deposit_amount))) out.push({k:"deposit_amount", m:"Deposit: enter the amount in rupees"});
   if (r.scrutiny === "Rejected" && !r.rejection_reason) out.push({k:"rejection_reason", m:"Give the reason for rejection"});
+  if (S.master && r.gram_panchayat){
+    const s = secRes(r);
+    if (!s) out.push({k:"gram_panchayat", m:"Gram Panchayat is not in the SEC list — check the spelling"});
+    else if (s.bad) out.push({k:"ward_no", m:`${s.g.gp} has only ${s.g.ward_res.length} wards`});
+    else if (s.res){
+      if (r.reservation && r.reservation !== s.res) out.push({k:"reservation", m:`Reservation should be ${s.res} as per the SEC list`});
+      out.push(...eligibility(r, s.res));
+    }
+  }
   if (others && r.cand_name_en){
     const dup = others.find(o => o.record_id !== r.record_id && norm(o.cand_name_en) === norm(r.cand_name_en) && norm(o.gram_panchayat) === norm(r.gram_panchayat) && o.post === r.post && String(o.ward_no||"") === String(r.ward_no||""));
     if (dup) out.push({k:"cand_name_en", m:`Possible duplicate of saved entry (Sl. ${dup.nom_sl_no || "–"})`});
@@ -502,6 +577,7 @@ function buildPrompt(guide){
   return `You are reading a filled nomination paper for Gram Panchayat elections in Andhra Pradesh, India, for the post of Sarpanch or Ward Member. The paper may be printed in Telugu and/or English with handwritten entries.
 ${guide}
 
+${S.master ? "Gram Panchayats of this mandal (use the matching name for gram_panchayat, cand_er_gp and prop_er_gp): " + S.master.gps.map(g => g.gp).join(", ") + "\n" : ""}
 Extract the entries into JSON for a data-entry form. Fields (key — label — format):
 ${lines}
 
@@ -561,7 +637,7 @@ function applyAI(res){
     const bits = []; if (uns.has(f.key)) bits.push("Unclear on paper — check"); if (tr.has(f.key)) bits.push("Transliterated, not written on paper");
     note.textContent = bits.join(" · "); note.className = "note " + (uns.has(f.key) ? "unsure" : "ai");
   }
-  toggles(); groupMeta();
+  toggles(); groupMeta(); syncSeat();
   return n;
 }
 $("#entry").addEventListener("click", e => {
@@ -681,8 +757,8 @@ async function editRecord(id){
 
 /* ---------- register ---------- */
 function filtered(){
-  const q = norm($("#q").value), p = $("#fPost").value, s = $("#fScr").value;
-  return S.records.filter(r => (!p || r.post === p) && (!s || (r.scrutiny || "Pending") === s) &&
+  const q = norm($("#q").value), p = $("#fPost").value, s = $("#fScr").value, gpF = $("#fGp").value;
+  return S.records.filter(r => (!p || r.post === p) && (!s || (r.scrutiny || "Pending") === s) && (!gpF || r.gram_panchayat === gpF) &&
     (!q || [r.cand_name_en, r.cand_name_te, r.gram_panchayat, r.mandal, r.ward_no && "ward " + r.ward_no, r.nom_ref_id, r.rel_name_en, r.mobile].some(x => norm(x).includes(q))))
     .sort((a,b) => norm(a.gram_panchayat).localeCompare(norm(b.gram_panchayat)) || (a.post||"").localeCompare(b.post||"") || (Number(a.ward_no)||0)-(Number(b.ward_no)||0) || (Number(a.nom_sl_no)||0)-(Number(b.nom_sl_no)||0));
 }
@@ -727,7 +803,7 @@ $("#tbody").addEventListener("click", async e => {
     } catch (err){ $("#regStatus").textContent = "Couldn't delete: " + (err.message || "error"); if (err.locked) lock(err.message); }
   }
 });
-["#q","#fPost","#fScr"].forEach(s => $(s).addEventListener("input", renderRegister));
+["#q","#fPost","#fScr","#fGp"].forEach(s => $(s).addEventListener("input", renderRegister));
 LISTS.POST.forEach(v => $("#fPost").insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`));
 LISTS.SCRUTINY.forEach(v => $("#fScr").insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`));
 
@@ -770,7 +846,8 @@ async function unlock(code){
   S.code = code.trim(); $("#gateBtn").disabled = true; $("#gateMsg").textContent = "Checking…"; $("#gateMsg").className = "status";
   try {
     const out = await api("ping");
-    S.ai = !!out.ai; S.sheetUrl = out.sheetUrl || "";
+    S.ai = !!out.ai; S.sheetUrl = out.sheetUrl || ""; S.master = out.master && out.master.gps && out.master.gps.length ? out.master : null;
+    applyMaster();
     try { sessionStorage.setItem("gpnom.code", S.code); } catch {}
     S.mode = "loading"; $("#gate").hidden = true; $("#app").hidden = false; $("nav.tabs").hidden = false;
     $("#sheetLink").href = S.sheetUrl; $("#sheetLink").hidden = !S.sheetUrl;

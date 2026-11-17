@@ -8,7 +8,9 @@
  *   ANTHROPIC_API_KEY  optional. Turns on "Read form into fields". From console.anthropic.com.
  *   ANTHROPIC_MODEL    optional. Default claude-sonnet-5-5.
  */
-const SHEET_ID = '1mRy3YOHFt613bGWebWbKOlLNiUKrI7zbfBU04oKV8S0';
+const SHEET_ID = '1II8uxJ9XPqSGWc5Bsu1ctD8n2ehl6469eOLVG-751WE';
+const MASTER_TAB = 'GP Master';
+const DEFAULTS = { district: 'Tirupati', revenue_division: 'Sullurupeta', mandal: 'Tada', election: 'Ordinary Elections' };
 const TAB = 'Nominations';
 const HEADER_ROW = 3;
 const FIRST_ROW = 5;           // row 4 is the worked example
@@ -25,7 +27,7 @@ function doPost(e) {
     checkCode_(req.code);
     const p = req.payload || {};
     switch (req.action) {
-      case 'ping':   return json_({ ok: true, ai: !!prop_('ANTHROPIC_API_KEY'), sheetUrl: 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit' });
+      case 'ping':   return json_({ ok: true, ai: !!prop_('ANTHROPIC_API_KEY'), sheetUrl: 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit', master: getMaster_() });
       case 'list':   return json_({ ok: true, records: listRecords_() });
       case 'save':   return json_({ ok: true, record: saveRecord_(p.record || {}, p.files || []) });
       case 'delete': return json_({ ok: true, deleted: deleteRecord_(String(p.id || '')) });
@@ -74,6 +76,33 @@ function cellIn_(v, type, tz) {
   if (type === 'int' || type === 'num') return isNaN(Number(v)) ? v : Number(v);
   if (/^[=+\-@]/.test(v)) return "'" + v;      // never let entered text run as a formula
   return v;
+}
+
+/* ---------- GP master (reservations, voters, RO / ARO) from the 'GP Master' tab ---------- */
+function getMaster_() {
+  const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName(MASTER_TAB);
+  if (!sh) return null;
+  const last = sh.getLastRow();
+  if (last < 4) return null;
+  const vals = sh.getRange(3, 1, last - 2, sh.getLastColumn()).getValues();
+  const head = vals[0].map(function (h) { return String(h).trim(); });
+  const ix = function (h) { return head.indexOf(h); };
+  const wardCols = head.map(function (h, i) { return /^Ward [IVXL]+$/.test(h) ? i : -1; }).filter(function (i) { return i >= 0; });
+  const gps = [];
+  vals.slice(1).forEach(function (r) {
+    const gp = String(r[ix('Gram Panchayat')] || '').trim();
+    if (!gp || gp === 'Total') return;
+    gps.push({
+      gp: gp, mandal: String(r[ix('Mandal')] || ''), aliases: String(r[ix('Other spellings')] || ''),
+      wards: Number(r[ix('No. of Wards')]) || 0, sarpanch: String(r[ix('Sarpanch Reserved for')] || ''),
+      ward_res: wardCols.map(function (i) { return String(r[i] || ''); }).filter(function (x) { return x; }),
+      voters: Number(r[ix('Total Voters')]) || 0, male: Number(r[ix('Male Voters')]) || 0, female: Number(r[ix('Female Voters')]) || 0,
+      venue: String(r[ix('RO Venue (Head Quarter)')] || ''),
+      ro: { name: String(r[ix('Stage-I RO')] || ''), designation: String(r[ix('RO Designation')] || ''), phone: String(r[ix('RO Phone')] || '') },
+      aro: { name: String(r[ix('Stage-I ARO')] || ''), designation: String(r[ix('ARO Designation')] || ''), phone: String(r[ix('ARO Phone')] || '') }
+    });
+  });
+  return { defaults: DEFAULTS, gps: gps };
 }
 
 /* ---------- list ---------- */
@@ -195,7 +224,8 @@ function readForm_(p) {
 /* Run once from the editor to check the sheet connection. */
 function testConnection() {
   const sh = sheet_();
-  Logger.log('Sheet: ' + sh.getParent().getName() + ' · columns mapped: ' + Object.keys(colMap_(sh)).length + ' · records: ' + listRecords_().length);
+  const m = getMaster_();
+  Logger.log('Sheet: ' + sh.getParent().getName() + ' · columns mapped: ' + Object.keys(colMap_(sh)).length + ' · records: ' + listRecords_().length + ' · GPs in master: ' + (m ? m.gps.length : 0) + ' · wards: ' + (m ? m.gps.reduce(function (a, g) { return a + g.ward_res.length; }, 0) : 0));
 }
 
 /* Run once: creates the access code (if none) and checks the sheet. The code is printed in the Execution log. */
