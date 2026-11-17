@@ -298,7 +298,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 
 /* ---------- backend (Google Apps Script web app that writes to the Google Sheet) ---------- */
-const GAS_URL = "__GAS_URL__";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwQAvbpf2d3jhcfvn6VQRDj9b9kXx_Jk46tFkYQtWIUNUMN8JRbhfv56kjson2cxJux/exec";
 const S = { records: [], mode: "locked", code: "", ai: false, sheetUrl: "", editingId: null,
             files: [], pages: [], existingScans: [], current: 0, ctl: null };
 async function api(action, payload, signal){
