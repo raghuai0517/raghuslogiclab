@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GP Nomination Entry (Sarpanch &amp; Ward Member) · RaghusLogicLab</title>
+<meta name="description" content="For Gram Panchayat Returning Officers: photograph or scan each Sarpanch / Ward Member nomination paper, check the fields in APSEC order and save them to a shared Google Sheet register.">
+  <!-- share preview, canonical & icons -->
+  <link rel="canonical" href="https://raghuslogiclab.com/tools/gp-nomination-entry.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RaghusLogicLab">
+  <meta property="og:title" content="GP Nomination Entry (Sarpanch &amp; Ward Member) · RaghusLogicLab">
+  <meta property="og:description" content="Photograph or scan each Sarpanch / Ward Member nomination paper, check the fields in APSEC order and save them to a shared Google Sheet register.">
+  <meta property="og:url" content="https://raghuslogiclab.com/tools/gp-nomination-entry.html">
+  <meta property="og:image" content="https://raghuslogiclab.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#8E1F4F">
+<meta name="rll-track-files" content="type-only"><script defer src="../assets/track.js?v=1"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Telugu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: an RO's desk — the scanned paper on the left, the APSEC-ordered entry form on the right; register as a second view. */
+:root{
+  --paper:#F5F3F6; --surface:#FFFFFF; --ink:#1D1B24; --muted:#6B6475; --line:#E2DCE5;
+  --accent:#8E1F4F; --accent-ink:#FFFFFF; --navy:#1F2A5A; --soft:#F8EEF3; --input:#FFFFFF;
+  --ok:#1E7A45; --ok-bg:#E3F3E8; --warn:#9A6200; --warn-bg:#FFF2D6; --bad:#B42335; --bad-bg:#FBE4E7; --ai:#2B5CB8; --ai-bg:#E8EFFC;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Telugu",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --f-te:"Noto Sans Telugu","Nirmala UI","Gautami",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#16141B; --surface:#201D27; --ink:#EDE9F2; --muted:#A49CB0; --line:#363141; --accent:#E06A9C; --accent-ink:#1A0E14;
+  --navy:#9FB0F0; --soft:#2C2030; --input:#1A1820;
+  --ok:#6FD39A; --ok-bg:#183326; --warn:#F2C062; --warn-bg:#3A2E14; --bad:#FF8A98; --bad-bg:#3D1C22; --ai:#8FB0FF; --ai-bg:#1D2742;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#16141B; --surface:#201D27; --ink:#EDE9F2; --muted:#A49CB0; --line:#363141; --accent:#E06A9C; --accent-ink:#1A0E14;
+  --navy:#9FB0F0; --soft:#2C2030; --input:#1A1820;
+  --ok:#6FD39A; --ok-bg:#183326; --warn:#F2C062; --warn-bg:#3A2E14; --bad:#FF8A98; --bad-bg:#3D1C22; --ai:#8FB0FF; --ai-bg:#1D2742;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+[lang="te"],.te{font-family:var(--f-te)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+header.top{background:var(--surface);border-bottom:3px solid var(--accent)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-top:12px;padding-bottom:0}
+.brand{display:flex;flex-direction:column;gap:2px;margin-right:auto;padding-bottom:10px}
+.brand h1{font-size:22px;color:var(--accent)}
+.brand small{color:var(--muted);font-size:12px}
+nav.tabs{display:flex;gap:4px;align-self:flex-end}
+nav.tabs a{padding:9px 14px;border-radius:8px 8px 0 0;text-decoration:none;color:var(--muted);font-weight:600;border:1px solid transparent;border-bottom:none}
+nav.tabs a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+nav.tabs a:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.count{font-family:var(--f-mono);font-size:12px;margin-left:4px;opacity:.85}
+.banner{margin:12px 0 0;padding:10px 12px;border-radius:var(--r);background:var(--warn-bg);color:var(--warn);font-size:13px}
+.banner[hidden]{display:none}
+main{padding:16px 0 120px}
+.view[hidden]{display:none}
+
+/* entry layout */
+.desk{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:980px){.desk{grid-template-columns:minmax(340px,5fr) 7fr;align-items:start}.scanpane{position:sticky;top:12px}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.scanpane .card{padding:14px;display:grid;gap:12px}
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;display:grid;gap:8px;justify-items:center;background:var(--soft);cursor:pointer}
+.drop.over{border-color:var(--accent)}
+.drop strong{font-size:15px}
+.drop span{color:var(--muted);font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--muted)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ai{background:var(--navy);color:var(--surface);border-color:var(--navy)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.small{padding:5px 10px;min-height:32px;font-size:13px}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.status{font-size:13px;color:var(--muted);min-height:1.2em}
+.status.err{color:var(--bad)}
+.status.ok{color:var(--ok)}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.thumbs button{flex:0 0 auto;border:2px solid var(--line);border-radius:6px;padding:0;background:none;cursor:pointer;position:relative}
+.thumbs button[aria-pressed="true"]{border-color:var(--accent)}
+.thumbs img{display:block;height:72px;width:auto;border-radius:4px}
+.thumbs .pg{position:absolute;bottom:2px;right:2px;background:var(--ink);color:var(--paper);font-size:10px;padding:0 4px;border-radius:3px;font-family:var(--f-mono)}
+.viewer{border:1px solid var(--line);border-radius:8px;overflow:auto;max-height:70vh;background:var(--paper);display:none}
+.viewer.has{display:block}
+.viewer img{display:block;width:100%;height:auto;cursor:zoom-in}
+.viewer.zoom img{width:220%;cursor:zoom-out}
+.hint{font-size:12px;color:var(--muted)}
+label.chk{display:flex;gap:8px;align-items:center;font-size:13px}
+
+/* form */
+form.entry{display:grid;gap:14px}
+.grp{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.grp>summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;align-items:center;gap:10px;border-left:5px solid var(--gc,var(--accent))}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary h2{font-size:16px}
+.grp>summary .meta{margin-left:auto;font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.grp>summary::after{content:"▾";color:var(--muted);transition:transform .15s}
+.grp:not([open])>summary::after{transform:rotate(-90deg)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 14px;padding:4px 14px 16px}
+.fld{display:grid;gap:4px;align-content:start}
+.fld.wide{grid-column:1/-1}
+.fld[hidden]{display:none}
+.fld label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.fld label .req{color:var(--accent)}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--line);background:var(--input);border-radius:7px;padding:8px 10px;min-height:40px}
+.fld textarea{min-height:64px;resize:vertical}
+.fld input.te,.fld textarea.te{font-family:var(--f-te)}
+.fld.ai input,.fld.ai select,.fld.ai textarea{border-color:var(--ai);background:var(--ai-bg)}
+.fld.unsure input,.fld.unsure select,.fld.unsure textarea{border-color:var(--warn);background:var(--warn-bg)}
+.fld.bad input,.fld.bad select,.fld.bad textarea{border-color:var(--bad)}
+.note{font-size:12px;line-height:1.35}
+.note.ai{color:var(--ai)} .note.unsure{color:var(--warn)} .note.bad{color:var(--bad)}
+.note button{border:none;background:none;color:inherit;text-decoration:underline;cursor:pointer;padding:0;font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid}
+
+/* sticky save bar */
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:5;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.savebar .wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:10px;padding-bottom:10px}
+.savebar .msg{margin-right:auto;font-size:13px}
+.issues{margin:0;padding:10px 14px 10px 30px;background:var(--bad-bg);color:var(--bad);border-radius:var(--r);font-size:13px}
+.issues[hidden]{display:none}
+
+/* register */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.tile b{display:block;font-family:var(--f-display);font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile span{font-size:12px;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.tools input,.tools select{border:1px solid var(--line);background:var(--input);border-radius:8px;padding:8px 10px;min-height:40px}
+.tools input[type="search"]{flex:1 1 200px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:14px}
+th{position:sticky;top:0;background:var(--navy);color:var(--surface);text-align:left;font-weight:600;font-size:12px;padding:8px 10px;white-space:nowrap}
+td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td .sub{display:block;font-size:12.5px;color:var(--muted)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.mut{background:var(--soft);color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.dlg{position:fixed;inset:0;background:rgba(10,8,14,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.dlg.open{display:flex}
+.dlg .card{max-width:480px;width:100%;padding:18px;display:grid;gap:12px}
+.dlg ul{margin:0;padding-left:20px;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:520px){.savebar .msg{flex:1 0 100%;font-size:12px;color:var(--muted)}.savebar .btn{flex:1}.brand h1{font-size:19px}.fields{grid-template-columns:1fr}nav.tabs a{padding:8px 10px}}
+.rll-bar{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:4px}
+.rll-bar a{color:var(--muted);text-decoration:none;font-weight:600}
+.rll-bar a:hover{text-decoration:underline}
+.rll-mark{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;margin-right:6px}
+.rll-disclaimer{margin:12px 0 0;padding:10px 14px;border:1px solid #f0c36d;border-left:4px solid #d97706;background:#fff8e6;color:#3d2c00;border-radius:10px;font-size:.86rem;line-height:1.5}.rll-disclaimer b{color:#7c2d12}.rll-disclaimer a{color:#9a3412;font-weight:600}
+.gate{max-width:440px;margin:40px auto;padding:22px;display:grid;gap:12px}
+.gate input{border:1px solid var(--line);background:var(--input);border-radius:8px;padding:10px 12px;min-height:44px;font-size:16px;letter-spacing:.08em;text-transform:uppercase;width:100%}
+.gate h2{font-size:20px}
+.gate p{margin:0;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <nav class="rll-bar" aria-label="Site"><a href="../index.html"><span class="rll-mark">RL</span>RaghusLogicLab</a><span aria-hidden="true">/</span><a href="../index.html#elections">Local body elections</a></nav>
+      <h1>GP Nomination Entry</h1>
+      <small>Sarpanch &amp; Ward Member · fields in APSEC order</small>
+    </div>
+    <nav class="tabs" aria-label="Views">
+      <a href="#entry" id="tab-entry">New entry</a>
+      <a href="#register" id="tab-register">Register<span class="count" id="regCount">0</span></a>
+    </nav>
+  </div>
+</header>
+<div class="wrap"><div class="rll-disclaimer" role="note"><b>Independent tool — not from the State Election Commission.</b> RaghusLogicLab is not affiliated with, endorsed by or acting for the Andhra Pradesh State Election Commission. This register only helps an office type nomination details once; the official entry is made in the SEC's own system. Official site: <a href="https://sec.ap.gov.in" target="_blank" rel="noopener">sec.ap.gov.in</a>.</div></div>
+
+<section class="wrap" id="gate" hidden>
+  <form class="card gate" id="gateForm" autocomplete="off">
+    <h2>Enter the access code</h2>
+    <p>This register holds candidates' personal details, so it is open only to the Returning Officer's team. Ask the register owner for the code.</p>
+    <label for="gateCode" class="hint">Access code</label>
+    <input id="gateCode" name="code" type="password" autocomplete="off" spellcheck="false">
+    <button type="submit" class="btn primary" id="gateBtn">Open register</button>
+    <p class="status" id="gateMsg"></p>
+  </form>
+</section>
+
+<div id="app" hidden>
+
+<main class="wrap">
+  <!-- ENTRY -->
+  <section class="view" id="view-entry">
+    <div class="desk">
+      <aside class="scanpane">
+        <div class="card">
+          <h2 style="font-size:17px" id="scanTitle">1 · Nomination paper</h2>
+          <label class="drop" id="drop" for="fileIn">
+            <strong>Add photo or PDF of the nomination paper</strong>
+            <span>JPG, PNG or PDF · several photos for a multi-page paper</span>
+            <span class="btn small">Choose files</span>
+          </label>
+          <input type="file" id="fileIn" accept="image/*,application/pdf,.pdf" multiple hidden>
+          <div class="thumbs" id="thumbs"></div>
+          <div class="viewer" id="viewer" title="Tap to zoom"></div>
+          <div class="row">
+            <button type="button" class="btn ai" id="readBtn" disabled>Read form into fields</button>
+            <button type="button" class="btn small" id="stopBtn" hidden>Stop</button>
+            <button type="button" class="btn small" id="clearScan" hidden>Remove scan</button>
+          </div>
+          <label class="chk"><input type="checkbox" id="careful"> Careful read (slower; for faint handwriting)</label>
+          <p class="hint" id="aiNote" hidden>Reading scans is not switched on for this register yet. Add the scan for the record and type the fields.</p>
+          <p class="status" id="readStatus">Add the scan, then read it. You can also type the fields directly.</p>
+          <div class="legend">
+            <span><i style="background:var(--ai-bg);border-color:var(--ai)"></i>Read from scan, check it</span>
+            <span><i style="background:var(--warn-bg);border-color:var(--warn)"></i>Unclear on paper</span>
+          </div>
+        </div>
+      </aside>
+
+      <div>
+        <div class="row" style="margin-bottom:10px;justify-content:space-between">
+          <h2 style="font-size:17px" id="formTitle">2 · Check and complete the details</h2>
+          <label class="chk"><input type="checkbox" id="keepLoc" checked> Keep election &amp; location for next form</label>
+        </div>
+        <form class="entry" id="entry" novalidate></form>
+        <ol class="issues" id="issues" hidden></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="view" id="view-register" hidden>
+    <div class="tiles" id="tiles"></div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Search name, GP, ward, ref ID…" aria-label="Search register">
+      <select id="fPost" aria-label="Filter by post"><option value="">All posts</option></select>
+      <select id="fScr" aria-label="Filter by scrutiny"><option value="">All decisions</option></select>
+      <button type="button" class="btn" id="refreshBtn">Refresh</button>
+      <a class="btn primary" id="sheetLink" href="#" target="_blank" rel="noopener" hidden>Open Google Sheet</a>
+      <button type="button" class="btn" id="csvBtn">Download CSV</button>
+      <button type="button" class="btn" id="lockBtn">Lock</button>
+    </div>
+    <p class="status" id="regStatus"></p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Sl.</th><th>Candidate</th><th>Post</th><th>Gram Panchayat</th><th>Age / Sex</th><th>Category</th><th>Received</th><th>Scrutiny</th><th>Entry check</th><th>Scan</th><th></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="savebar" id="savebar" hidden>
+  <div class="wrap">
+    <span class="msg" id="saveMsg">New nomination</span>
+    <button type="button" class="btn" id="resetBtn">Clear form</button>
+    <button type="button" class="btn primary" id="saveBtn">Save to register</button>
+  </div>
+</div>
+
+<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="card">
+    <h2 id="dlgTitle" style="font-size:18px"></h2>
+    <div id="dlgBody"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button type="button" class="btn" id="dlgCancel">Cancel</button>
+      <button type="button" class="btn primary" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCHEMA = {"lists": {"ELECTION": ["Ordinary Elections", "Casual Elections"], "POST": ["Sarpanch", "Ward Member"], "RESERVATION": ["ST(W)", "ST(G)", "SC(W)", "SC(G)", "BC(W)", "BC(G)", "UR(W)", "UR(G)"], "GENDER": ["Male", "Female", "Others"], "SOCIAL": ["OC", "BC-A", "BC-B", "BC-C", "BC-D", "BC-E", "SC", "ST"], "PARTY": ["Independent", "Recognised National Party", "Recognised State Party", "Registered Unrecognised Party"], "PAYMENT": ["Cash", "Treasury Challan", "Demand Draft", "Online"], "SCRUTINY": ["Pending", "Accepted", "Rejected"], "YESNO": ["No", "Yes"]}, "groups": [{"key": "loc", "label": "Election & Location"}, {"key": "rec", "label": "Receipt of Nomination"}, {"key": "cand", "label": "Candidate (items 1-16)"}, {"key": "prop", "label": "Proposer (items 18-24)"}, {"key": "dep", "label": "Party & Deposit (items 26-27)"}, {"key": "stat", "label": "Scrutiny & Withdrawal"}, {"key": "meta", "label": "Scan & Record"}], "fields": [{"key": "election", "label": "Election", "group": "loc", "type": "select", "list": "ELECTION", "req": true, "w": 18}, {"key": "district", "label": "District", "group": "loc", "type": "text", "req": true, "w": 18}, {"key": "revenue_division", "label": "Revenue Division", "group": "loc", "type": "text", "w": 18}, {"key": "ac_no_name", "label": "AC No. & Name", "group": "loc", "type": "text", "w": 18}, {"key": "mandal", "label": "Mandal", "group": "loc", "type": "text", "req": true, "w": 16}, {"key": "gram_panchayat", "label": "Gram Panchayat", "group": "loc", "type": "text", "req": true, "w": 18}, {"key": "post", "label": "Name of the Post", "group": "loc", "type": "select", "list": "POST", "req": true, "w": 14}, {"key": "ward_no", "label": "Ward No.", "group": "loc", "type": "int", "w": 8, "hint": "Only for Ward Member"}, {"key": "reservation", "label": "Reservation", "group": "loc", "type": "select", "list": "RESERVATION", "w": 12}, {"key": "nom_ref_id", "label": "Nomination Reference ID", "group": "rec", "type": "text", "w": 16}, {"key": "nom_sl_no", "label": "Nomination Sl. No.", "group": "rec", "type": "int", "w": 10}, {"key": "receipt_date", "label": "14(a) Date of Receipt", "group": "rec", "type": "date", "w": 13}, {"key": "receipt_time", "label": "14(b) Time of Receipt", "group": "rec", "type": "time", "w": 11}, {"key": "cand_name_en", "label": "1. Full Name of Candidate", "group": "cand", "type": "text", "req": true, "w": 24}, {"key": "cand_name_te", "label": "2. అభ్యర్థి పేరు (Telugu)", "group": "cand", "type": "te", "w": 22}, {"key": "rel_name_en", "label": "3. Father's/Mother's/Husband's Name", "group": "cand", "type": "text", "w": 24}, {"key": "rel_name_te", "label": "4. తండ్రి / భర్త పేరు (Telugu)", "group": "cand", "type": "te", "w": 22}, {"key": "cand_er_slno", "label": "5. Sl. No. in GP Electoral Roll", "group": "cand", "type": "int", "req": true, "w": 11}, {"key": "cand_er_gp", "label": "5. GP of Electoral Roll", "group": "cand", "type": "text", "w": 16}, {"key": "age", "label": "6. Age", "group": "cand", "type": "int", "req": true, "w": 7, "hint": "Must be 21 or above"}, {"key": "gender", "label": "7. Gender", "group": "cand", "type": "select", "list": "GENDER", "req": true, "w": 9}, {"key": "education", "label": "8. Educational Qualification", "group": "cand", "type": "text", "w": 16}, {"key": "social_status", "label": "9. Social Status", "group": "cand", "type": "select", "list": "SOCIAL", "req": true, "w": 10}, {"key": "sub_caste", "label": "9. Sub Caste", "group": "cand", "type": "text", "req": true, "w": 14}, {"key": "occupation_en", "label": "10. Occupation", "group": "cand", "type": "text", "w": 16}, {"key": "occupation_te", "label": "11. వృత్తి (Telugu)", "group": "cand", "type": "te", "w": 16}, {"key": "addr1", "label": "12. Address Line 1", "group": "cand", "type": "text", "w": 22}, {"key": "addr2", "label": "12. Address Line 2", "group": "cand", "type": "text", "w": 18}, {"key": "addr3", "label": "12. Address Line 3", "group": "cand", "type": "text", "w": 18}, {"key": "pin", "label": "12. Pin Code", "group": "cand", "type": "pin", "w": 9}, {"key": "address_te", "label": "13. చిరునామా (Telugu)", "group": "cand", "type": "te", "w": 30}, {"key": "mobile", "label": "15. Mobile No.", "group": "cand", "type": "mobile", "w": 12}, {"key": "email", "label": "16. Email", "group": "cand", "type": "email", "w": 20}, {"key": "prop_er_slno", "label": "20. Proposer Sl. No. in Electoral Roll", "group": "prop", "type": "int", "w": 11}, {"key": "prop_er_gp", "label": "20. Proposer GP", "group": "prop", "type": "text", "w": 16}, {"key": "prop_name_en", "label": "18. Full Name of Proposer", "group": "prop", "type": "text", "w": 24}, {"key": "prop_name_te", "label": "19. ప్రతిపాదకుని పేరు (Telugu)", "group": "prop", "type": "te", "w": 22}, {"key": "prop_addr1", "label": "21. Address Line 1", "group": "prop", "type": "text", "w": 22}, {"key": "prop_addr2", "label": "21. Address Line 2", "group": "prop", "type": "text", "w": 18}, {"key": "prop_addr3", "label": "21. Address Line 3", "group": "prop", "type": "text", "w": 18}, {"key": "prop_pin", "label": "21. Pin Code", "group": "prop", "type": "pin", "w": 9}, {"key": "prop_address_te", "label": "22. చిరునామా (Telugu)", "group": "prop", "type": "te", "w": 30}, {"key": "prop_mobile", "label": "23. Mobile No.", "group": "prop", "type": "mobile", "w": 12}, {"key": "prop_email", "label": "24. Email", "group": "prop", "type": "email", "w": 20}, {"key": "party_type", "label": "Political Party Type", "group": "dep", "type": "select", "list": "PARTY", "req": true, "w": 16}, {"key": "party_name", "label": "Party Name", "group": "dep", "type": "text", "w": 16}, {"key": "deposit_amount", "label": "26. Amount of Deposit (Rs.)", "group": "dep", "type": "num", "w": 11}, {"key": "payment_mode", "label": "27. Mode of Payment", "group": "dep", "type": "select", "list": "PAYMENT", "w": 14}, {"key": "receipt_no", "label": "Receipt / Challan No.", "group": "dep", "type": "text", "w": 14}, {"key": "scrutiny", "label": "Scrutiny Decision", "group": "stat", "type": "select", "list": "SCRUTINY", "w": 11, "default": "Pending"}, {"key": "rejection_reason", "label": "Reason for Rejection", "group": "stat", "type": "long", "w": 22}, {"key": "withdrawn", "label": "Withdrawn", "group": "stat", "type": "select", "list": "YESNO", "w": 10, "default": "No"}, {"key": "symbol", "label": "Symbol Allotted", "group": "stat", "type": "text", "w": 14}, {"key": "remarks", "label": "Remarks", "group": "stat", "type": "long", "w": 22}, {"key": "scan_file", "label": "Scan File Name", "group": "meta", "type": "text", "w": 22}, {"key": "scan_link", "label": "Scan Link", "group": "meta", "type": "text", "w": 22}, {"key": "entered_on", "label": "Entered On", "group": "meta", "type": "text", "w": 17}, {"key": "record_id", "label": "Record ID", "group": "meta", "type": "text", "w": 14}]}
+;
+const F = SCHEMA.fields, BY = Object.fromEntries(F.map(f => [f.key, f]));
+const LISTS = SCHEMA.lists;
+const STICKY = ["election","district","revenue_division","ac_no_name","mandal","gram_panchayat","post","reservation"];
+const HIDDEN_GROUPS = new Set(["meta"]);
+const COLLAPSED = new Set(["stat"]);
+const AI_SKIP = new Set(["scan_file","scan_link","entered_on","record_id","nom_ref_id"]);
+const GCOL = {loc:"#1F2A5A",rec:"#2E3B73",cand:"#8E1F4F",prop:"#6E2A5E",dep:"#2F5D50",stat:"#7A5A12"};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+/* ---------- backend (Google Apps Script web app that writes to the Google Sheet) ---------- */
+const GAS_URL = "__GAS_URL__";
+const S = { records: [], mode: "locked", code: "", ai: false, sheetUrl: "", editingId: null,
+            files: [], pages: [], existingScans: [], current: 0, ctl: null };
+async function api(action, payload, signal){
+  let res;
+  try {
+    res = await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ code: S.code, action, payload: payload || {} }), signal, redirect: "follow" });
+  } catch (e){
+    if (e.name === "AbortError") throw e;
+    throw new Error("Can't reach the register. Check your internet connection and try again.");
+  }
+  let out; try { out = await res.json(); } catch { throw new Error("The register sent an unexpected reply (" + res.status + "). Try again."); }
+  if (!out.ok){ const err = new Error(out.error || "Request failed"); if (/access code/i.test(out.error || "")) err.locked = true; throw err; }
+  return out;
+}
+const toB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
+
+/* ---------- build form ---------- */
+function buildForm(){
+  const form = $("#entry");
+  for (const g of SCHEMA.groups){
+    if (HIDDEN_GROUPS.has(g.key)) continue;
+    const d = document.createElement("details");
+    d.className = "grp"; d.open = !COLLAPSED.has(g.key); d.id = "g-" + g.key;
+    d.style.setProperty("--gc", GCOL[g.key]);
+    const label = g.key === "stat" ? "Scrutiny & Withdrawal (fill later)" : g.label;
+    d.innerHTML = `<summary><h2>${esc(label)}</h2><span class="meta" id="gm-${g.key}"></span></summary><div class="fields"></div>`;
+    const box = d.querySelector(".fields");
+    for (const f of F.filter(x => x.group === g.key)){
+      const w = document.createElement("div");
+      w.className = "fld" + (["address_te","prop_address_te","rejection_reason","remarks"].includes(f.key) ? " wide" : "");
+      w.id = "w-" + f.key;
+      const id = "f-" + f.key;
+      let ctrl;
+      const te = f.type === "te" ? ' lang="te" class="te"' : "";
+      if (f.type === "select"){
+        ctrl = `<select id="${id}" name="${f.key}"><option value="">— Select —</option>${LISTS[f.list].map(v => `<option>${esc(v)}</option>`).join("")}</select>`;
+      } else if (f.type === "long" || f.key.endsWith("address_te")){
+        ctrl = `<textarea id="${id}" name="${f.key}"${te} rows="2"></textarea>`;
+      } else {
+        const t = {date:'type="date"', time:'type="time"', email:'type="email" autocomplete="off"', int:'type="text" inputmode="numeric"', num:'type="text" inputmode="decimal"', mobile:'type="tel" inputmode="numeric" maxlength="10"', pin:'type="text" inputmode="numeric" maxlength="6"'}[f.type] || 'type="text"';
+        ctrl = `<input id="${id}" name="${f.key}" ${t}${te} autocomplete="off">`;
+      }
+      w.innerHTML = `<label for="${id}">${esc(f.label)}${f.req ? ' <span class="req">*</span>' : ""}</label>${ctrl}<div class="note" id="n-${f.key}"></div>`;
+      box.appendChild(w);
+    }
+    form.appendChild(d);
+  }
+  form.addEventListener("input", e => {
+    const k = e.target.name; if (!k) return;
+    const w = $("#w-" + k); w.classList.remove("ai","unsure","bad");
+    const n = $("#n-" + k); if (n && !n.dataset.keep) { n.textContent = ""; n.className = "note"; }
+    if (k === "post" || k === "scrutiny") toggles();
+    groupMeta();
+  });
+  form.addEventListener("submit", e => e.preventDefault());
+}
+function toggles(){
+  $("#w-ward_no").hidden = $("#f-post").value !== "Ward Member";
+  $("#w-rejection_reason").hidden = $("#f-scrutiny").value !== "Rejected";
+}
+function groupMeta(){
+  for (const g of SCHEMA.groups){
+    if (HIDDEN_GROUPS.has(g.key)) continue;
+    const fs = F.filter(f => f.group === g.key);
+    const filled = fs.filter(f => val(f.key) !== "").length;
+    const miss = fs.filter(f => f.req && val(f.key) === "").length;
+    $("#gm-" + g.key).textContent = `${filled}/${fs.length}` + (miss ? ` · ${miss} required left` : "");
+  }
+}
+const val = k => { const el = $("#f-" + k); return el ? el.value.trim() : ""; };
+function setVal(k, v){ const el = $("#f-" + k); if (el) el.value = v ?? ""; }
+function collect(){ const r = {}; for (const f of F){ if ($("#f-" + f.key)) r[f.key] = val(f.key); } return r; }
+function clearMarks(){
+  for (const f of F){ const w = $("#w-" + f.key); if (!w) continue; w.classList.remove("ai","unsure","bad"); const n = $("#n-" + f.key); n.textContent = ""; n.className = "note"; delete n.dataset.keep; }
+}
+function fillForm(rec){
+  clearMarks();
+  for (const f of F){ if ($("#f-" + f.key)) setVal(f.key, rec?.[f.key] ?? f.default ?? ""); }
+  toggles(); groupMeta();
+}
+function applyDefaults(){
+  const d = store.get("gpnom.defaults") || {};
+  for (const k of STICKY) if (d[k]) setVal(k, d[k]);
+  for (const f of F) if (f.default && !val(f.key)) setVal(f.key, f.default);
+  toggles(); groupMeta();
+}
+
+/* ---------- validation (mirrors Excel 'Entry Check') ---------- */
+function issuesFor(r, others){
+  const out = [];
+  for (const f of F) if (f.req && !String(r[f.key] ?? "").trim()) out.push({k:f.key, m:`${f.label} is required`, hard:true});
+  const age = Number(r.age);
+  if (r.age && (!Number.isInteger(age) || age < 21)) out.push({k:"age", m:"Age must be a whole number, 21 or above"});
+  if (r.post === "Ward Member" && !r.ward_no) out.push({k:"ward_no", m:"Ward No. is needed for a Ward Member"});
+  for (const k of ["mobile","prop_mobile"]) if (r[k] && !/^\d{10}$/.test(r[k])) out.push({k, m:`${BY[k].label}: enter 10 digits`});
+  for (const k of ["pin","prop_pin"]) if (r[k] && !/^\d{6}$/.test(r[k])) out.push({k, m:`${BY[k].label}: enter 6 digits`});
+  for (const k of ["email","prop_email"]) if (r[k] && !/^\S+@\S+\.\S+$/.test(r[k])) out.push({k, m:`${BY[k].label} looks wrong`});
+  for (const k of ["nom_sl_no","cand_er_slno","prop_er_slno","ward_no"]) if (r[k] && !/^\d+$/.test(r[k])) out.push({k, m:`${BY[k].label}: digits only`});
+  if (r.deposit_amount && isNaN(Number(r.deposit_amount))) out.push({k:"deposit_amount", m:"Deposit: enter the amount in rupees"});
+  if (r.scrutiny === "Rejected" && !r.rejection_reason) out.push({k:"rejection_reason", m:"Give the reason for rejection"});
+  if (others && r.cand_name_en){
+    const dup = others.find(o => o.record_id !== r.record_id && norm(o.cand_name_en) === norm(r.cand_name_en) && norm(o.gram_panchayat) === norm(r.gram_panchayat) && o.post === r.post && String(o.ward_no||"") === String(r.ward_no||""));
+    if (dup) out.push({k:"cand_name_en", m:`Possible duplicate of saved entry (Sl. ${dup.nom_sl_no || "–"})`});
+  }
+  return out;
+}
+const norm = s => String(s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+function checkLabel(r){
+  const is = issuesFor(r, S.records);
+  if (!is.length) return {t:"OK", c:"ok"};
+  const miss = is.filter(i => i.hard).length;
+  return {t: miss ? `Missing ${miss} required` : is[0].m, c: miss ? "bad" : "warn"};
+}
+
+/* ---------- scan handling ---------- */
+const loaded = {};
+function loadScript(src){
+  return loaded[src] ||= new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("Could not load " + src)); document.head.appendChild(s); });
+}
+
+async function pdfLib(){
+  await loadScript("../assets/lib/pdf-3.11.174.min.js");
+  const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = "../assets/lib/pdf.worker-3.11.174.min.js";
+  return lib;
+}
+function canvasBlob(c, q=.9){ return new Promise(r => c.toBlob(r, "image/jpeg", q)); }
+async function imageToCanvas(blob, maxSide=2400){
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const s = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+    const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  } finally { URL.revokeObjectURL(url); }
+}
+async function pdfToCanvases(data){
+  const lib = await pdfLib();
+  const doc = await lib.getDocument({data, isEvalSupported:false}).promise;
+  const out = [];
+  for (let p = 1; p <= Math.min(doc.numPages, 12); p++){
+    const page = await doc.getPage(p);
+    const v1 = page.getViewport({scale:1});
+    const scale = Math.min(3, 2400 / Math.max(v1.width, v1.height));
+    const vp = page.getViewport({scale});
+    const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+    const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:x, viewport:vp}).promise;
+    out.push(c);
+  }
+  return out;
+}
+async function addFiles(list){
+  const files = [...list].filter(f => /^image\//.test(f.type) || /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name));
+  if (!files.length) { status("Choose a photo (JPG/PNG) or a PDF.", "err"); return; }
+  status("Preparing pages…");
+  try {
+    for (const file of files){
+      S.files.push(file);
+      const canvases = /pdf/i.test(file.type) || /\.pdf$/i.test(file.name) ? await pdfToCanvases(new Uint8Array(await file.arrayBuffer())) : [await imageToCanvas(file)];
+      for (const c of canvases){ const b = await canvasBlob(c); S.pages.push({blob:b, url:URL.createObjectURL(b), w:c.width, h:c.height}); }
+    }
+    status(`${S.pages.length} page${S.pages.length>1?"s":""} ready. Tap “Read form into fields”.`);
+  } catch (e) { status("Could not open that file: " + (e.message || e), "err"); }
+  renderPages();
+}
+function renderPages(){
+  const t = $("#thumbs"), v = $("#viewer");
+  t.innerHTML = S.pages.map((p,i) => p.link ? `<a class="btn small" href="${esc(p.link)}" target="_blank" rel="noopener">Open ${esc(p.name||"scan")} in Drive</a>` :
+    `<button type="button" aria-pressed="${i===S.current}" data-i="${i}" aria-label="Page ${i+1}"><img src="${p.url}" alt=""><span class="pg">${i+1}</span></button>`).join("");
+  const cur = S.pages[S.current];
+  v.className = "viewer" + (cur && !cur.link ? " has" : "");
+  v.innerHTML = cur && !cur.link ? `<img src="${cur.url}" alt="Nomination paper page ${S.current+1}">` : "";
+  $("#readBtn").disabled = !S.pages.some(p => p.blob);
+  $("#clearScan").hidden = !S.pages.length;
+}
+$("#thumbs").addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if (!b) return; S.current = +b.dataset.i; renderPages(); });
+$("#viewer").addEventListener("click", () => $("#viewer").classList.toggle("zoom"));
+$("#fileIn").addEventListener("change", e => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("#drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+$("#clearScan").addEventListener("click", () => { S.pages.forEach(p => p.blob && URL.revokeObjectURL(p.url)); S.pages = []; S.files = []; S.existingScans = []; S.current = 0; renderPages(); status("Scan removed."); });
+function status(t, cls=""){ const s = $("#readStatus"); s.textContent = t; s.className = "status " + cls; }
+
+/* ---------- read with Claude ---------- */
+async function cropBlob(page, y0, y1){
+  const c0 = await imageToCanvas(page.blob, 4000);
+  const h = c0.height, top = Math.round(h*y0), hh = Math.round(h*(y1-y0));
+  const c = document.createElement("canvas"); c.width = c0.width; c.height = hh;
+  c.getContext("2d").drawImage(c0, 0, top, c0.width, hh, 0, 0, c0.width, hh);
+  return canvasBlob(c, .92);
+}
+function buildPrompt(guide){
+  const lines = F.filter(f => !AI_SKIP.has(f.key)).map(f => {
+    let fmt = {select:"one of: " + LISTS[f.list].map(v => `"${v}"`).join(", "), date:"YYYY-MM-DD", time:"24-hour HH:MM", int:"digits", num:"number, digits only", mobile:"10 digits", pin:"6 digits", te:"Telugu script", email:"email"}[f.type] || "text";
+    return `- ${f.key} — ${f.label} — ${fmt}`;
+  }).join("\n");
+  return `You are reading a filled nomination paper for Gram Panchayat elections in Andhra Pradesh, India, for the post of Sarpanch or Ward Member. The paper may be printed in Telugu and/or English with handwritten entries.
+${guide}
+
+Extract the entries into JSON for a data-entry form. Fields (key — label — format):
+${lines}
+
+Notes on fields:
+- rel_name_en / rel_name_te: father's, mother's or husband's name as written.
+- cand_er_slno / cand_er_gp: the candidate's serial number in the Gram Panchayat electoral roll, and the GP of that roll. prop_er_slno / prop_er_gp: the same for the proposer.
+- receipt_date / receipt_time: when the Returning Officer received the paper (often in the RO's endorsement or receipt part).
+- ac_no_name: Assembly Constituency number and name, e.g. "47 - Mandapeta".
+- party_type: "Independent" unless a party is named.
+- scrutiny, rejection_reason, withdrawn, symbol: fill only if those sections are actually completed on the paper.
+
+Rules:
+- Use only what is written on the paper. If a field is blank, missing or unreadable, use "". Never invent values.
+- English fields in Latin script with normal capitalisation; Telugu fields in Telugu script. If a value is written only in one script, fill the paired field by transliterating it, and list that key in "transliterated".
+- Choice fields must be exactly one of the allowed values, or "". Map Telugu words (e.g. పురుషుడు → Male, స్త్రీ → Female, బి.సి.-బి → BC-B, షెడ్యూల్డ్ కులం → SC).
+- Address lines: split the address into up to three lines in addr1/addr2/addr3 (and prop_addr1-3); pin code separately.
+- List in "uncertain" every key whose reading you are not sure of.
+
+Reply with only JSON of this shape:
+{"fields":{"<key>":"<value>"},"uncertain":["<key>"],"transliterated":["<key>"],"notes":"one short sentence on anything the officer should check, or empty"}`;
+}
+function matchOption(f, v){
+  const opts = LISTS[f.list]; const s = norm(v).replace(/[^a-z0-9()]/g, "");
+  return opts.find(o => norm(o).replace(/[^a-z0-9()]/g, "") === s) || opts.find(o => s && norm(o).replace(/[^a-z0-9()]/g, "").startsWith(s)) || "";
+}
+function cleanValue(f, v){
+  v = String(v ?? "").trim(); if (!v) return "";
+  if (f.type === "select") return matchOption(f, v);
+  if (f.type === "date"){ const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/) || null; if (m) return v; const d = v.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/); return d ? `${d[3]}-${d[2].padStart(2,"0")}-${d[1].padStart(2,"0")}` : ""; }
+  if (f.type === "time"){ const m = v.match(/^(\d{1,2}):(\d{2})/); return m ? `${m[1].padStart(2,"0")}:${m[2]}` : ""; }
+  if (["int","mobile","pin"].includes(f.type)){
+    let d = v.replace(/\D/g, "");
+    if (f.type === "mobile"){ if (d.length === 12 && d.startsWith("91")) d = d.slice(2); else if (d.length === 11 && d.startsWith("0")) d = d.slice(1); }
+    return d;
+  }
+  if (f.type === "num") return v.replace(/[^\d.]/g, "");
+  return v;
+}
+function applyAI(res){
+  const fields = res?.fields || {}; const uns = new Set(res?.uncertain || []); const tr = new Set(res?.transliterated || []);
+  let n = 0;
+  for (const f of F){
+    if (AI_SKIP.has(f.key) || !$("#f-" + f.key)) continue;
+    const raw = fields[f.key]; const v = cleanValue(f, raw);
+    const w = $("#w-" + f.key), note = $("#n-" + f.key);
+    if (!v){
+      if (raw && String(raw).trim()) { note.innerHTML = `Paper reads “${esc(raw)}” — not a valid value.`; note.className = "note unsure"; w.classList.add("unsure"); }
+      continue;
+    }
+    const cur = val(f.key);
+    if (cur && cur !== v && cur !== (f.default || "")){
+      note.innerHTML = `Paper reads “${esc(v)}”. <button type="button" data-use="${f.key}" data-v="${esc(v)}">Use this</button>`;
+      note.className = "note ai"; note.dataset.keep = "1"; continue;
+    }
+    setVal(f.key, v); n++;
+    w.classList.add(uns.has(f.key) ? "unsure" : "ai");
+    const bits = []; if (uns.has(f.key)) bits.push("Unclear on paper — check"); if (tr.has(f.key)) bits.push("Transliterated, not written on paper");
+    note.textContent = bits.join(" · "); note.className = "note " + (uns.has(f.key) ? "unsure" : "ai");
+  }
+  toggles(); groupMeta();
+  return n;
+}
+$("#entry").addEventListener("click", e => {
+  const b = e.target.closest("button[data-use]"); if (!b) return;
+  setVal(b.dataset.use, b.dataset.v); const n = $("#n-" + b.dataset.use); n.textContent = ""; delete n.dataset.keep; $("#w-" + b.dataset.use).classList.add("ai"); toggles(); groupMeta();
+});
+$("#readBtn").addEventListener("click", readForm);
+$("#stopBtn").addEventListener("click", () => S.ctl?.abort());
+
+/* ---------- read with Claude (through the backend) ---------- */
+async function shrink(blob, maxSide=1568){ const c = await imageToCanvas(blob, maxSide); return canvasBlob(c, .88); }
+async function readForm(){
+  if (!S.ai){ status("Reading scans isn't switched on for this register yet. Type the fields from the scan.", "err"); return; }
+  const pages = S.pages.filter(p => p.blob);
+  const max = 12, imgs = [], desc = [];
+  try {
+    if (pages.length * 3 <= max){
+      for (let i=0;i<pages.length;i++){ imgs.push(await shrink(pages[i].blob), await shrink(await cropBlob(pages[i],0,.55)), await shrink(await cropBlob(pages[i],.45,1))); desc.push(`page ${i+1}: whole page, then its top half, then its bottom half (halves overlap, for detail)`); }
+    } else if (pages.length * 2 <= max){
+      for (let i=0;i<pages.length;i++){ imgs.push(await shrink(await cropBlob(pages[i],0,.55)), await shrink(await cropBlob(pages[i],.45,1))); desc.push(`page ${i+1}: top half, then bottom half (halves overlap)`); }
+    } else {
+      for (let i=0;i<Math.min(pages.length,max);i++){ imgs.push(await shrink(pages[i].blob)); desc.push(`page ${i+1}: whole page`); }
+    }
+  } catch (e){ status("Could not prepare the images: " + (e.message||e), "err"); return; }
+  const guide = `There are ${imgs.length} images, in this order — ${desc.join("; ")}.` + (pages.length > max ? ` Only the first ${max} pages were sent.` : "");
+  S.ctl = new AbortController();
+  $("#readBtn").disabled = true; $("#stopBtn").hidden = false;
+  const t0 = Date.now();
+  const tick = setInterval(() => status(`Reading the paper… ${Math.round((Date.now()-t0)/1000)} s`), 1000);
+  status("Reading the paper…");
+  try {
+    const images = await Promise.all(imgs.map(async b => ({ type: "image/jpeg", data: await toB64(b) })));
+    const out = await api("read", { images, prompt: buildPrompt(guide), careful: $("#careful").checked }, S.ctl.signal);
+    clearInterval(tick);
+    const res = out.result;
+    const n = applyAI(res);
+    status(`Filled ${n} field${n===1?"":"s"} from the scan in ${Math.round((Date.now()-t0)/1000)} s. Blue = check against paper, amber = unclear.` + (res?.notes ? " Note: " + res.notes : ""), "ok");
+  } catch (e){
+    clearInterval(tick);
+    if (e.name === "AbortError") status("Stopped.");
+    else { status(e.message || "Reading failed. Try again.", "err"); if (e.locked) lock(e.message); }
+  } finally { $("#readBtn").disabled = !S.pages.some(p => p.blob); $("#stopBtn").hidden = true; }
+}
+
+/* ---------- dialog ---------- */
+function ask(title, html, okText="OK", cancelText="Cancel"){
+  return new Promise(res => {
+    $("#dlgTitle").textContent = title; $("#dlgBody").innerHTML = html;
+    $("#dlgOk").textContent = okText; $("#dlgCancel").textContent = cancelText; $("#dlgCancel").hidden = !cancelText;
+    const d = $("#dlg"); d.classList.add("open"); $("#dlgOk").focus();
+    const done = v => { d.classList.remove("open"); $("#dlgOk").onclick = $("#dlgCancel").onclick = null; res(v); };
+    $("#dlgOk").onclick = () => done(true); $("#dlgCancel").onclick = () => done(false);
+  });
+}
+
+
+
+/* ---------- save ---------- */
+function nextSlNo(r){
+  const same = S.records.filter(o => o.record_id !== r.record_id && norm(o.gram_panchayat) === norm(r.gram_panchayat) && o.post === r.post);
+  return String(same.reduce((m,o) => Math.max(m, Number(o.nom_sl_no) || 0), 0) + 1);
+}
+async function save(){
+  const r = collect();
+  r.record_id = S.editingId || "";
+  document.querySelectorAll(".fld.bad").forEach(w => w.classList.remove("bad"));
+  const is = issuesFor(r, S.records);
+  const box = $("#issues");
+  if (is.length){
+    for (const i of is) $("#w-" + i.k)?.classList.add("bad");
+    box.innerHTML = is.map(i => `<li>${esc(i.m)}</li>`).join(""); box.hidden = false;
+    const go = await ask("Save with these points open?", `<ul>${is.slice(0,8).map(i => `<li>${esc(i.m)}</li>`).join("")}${is.length>8?`<li>…and ${is.length-8} more</li>`:""}</ul><p class="hint">They are marked red on the form and show in the register's Entry check.</p>`, "Save anyway", "Go back and fix");
+    if (!go) { $("#w-" + is[0].k)?.closest("details")?.setAttribute("open",""); $("#f-" + is[0].k)?.focus(); return; }
+  } else { box.hidden = true; }
+  if (!r.nom_sl_no && r.gram_panchayat && r.post) r.nom_sl_no = nextSlNo(r);
+  $("#saveBtn").disabled = true; $("#saveMsg").textContent = S.files.length ? "Uploading scan and saving…" : "Saving…";
+  try {
+    const files = [];
+    for (const f of S.files){
+      // send the original file when small; otherwise the prepared page images
+      if (f.size <= 8 * 1024 * 1024) files.push({ name: f.name, type: f.type || "application/octet-stream", data: await toB64(f) });
+    }
+    if (S.files.length && !files.length){
+      for (let i=0;i<S.pages.length;i++) if (S.pages[i].blob) files.push({ name: `page${i+1}.jpg`, type: "image/jpeg", data: await toB64(S.pages[i].blob) });
+    }
+    const out = await api("save", { record: r, files });
+    if ($("#keepLoc").checked){ const d = {}; for (const k of STICKY) d[k] = r[k]; store.set("gpnom.defaults", d); }
+    const name = r.cand_name_en || "Nomination";
+    newEntry();
+    $("#saveMsg").textContent = `Saved to the Google Sheet (row ${out.record.row}): ${name}, Sl. ${r.nom_sl_no || "–"}. Ready for the next paper.`;
+    loadRecords(true);
+  } catch (e){
+    $("#saveMsg").textContent = "Not saved: " + (e.message || "error") + " Your entries are still in the form.";
+    if (e.locked) lock(e.message);
+  } finally { $("#saveBtn").disabled = false; }
+}
+function newEntry(){
+  S.editingId = null; S.files = []; S.existingScans = []; S.pages.forEach(p => p.blob && URL.revokeObjectURL(p.url)); S.pages = []; S.current = 0;
+  fillForm({});
+  if ($("#keepLoc").checked) applyDefaults();
+  toggles(); groupMeta(); renderPages(); $("#issues").hidden = true;
+  $("#formTitle").textContent = "2 · Check and complete the details"; $("#saveBtn").textContent = "Save to register";
+  $("#saveMsg").textContent = "New nomination"; status(S.ai ? "Add the scan, then read it. You can also type the fields directly." : "Add the scan and type the fields from it.");
+}
+$("#saveBtn").addEventListener("click", save);
+$("#resetBtn").addEventListener("click", async () => { if (await ask("Clear this form?", "<p>Unsaved entries and the attached scan will be removed.</p>", "Clear form")) newEntry(); });
+
+async function editRecord(id){
+  const r = S.records.find(o => o.record_id === id); if (!r) return;
+  newEntry(); S.editingId = id; fillForm(r);
+  $("#formTitle").textContent = `2 · Editing: ${r.cand_name_en || "nomination"}`; $("#saveBtn").textContent = "Save changes";
+  $("#saveMsg").textContent = `Editing Sl. ${r.nom_sl_no || "–"} · ${r.gram_panchayat || ""}`;
+  location.hash = "entry";
+  if (r.scan_link){ S.pages = [{ link: r.scan_link, name: "saved scan" }]; renderPages(); status("The saved scan opens in Google Drive. Add a new file only to replace it."); }
+  else status("No scan saved with this entry. Add one if you have it.");
+}
+
+/* ---------- register ---------- */
+function filtered(){
+  const q = norm($("#q").value), p = $("#fPost").value, s = $("#fScr").value;
+  return S.records.filter(r => (!p || r.post === p) && (!s || (r.scrutiny || "Pending") === s) &&
+    (!q || [r.cand_name_en, r.cand_name_te, r.gram_panchayat, r.mandal, r.ward_no && "ward " + r.ward_no, r.nom_ref_id, r.rel_name_en, r.mobile].some(x => norm(x).includes(q))))
+    .sort((a,b) => norm(a.gram_panchayat).localeCompare(norm(b.gram_panchayat)) || (a.post||"").localeCompare(b.post||"") || (Number(a.ward_no)||0)-(Number(b.ward_no)||0) || (Number(a.nom_sl_no)||0)-(Number(b.nom_sl_no)||0));
+}
+function renderRegister(){
+  const R = S.records;
+  $("#regCount").textContent = R.length;
+  const c = (fn) => R.filter(fn).length;
+  const tiles = [["Received", R.length], ["Sarpanch", c(r => r.post==="Sarpanch")], ["Ward Member", c(r => r.post==="Ward Member")],
+    ["Accepted", c(r => r.scrutiny==="Accepted")], ["Rejected", c(r => r.scrutiny==="Rejected")], ["Pending scrutiny", c(r => !r.scrutiny || r.scrutiny==="Pending")],
+    ["Withdrawn", c(r => r.withdrawn==="Yes")], ["Need attention", c(r => checkLabel(r).t !== "OK")]];
+  $("#tiles").innerHTML = tiles.map(([l,n]) => `<div class="tile"><b>${n}</b><span>${l}</span></div>`).join("");
+  const rows = filtered();
+  $("#tbody").innerHTML = rows.length ? rows.map(r => {
+    const ck = checkLabel(r); const sc = r.scrutiny || "Pending";
+    const scls = sc === "Accepted" ? "ok" : sc === "Rejected" ? "bad" : "warn";
+    const scan = r.scan_link ? {url: r.scan_link} : null;
+    return `<tr data-id="${esc(r.record_id)}">
+      <td class="num">${esc(r.nom_sl_no || "–")}</td>
+      <td><b>${esc(r.cand_name_en || "(no name)")}</b><span class="sub te" lang="te">${esc(r.cand_name_te)}</span><span class="sub">${esc(r.rel_name_en ? "S/W/D of " + r.rel_name_en : "")}</span></td>
+      <td>${esc(r.post)}${r.post === "Ward Member" && r.ward_no ? `<span class="sub">Ward ${esc(r.ward_no)}</span>` : ""}${r.reservation ? `<span class="sub">${esc(r.reservation)}</span>` : ""}</td>
+      <td>${esc(r.gram_panchayat)}<span class="sub">${esc(r.mandal)}</span></td>
+      <td class="num">${esc(r.age || "–")} / ${esc((r.gender || "–").charAt(0))}</td>
+      <td>${esc(r.social_status || "–")}<span class="sub">${esc(r.party_type === "Independent" ? "Independent" : r.party_name || r.party_type)}</span></td>
+      <td class="num">${esc(r.receipt_date ? r.receipt_date.split("-").reverse().join("-") : "–")}<span class="sub">${esc(r.receipt_time)}</span></td>
+      <td><span class="pill ${scls}">${esc(sc)}</span>${r.withdrawn === "Yes" ? ' <span class="pill mut">Withdrawn</span>' : ""}</td>
+      <td><span class="pill ${ck.c}">${esc(ck.t)}</span></td>
+      <td>${scan ? `<a href="${esc(scan.url)}" target="_blank" rel="noopener">View</a>` : `<span class="sub">${esc(r.scan_file || "–")}</span>`}</td>
+      <td><div class="row" style="flex-wrap:nowrap"><button type="button" class="btn small" data-edit>Edit</button><button type="button" class="btn small danger" data-del aria-label="Delete">✕</button></div></td></tr>`;
+  }).join("") : `<tr><td colspan="11" class="empty">${R.length ? "No entries match the search." : S.mode !== "ok" ? "Loading register…" : "No nominations yet. Add the first one under New entry."}</td></tr>`;
+}
+$("#tbody").addEventListener("click", async e => {
+  const tr = e.target.closest("tr[data-id]"); if (!tr) return; const id = tr.dataset.id;
+  if (e.target.closest("[data-edit]")) editRecord(id);
+  if (e.target.closest("[data-del]")){
+    const r = S.records.find(o => o.record_id === id);
+    if (!await ask("Delete this entry?", `<p><b>${esc(r?.cand_name_en || "This nomination")}</b> — ${esc(r?.post || "")} ${esc(r?.gram_panchayat || "")}. This can't be undone.</p>`, "Delete")) return;
+    try {
+      $("#regStatus").textContent = "Deleting…";
+      await api("delete", {id});
+      S.records = S.records.filter(o => o.record_id !== id); renderRegister();
+      $("#regStatus").textContent = "Deleted. The row in the Google Sheet is cleared.";
+    } catch (err){ $("#regStatus").textContent = "Couldn't delete: " + (err.message || "error"); if (err.locked) lock(err.message); }
+  }
+});
+["#q","#fPost","#fScr"].forEach(s => $(s).addEventListener("input", renderRegister));
+LISTS.POST.forEach(v => $("#fPost").insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`));
+LISTS.SCRUTINY.forEach(v => $("#fScr").insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`));
+
+
+
+/* ---------- load / CSV / sheet ---------- */
+async function loadRecords(quiet){
+  if (!quiet) $("#regStatus").textContent = "Loading register…";
+  try {
+    const out = await api("list");
+    S.records = out.records || []; S.mode = "ok";
+    $("#regStatus").textContent = `Loaded ${S.records.length} entr${S.records.length===1?"y":"ies"} from the Google Sheet at ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}.`;
+    renderRegister();
+  } catch (e){ $("#regStatus").textContent = e.message; if (e.locked) lock(e.message); }
+}
+$("#refreshBtn").addEventListener("click", () => loadRecords());
+function exportRows(){
+  return filtered().map(r => F.map(f => {
+    const v = r[f.key] ?? "";
+    if (f.type === "date" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v.split("-").reverse().join("-");
+    return String(v);
+  }).concat(checkLabel(r).t));
+}
+$("#csvBtn").addEventListener("click", () => {
+  const q = v => { v = String(v ?? ""); return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v; };
+  const csv = "﻿" + [F.map(f => f.label).concat("Entry Check"), ...exportRows()].map(r => r.map(q).join(",")).join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download = `GP_Nominations_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+
+/* ---------- access code ---------- */
+function lock(msg){
+  S.mode = "locked"; S.code = ""; try { sessionStorage.removeItem("gpnom.code"); } catch {}
+  $("#gate").hidden = false; $("#app").hidden = true; $("#savebar").hidden = true; $("nav.tabs").hidden = true;
+  $("#gateMsg").textContent = msg || ""; $("#gateMsg").className = "status" + (msg ? " err" : "");
+  setTimeout(() => $("#gateCode").focus(), 50);
+}
+async function unlock(code){
+  S.code = code.trim(); $("#gateBtn").disabled = true; $("#gateMsg").textContent = "Checking…"; $("#gateMsg").className = "status";
+  try {
+    const out = await api("ping");
+    S.ai = !!out.ai; S.sheetUrl = out.sheetUrl || "";
+    try { sessionStorage.setItem("gpnom.code", S.code); } catch {}
+    S.mode = "loading"; $("#gate").hidden = true; $("#app").hidden = false; $("nav.tabs").hidden = false;
+    $("#sheetLink").href = S.sheetUrl; $("#sheetLink").hidden = !S.sheetUrl;
+    $("#readBtn").title = S.ai ? "" : "Reading scans is not switched on for this register";
+    $("#aiNote").hidden = S.ai;
+    $("#readBtn").hidden = !S.ai; $("#careful").closest("label").hidden = !S.ai; document.querySelector(".legend").hidden = !S.ai;
+    route(); newEntry(); loadRecords();
+  } catch (e){ $("#gateMsg").textContent = e.message; $("#gateMsg").className = "status err"; S.code = ""; }
+  finally { $("#gateBtn").disabled = false; }
+}
+$("#gateForm").addEventListener("submit", e => { e.preventDefault(); if ($("#gateCode").value.trim()) unlock($("#gateCode").value); });
+$("#lockBtn").addEventListener("click", () => lock("Locked. Enter the access code to continue."));
+
+/* ---------- routing ---------- */
+function route(){
+  if (S.mode === "locked") return;
+  const reg = location.hash === "#register";
+  $("#view-entry").hidden = reg; $("#view-register").hidden = !reg; $("#savebar").hidden = reg;
+  $("#tab-entry").setAttribute("aria-current", reg ? "false" : "page"); $("#tab-register").setAttribute("aria-current", reg ? "page" : "false");
+  if (reg) renderRegister();
+}
+window.addEventListener("hashchange", route);
+
+
+
+/* ---------- start ---------- */
+buildForm(); applyDefaults(); renderPages();
+(() => {
+  if (!/^https:\/\/script\.google\.com\//.test(GAS_URL)){ lock("The register is being set up. Please check back shortly."); $("#gateBtn").disabled = true; return; }
+  let c = ""; try { c = sessionStorage.getItem("gpnom.code") || ""; } catch {} if (c) unlock(c); else lock("");
+})();
+
+</script>
+</body>
+</html>

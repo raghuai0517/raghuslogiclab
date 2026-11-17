@@ -34,6 +34,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-gp-nomination-entry",
+      "date": "2026-11-17",
+      "type": "launch",
+      "title": "New: GP Nomination Entry for Sarpanch & Ward Member",
+      "body": "Gram Panchayat Returning Officers can photograph each nomination paper, fill the APSEC nomination fields beside the scan and save them to one shared Google Sheet register with automatic checks and summary counts. Opens with an access code.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-resurvey-correlation",
       "date": "2026-11-16",
       "type": "launch",
@@ -227,6 +235,19 @@ window.RLL_DATA = {
     }
   ],
   "tools": [
+    {
+      "id": "t-gp-nomination-entry",
+      "slug": "gp-nomination-entry",
+      "name": "GP Nomination Entry (Sarpanch & Ward Member)",
+      "tagline": "For Gram Panchayat Returning Officers: photograph each Sarpanch / Ward Member nomination paper, check the fields in APSEC order and save them to a shared Google Sheet register.",
+      "description": "Add a photo or PDF of the nomination paper and fill the 27 APSEC nomination fields (candidate and proposer in English and తెలుగు, electoral roll serial numbers, social status, deposit) beside the scan. Checks age 21+, ward number, mobile and pin, and possible duplicates; numbers each paper per Gram Panchayat; keeps the scan in Google Drive. Every entry goes into one Google Sheet register with summary counts by post, scrutiny decision, social status, gender and ward. Opens with an access code from the register owner.",
+      "category": "ELECTIONS",
+      "badge": "Access code",
+      "url": "tools/gp-nomination-entry.html",
+      "color": "#8E1F4F",
+      "visibility": "public",
+      "added": "2026-11-17"
+    },
     {
       "id": "t-resurvey-correlation",
       "slug": "resurvey-correlation",
