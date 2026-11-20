@@ -34,6 +34,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-census-household-schedule",
+      "date": "2026-11-20",
+      "type": "launch",
+      "title": "New in CENSUS 2027: AHL → Household Schedule Generator",
+      "body": "Enumerators can now upload the Abridged Houselist (AHL) PDF of their block and print a prefilled compact Household Schedule for every household: 4 A4 pages each, with location codes, building, census house and household numbers and the head of household already filled in. Add the CMMS Excel and each household gets exactly as many member slots as it has persons. Free; files stay in your browser.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-gp-nomination-entry",
       "date": "2026-11-17",
       "type": "launch",
@@ -287,6 +295,20 @@ window.RLL_DATA = {
       "color": "#b91c1c",
       "visibility": "public",
       "added": "2026-11-14"
+    },
+    {
+      "id": "t-census-household-schedule",
+      "slug": "census-household-schedule",
+      "name": "AHL → Household Schedule Generator",
+      "tagline": "Upload your Abridged Houselist (AHL) PDF and print prefilled compact Census 2027 Household Schedules.",
+      "description": "Upload the AHL PDF of your Houselisting Block (and the CMMS Excel if you have it) and get a compact Household Schedule for every household: A4 landscape, 4 pages each, Q1–10 on page 1 and Q11–40 with one column per member. Location codes, building, census house and household numbers, hamlet and the head of household are filled in; with the Excel also the number of members (up to 6), head's sex, SC/ST and mobile. Free; your files are read only in your browser.",
+      "category": "CENSUS",
+      "badge": "Free tool",
+      "url": "tools/census-household-schedule/index.html",
+      "color": "#0a2f8a",
+      "icon": "HS",
+      "visibility": "public",
+      "added": "2026-11-20"
     },
     {
       "id": "t-pe-phase2-guide-telugu",

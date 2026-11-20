@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AHL → Household Schedule Generator · Census 2027 · RaghusLogicLab</title>
+<meta name="robots" content="noindex">
+<script defer src="../../assets/track.js?v=1"></script>
+<meta name="description" content="Upload your Census 2027 Abridged Houselist (AHL) PDF and print prefilled compact Household Schedules: location codes, building, census house and household numbers, head of household. Free; files are read only in your browser.">
+  <!-- share preview, canonical & icons -->
+  <link rel="canonical" href="https://raghuslogiclab.com/tools/census-household-schedule/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RaghusLogicLab">
+  <meta property="og:title" content="AHL → Household Schedule Generator · Census 2027">
+  <meta property="og:description" content="Upload your Abridged Houselist (AHL) PDF and print prefilled compact Household Schedules, 4 A4 pages per household. Free; files stay in your browser.">
+  <meta property="og:url" content="https://raghuslogiclab.com/tools/census-household-schedule/">
+  <meta property="og:image" content="https://raghuslogiclab.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#0a0e16">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>.rll-disclaimer{margin:12px 0 4px;padding:10px 14px;border:1px solid #f0c36d;border-left:4px solid #d97706;background:#fff8e6;color:#3d2c00;border-radius:10px;font-size:.86rem;line-height:1.5}.rll-disclaimer b{color:#7c2d12}.rll-disclaimer a{color:#9a3412;font-weight:600}@media print{.rll-disclaimer{display:none!important}}</style>
+<style>
+:root{
+  /* CENSUS 2027 theme: deep blue, tricolour strip as the only flourish (same family as the PE Phase-II Guide) */
+  --paper:#f2f4f6; --card:#fff; --ink:#14233c; --muted:#5a6678; --line:#d8dde4;
+  --blue:#1d4ed8; --blue-dark:#0a2f8a; --blue-soft:#e8eefc; --warn:#8a5a00; --warn-soft:#fff4cc; --bad:#b3261e;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-text-size-adjust:100%}
+button,input{font:inherit}
+a{color:var(--blue)}
+:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px}
+.strip{height:4px;background:linear-gradient(90deg,#e8761d 0 33.3%,#f7f7f2 33.3% 66.6%,#1f8a4c 66.6%)}
+header.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top-in{max-width:1060px;margin:0 auto;padding:12px 16px 10px;display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border-radius:9px;background:var(--blue-dark);color:#fff;display:grid;place-items:center;font:700 15px/1 var(--f-display);letter-spacing:.5px;flex:none}
+.brand h1{font:700 19px/1.15 var(--f-display);margin:0;letter-spacing:.2px}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+main{max-width:1060px;margin:0 auto;padding:10px 16px 60px}
+.lede{color:var(--muted);margin:6px 0 14px;font-size:14.5px;max-width:85ch}
+.card{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--blue);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{font:700 18px/1.25 var(--f-display);margin:0 0 8px}
+h3{font:600 15px/1.3 var(--f-body);margin:16px 0 8px}
+.files{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.files{grid-template-columns:1fr}}
+.drop{border:2px dashed #b9c3d1;border-radius:10px;padding:14px 16px;cursor:pointer;display:block;min-height:104px;background:#fff}
+.drop:hover,.drop.over{border-color:var(--blue);background:var(--blue-soft)}
+.drop b{display:block;font-size:15px}.drop small{color:var(--muted);display:block}
+.drop .fn{margin-top:8px;color:var(--blue-dark);font-weight:600;word-break:break-all}
+.drop input{position:absolute;left:-9999px}
+.req{color:var(--bad);font-size:11.5px;font-weight:700;letter-spacing:.4px}.opt{color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.4px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:9px;padding:10px 18px;font-weight:600;cursor:pointer;background:var(--blue-dark);color:#fff;min-height:44px}
+.btn.ghost{background:#fff;color:var(--blue-dark);border:1.5px solid var(--blue-dark)}
+.btn:disabled{opacity:.5;cursor:default}
+#status{color:var(--muted);font-size:14px}
+.err{color:var(--bad)!important;font-weight:600}
+.warn{background:var(--warn-soft);border:1px solid #f0d28a;border-radius:8px;padding:9px 12px;margin:8px 0;font-size:13.5px;color:#4a3300}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 10px}
+.kv div{background:var(--paper);border-radius:8px;padding:8px 10px}.kv span{display:block;font-size:12px;color:var(--muted)}.kv b{font-size:16px}
+.tw{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+table.hh{border-collapse:collapse;width:100%;font-size:13px}
+table.hh th,table.hh td{border-bottom:1px solid var(--line);padding:5px 7px;text-align:left;white-space:nowrap}
+table.hh th{background:var(--paper);position:sticky;top:0}
+.no{color:var(--bad)}
+ol.how{margin:10px 0 0 18px;padding:0;font-size:14px}ol.how li{margin:3px 0}
+#preview{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#d9dde3;max-height:640px}
+#prevhost{transform-origin:0 0}
+ul.what{margin:6px 0 0 18px;padding:0;font-size:14px}ul.what li{margin:2px 0}
+footer{max-width:1060px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="strip"></div>
+<header class="top"><div class="top-in">
+  <div class="logo" aria-hidden="true">HS</div>
+  <div class="brand"><h1>AHL → Household Schedule Generator</h1><p>Census 2027 · prefilled compact schedules for enumerators · <a href="../../index.html#census" style="color:inherit">RaghusLogicLab</a></p></div>
+</div></header>
+
+<main>
+  <div class="rll-disclaimer" role="note"><b>Independent tool — not from the Census organisation.</b> RaghusLogicLab is not affiliated with, endorsed by or acting for the Office of the Registrar General &amp; Census Commissioner, India, or any government office. It only prints a paper working sheet from your own Abridged Houselist; the official record is what you enter in the PE App. Your files are read only in your browser and are not uploaded anywhere. Official site: <a href="https://censusindia.gov.in" target="_blank" rel="noopener">censusindia.gov.in</a>.</div>
+
+  <p class="lede">Upload the <b>Abridged Houselist (AHL)</b> PDF of your Houselisting Block and get a compact Household Schedule for every household: A4 landscape, 4 pages per household (Q1–10 on page 1, Q11–40 on pages 2–4, one column per member). Add the <b>CMMS Excel</b> too and each household gets exactly as many member slots as it has persons (maximum 6).</p>
+
+  <div class="card">
+    <h2>1. Choose your files</h2>
+    <div class="files">
+      <label class="drop" id="dAhl"><b>AHL PDF <span class="req">REQUIRED</span></b><small>Abridged Houselist (HLO) PDF of one Houselisting Block, as downloaded (not a scan or photo).</small>
+        <input type="file" id="fAhl" accept=".pdf,application/pdf"><div class="fn" id="nAhl"></div></label>
+      <label class="drop" id="dXls"><b>CMMS Excel <span class="opt">OPTIONAL</span></b><small>HLB-wise household data workbook (a "CMMS Summary" sheet and sheets like "HLB 0018"). Gives member count, head's sex, SC/ST and mobile. Without it every household gets 6 member slots.</small>
+        <input type="file" id="fXls" accept=".xlsx,.xls"><div class="fn" id="nXls"></div></label>
+    </div>
+    <div class="row"><button class="btn" id="go" disabled>Generate schedules</button><span id="status">Choose the AHL PDF to begin.</span></div>
+    <h3>Filled in for you (in blue)</h3>
+    <ul class="what">
+      <li>State, District, Sub-district, Village/Town, Ward, EB and Sub-EB codes; Hamlet / Locality</li>
+      <li>Building No., Census House No., Household No., Type of Household</li>
+      <li>Head of household's name as member 1; with the Excel also sex, SC / ST (10a / 10b) and mobile number (Q36)</li>
+    </ul>
+    <p class="lede" style="margin-top:8px">Temples, vacant and non-residential census houses are left out. Everything else stays blank for you to fill in the field.</p>
+  </div>
+
+  <div class="card" id="res" hidden>
+    <h2 id="resTitle"></h2>
+    <div class="kv" id="kv"></div>
+    <div id="warns"></div>
+    <div class="row"><button class="btn" id="openPrint">Open print view</button><button class="btn ghost" id="dl">Download print file (.html)</button><span id="dlst" class="lede" style="margin:0"></span></div>
+    <ol class="how">
+      <li><b>Open print view</b> opens all schedules in a new tab. Use <b>Google Chrome</b> or <b>Microsoft Edge</b> (on a phone: Chrome).</li>
+      <li>Click <b>Print / Save as PDF</b> at the top of that tab (or press Ctrl+P).</li>
+      <li>Keep <b>Margins: Default</b> and <b>Scale: 100</b>, and tick <b>Background graphics</b>. Print, or choose <b>Save as PDF</b>.</li>
+      <li>To print later or on another computer, use <b>Download print file</b> and open that file in Chrome or Edge.</li>
+    </ol>
+    <h3>Households read from the AHL</h3>
+    <div class="tw"><table class="hh"><thead><tr><th>HH No.</th><th>Building</th><th>Census House</th><th>Head of household</th><th>Members</th><th>Slots</th><th>Sex</th><th>SC/ST</th><th>Mobile</th></tr></thead><tbody id="tb"></tbody></table></div>
+    <h3>Preview – first household, page 1</h3>
+    <div id="preview"><div id="prevhost"></div></div>
+  </div>
+</main>
+<footer>Runs in your browser with PDF.js and SheetJS (self-hosted). Nothing you upload leaves your device. <a href="../pe-phase2-guide/index.html">Doubts about a question? Open the PE Phase-II Guide</a>.</footer>
+
+<script src="../../assets/lib/pdf-3.11.174.min.js"></script>
+<script src="../pahani-report/lib/xlsx.full.min.js"></script>
+<script src="schedule-fonts.js"></script>
+<script src="schedule-core.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = '../../assets/lib/pdf.worker-3.11.174.min.js';
+  var $ = function (id) { return document.getElementById(id); };
+  var fA = null, fX = null, out = null;
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+  function st(t, bad) { var s = $('status'); s.textContent = t; s.className = bad ? 'err' : ''; }
+  function ready() { $('go').disabled = !fA; if (fA) st('Ready. Click Generate schedules.'); }
+  function hook(dropId, inpId, nameId, set) {
+    var d = $(dropId), i = $(inpId);
+    i.addEventListener('change', function () { if (i.files[0]) { set(i.files[0]); $(nameId).textContent = i.files[0].name; ready(); } });
+    ['dragover', 'dragenter'].forEach(function (e) { d.addEventListener(e, function (ev) { ev.preventDefault(); d.classList.add('over'); }); });
+    ['dragleave', 'drop'].forEach(function (e) { d.addEventListener(e, function (ev) { ev.preventDefault(); d.classList.remove('over'); }); });
+    d.addEventListener('drop', function (ev) { var f = ev.dataTransfer.files[0]; if (f) { set(f); $(nameId).textContent = f.name; ready(); } });
+  }
+  hook('dAhl', 'fAhl', 'nAhl', function (f) { fA = f; });
+  hook('dXls', 'fXls', 'nXls', function (f) { fX = f; });
+
+  $('go').addEventListener('click', async function () {
+    $('go').disabled = true; $('res').hidden = true;
+    try {
+      if (!window.pdfjsLib) throw new Error('The PDF reader did not load. Check your internet connection and reload the page.');
+      st('Reading AHL PDF…');
+      var pages = await AHL.pdfWords(pdfjsLib, new Uint8Array(await fA.arrayBuffer()));
+      var ahl = AHL.parseAHL(pages);
+      if (!ahl.households.length) throw new Error('No households found. Is this an Abridged Houselist (HLO) PDF downloaded from the system (not a scan)?');
+      var cmms = null;
+      if (fX) {
+        if (!window.XLSX) throw new Error('The Excel reader did not load. Reload the page.');
+        st('Reading Excel (HLB ' + ahl.hlb + ')…');
+        var buf = await fX.arrayBuffer();
+        var sn = AHL.cmmsSheetNames(XLSX.read(buf, { type: 'array', bookSheets: true }).SheetNames, ahl.hlb);
+        cmms = AHL.parseCMMS(XLSX, XLSX.read(buf, { type: 'array', sheets: [sn.sum, sn.sh].filter(Boolean) }), ahl.hlb);
+      }
+      st('Building schedules…');
+      var d = AHL.merge(ahl, cmms);
+      out = { d: d, html: AHL.buildHTML(d, window.SCHEDULE_FONTCSS || '', { screen: true }) };
+      show(d, ahl, cmms);
+      st('Done.');
+    } catch (e) { st(e.message || String(e), true); }
+    $('go').disabled = false;
+  });
+
+  function show(d, ahl, cmms) {
+    var hh = d.households, matched = hh.filter(function (h) { return h.known; }).length;
+    $('resTitle').textContent = 'HLB ' + d.hlb + ' · ' + (d.names.village || '') + ' · ' + (d.names.mandal || '') + ' mandal, ' + (d.names.district || '');
+    var kv = [['Households', hh.length], ['Pages', hh.length * 4],
+      ['Persons (Excel)', cmms ? hh.reduce(function (a, h) { return a + (h.n || 0); }, 0) : '–'],
+      ['Matched in Excel', cmms ? matched + ' / ' + hh.length : 'no Excel'],
+      ['Location code', [d.loc.state, d.loc.dist, d.loc.sub, d.loc.vill].join('-')],
+      ['Ward · EB · Sub', [d.loc.ward, d.loc.eb, d.loc.subeb].join(' · ')], ['Hamlet', d.hamlet || '–']];
+    $('kv').innerHTML = kv.map(function (x) { return '<div><span>' + x[0] + '</span><b>' + esc(x[1]) + '</b></div>'; }).join('');
+    var w = ahl.warnings.concat(cmms ? cmms.warnings : []);
+    if (cmms && matched < hh.length) w.push((hh.length - matched) + ' household(s) not found in the Excel sheet – they get 6 blank member slots.');
+    hh.filter(function (h) { return h.known && h.n > 6; }).forEach(function (h) { w.push('HH ' + h.hhno + ' (' + h.head + ') has ' + h.n + ' members – only 6 slots are printed.'); });
+    $('warns').innerHTML = w.map(function (x) { return '<div class="warn">⚠ ' + esc(x) + '</div>'; }).join('');
+    var SX = { M: 'Male', F: 'Female', T: 'TGP' };
+    $('tb').innerHTML = hh.map(function (h) {
+      return '<tr><td>' + h.hhno + '</td><td>' + esc(h.bno) + '</td><td>' + esc(h.chno) + '</td><td>' + esc(h.head) + '</td><td>' +
+        (h.known ? h.n : '<span class="no">not in Excel</span>') + '</td><td>' + (h.known && h.n > 0 ? Math.min(h.n, 6) : 6) + '</td><td>' +
+        (SX[h.sex] || '') + '</td><td>' + (h.cat || '') + '</td><td>' + esc(h.mob || '') + '</td></tr>';
+    }).join('');
+    // preview: page 1 of the first household, in a shadow root so its styles stay separate
+    var host = $('prevhost'), root = host.shadowRoot || host.attachShadow({ mode: 'open' });
+    var first = AHL.buildHTML(Object.assign({}, d, { households: hh.slice(0, 1) }), '', { screen: true });
+    var css = first.match(/<style>([\s\S]*)<\/style>/)[1].replace(/@page\s*\{[\s\S]*?\}\s*\}/, '').replace(/html, body \{[^}]*\}/, '').replace(/body \{/g, '.bodyx {');
+    var body = first.split('<body>')[1].split('</body>')[0].replace(/<div class="bar">[\s\S]*?<\/div>/, '');
+    var p1 = body.split('<div class="pg">')[1];
+    root.innerHTML = '<style>' + css + ' .pg{margin:6mm auto!important}</style><div class="bodyx" style="background:#d9dde3;padding:4mm 0"><div class="pg">' + p1 + '</div>';
+    $('res').hidden = false; $('dlst').textContent = '';
+    requestAnimationFrame(function () {
+      var W = $('preview').clientWidth, s = Math.min(1, W / (295 * 3.78));
+      host.style.transform = 'scale(' + s + ')'; host.style.width = (100 / s) + '%';
+      $('preview').style.height = Math.min(640, host.scrollHeight * s + 12) + 'px';
+    });
+    $('res').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function fileName() { return 'HLB_' + out.d.hlb + '_' + (out.d.names.village || 'AHL').replace(/[^A-Za-z0-9]+/g, '_') + '_Household_Schedules.html'; }
+  function blobUrl() { return URL.createObjectURL(new Blob([out.html], { type: 'text/html' })); }
+  $('openPrint').addEventListener('click', function () {
+    if (!out) return;
+    var w = window.open(blobUrl(), '_blank');
+    $('dlst').textContent = w ? 'Print view opened in a new tab.' : 'Your browser blocked the new tab – use Download print file instead.';
+  });
+  $('dl').addEventListener('click', function () {
+    if (!out) return;
+    var a = document.createElement('a'); a.href = blobUrl(); a.download = fileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    $('dlst').textContent = 'Downloaded: ' + fileName();
+  });
+})();
+</script>
+</body>
+</html>
