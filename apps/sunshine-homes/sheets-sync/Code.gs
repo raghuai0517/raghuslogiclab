@@ -216,7 +216,7 @@ function statusObj_(ss, props, error) {
 /* ----------------------------- sheets ----------------------------- */
 function writeSheets_(ss, d) {
   var cfg = d.config || {};
-  var monthly = +cfg.monthlyAmount || 800;
+  var monthly = +cfg.monthlyAmount || 1000;
   var approvals = d.approvals || {};
   var tStatus = d.ticketStatus || {};
   var users = d.users || {};
