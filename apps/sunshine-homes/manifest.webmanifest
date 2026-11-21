@@ -1,0 +1,16 @@
+{
+  "name": "Sunshine Homes",
+  "short_name": "Sunshine Homes",
+  "description": "Sunshine Homes apartment app: maintenance dues by UPI, society accounts, notices, helpdesk and visitor passes.",
+  "id": "/apps/sunshine-homes/",
+  "start_url": "/apps/sunshine-homes/",
+  "scope": "/apps/sunshine-homes/",
+  "display": "standalone",
+  "background_color": "#F2F6F7",
+  "theme_color": "#0A8C80",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
