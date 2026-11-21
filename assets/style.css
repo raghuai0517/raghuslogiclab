@@ -271,6 +271,7 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: up
 .app-card:hover { border-color: var(--teal-light); }
 .app-card .p-icon { background: var(--teal); color: #fff; font-size: 1.35rem; }
 .app-card .tool-open { color: var(--teal-light); }
+.app-card .app-thumb { display: block; width: calc(100% + 40px); max-width: none; height: auto; aspect-ratio: 1200 / 630; object-fit: cover; margin: -20px -20px 4px; border-radius: var(--radius) var(--radius) 0 0; }
 .badge-teal { color: var(--teal-light); }
 .btn-teal { background: var(--teal-dark); border-color: var(--teal-dark); color: #fff; }
 .btn-teal:hover { background: var(--teal); border-color: var(--teal); }

@@ -9,9 +9,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Sunshine Homes">
+  <!-- share preview, canonical & icons -->
+  <link rel="canonical" href="https://raghuslogiclab.com/apps/sunshine-homes/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RaghusLogicLab">
+  <meta property="og:title" content="Sunshine Homes Apartment — Community App">
+  <meta property="og:description" content="Pay maintenance by UPI, see society accounts and expenses, notices, helpdesk and visitor passes. Open the link and tap Install to keep it on your home screen.">
+  <meta property="og:url" content="https://raghuslogiclab.com/apps/sunshine-homes/">
+  <meta property="og:image" content="https://raghuslogiclab.com/apps/sunshine-homes/thumbnail.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Sunshine Homes community app poster">
+  <meta property="og:locale" content="en_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://raghuslogiclab.com/apps/sunshine-homes/thumbnail.jpg">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230FB5A6'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle'%3E%F0%9F%8C%87%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="icon-192.png" type="image/png">
   <style>
     html, body, #root { margin: 0; min-height: 100%; background: #F2F6F7; }
     .lab-bar { max-width: 480px; margin: 0 auto; padding: 7px 16px; font: 600 12px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; background: #0A8C80; }
@@ -20,6 +34,11 @@
     noscript { display: block; padding: 24px; font-family: system-ui, sans-serif; text-align: center; }
   </style>
 <script defer src="../../assets/track.js?v=1"></script>
+  <script>
+    /* Keep the browser's "install" offer as soon as it arrives, so the app's Install button can use it. */
+    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__shInstall = e; window.dispatchEvent(new Event("sh-installable")); });
+    if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  </script>
 </head>
 <body>
   <div class="lab-bar"><a href="../../index.html#apps">&larr; RaghusLogicLab Apps</a></div>
@@ -27,6 +46,6 @@
   <noscript>Please turn on JavaScript to use the Sunshine Homes app.</noscript>
   <!-- Built from src/ — see the README section "Apps" for how to rebuild app.js.
        After rebuilding, change the ?v= value below so phones load the new version straight away. -->
-  <script src="app.js?v=b4bfe4c8b7"></script>
+  <script src="app.js?v=a7b922435e"></script>
 </body>
 </html>

@@ -491,6 +491,7 @@ window.RLL_DATA = {
       "id": "a-sunshine-homes",
       "slug": "sunshine-homes",
       "name": "Sunshine Homes",
+      "image": "apps/sunshine-homes/thumbnail.jpg",
       "tagline": "Apartment app: maintenance by UPI, society accounts & expenses, notices, helpdesk and visitors.",
       "description": "Residents log in with their mobile number and the society password (new residents are approved by the committee), pay monthly maintenance by UPI, track dues and see the society's accounts. The committee has its own login to approve payments, record expenses and income, approve residents and post notices; every record is copied to the society's Google Sheet.",
       "category": "Community",
