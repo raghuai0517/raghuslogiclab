@@ -77,7 +77,7 @@ const fmtPhone = (p) => "+91 " + p.slice(0, 5) + " " + p.slice(5);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
-const DEFAULTS = { upiId: "sunshinehomes@okicici", monthlyAmount: 800, facilities: ["Terrace"], contacts: DEFAULT_CONTACTS,
+const DEFAULTS = { upiId: "sunshinehomes@okicici", monthlyAmount: 1000, facilities: ["Terrace"], contacts: DEFAULT_CONTACTS,
   openingBalance: 0, openingDate: "", showAccounts: true };
 const memberKey = (phone) => "member:" + phone;
 const fmtDay = (d) => (d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "");
@@ -586,6 +586,13 @@ export default function App() {
     setApprovals(next); store.set("approvals", next);
     saveCfg({ ...cfg, memberApproval: true });
   }, [user?.role, cfgLoaded, cfg.memberApproval]);
+
+  // Maintenance raised to ₹1000 a month (21 Nov 2026, applies to all months). Applied once on the next
+  // committee login; after that the committee can change it in Settings as usual.
+  useEffect(() => {
+    if (!user || user.role !== "admin" || !cfgLoaded || cfg.memberApproval === undefined || cfg.amount1000Applied) return;
+    saveCfg({ ...cfg, monthlyAmount: 1000, amount1000Applied: true });
+  }, [user?.role, cfgLoaded, cfg.amount1000Applied, cfg.memberApproval]);
 
   // "Install app" button (Android / desktop Chrome); iPhone users get Share → Add to Home Screen instructions.
   const [installEvt, setInstallEvt] = useState(null);
