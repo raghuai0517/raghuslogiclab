@@ -413,6 +413,12 @@ table.mx.ledger-t td,table.mx.ledger-t th{padding:8px 10px;text-align:right}
 .row-it{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .amt-in{color:var(--green);font-weight:700;font-family:'Sora';white-space:nowrap}
 .amt-out{color:var(--red);font-weight:700;font-family:'Sora';white-space:nowrap}
+.sheet-bg{position:fixed;inset:0;background:rgba(10,30,30,.45);display:flex;align-items:flex-end;justify-content:center;z-index:60}
+.sheet{width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom))}
+.isteps{list-style:none;margin:16px 0;padding:0}
+.isteps li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;font-weight:600;line-height:1.4;padding:7px 0}
+.isteps li span{flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.logo img{width:100%;height:100%;border-radius:inherit;display:block}
 .bar-row{display:flex;align-items:center;gap:8px;margin:6px 0}
 .bar-row .lab{width:30px;font-size:11px;color:var(--muted);font-weight:700}
 .bar-track{flex:1;height:16px;background:#EDF2F3;border-radius:6px;overflow:hidden}
@@ -595,18 +601,29 @@ export default function App() {
   }, [user?.role, cfgLoaded, cfg.amount1000Applied, cfg.memberApproval]);
 
   // "Install app" button (Android / desktop Chrome); iPhone users get Share → Add to Home Screen instructions.
-  const [installEvt, setInstallEvt] = useState(null);
+  const [installEvt, setInstallEvt] = useState(() => (typeof window !== "undefined" && window.__shInstall) || null);
+  const [installHelp, setInstallHelp] = useState(false);
   const [installed, setInstalled] = useState(() => { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } });
   useEffect(() => {
-    const h = (e) => { e.preventDefault(); setInstallEvt(e); };
-    const done = () => { setInstalled(true); setInstallEvt(null); };
+    const h = (e) => { e.preventDefault(); window.__shInstall = e; setInstallEvt(e); };
+    const ready = () => window.__shInstall && setInstallEvt(window.__shInstall);
+    const done = () => { setInstalled(true); setInstallEvt(null); setInstallHelp(false); window.__shInstall = null; flash("Installed ✓ — Sunshine Homes is on your home screen"); };
     window.addEventListener("beforeinstallprompt", h);
+    window.addEventListener("sh-installable", ready);
     window.addEventListener("appinstalled", done);
-    return () => { window.removeEventListener("beforeinstallprompt", h); window.removeEventListener("appinstalled", done); };
+    return () => { window.removeEventListener("beforeinstallprompt", h); window.removeEventListener("sh-installable", ready); window.removeEventListener("appinstalled", done); };
   }, []);
+  // Android / desktop Chrome & Edge: the phone's own "Install app" box opens straight away and puts the icon on
+  // the home screen. iPhone and in-app browsers (WhatsApp etc.) don't allow that, so we show simple steps.
   const install = async () => {
-    if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} setInstallEvt(null); return; }
-    flash(/iphone|ipad|ipod/i.test(navigator.userAgent) ? "Tap Share ⬆ then “Add to Home Screen”" : "Open your browser menu ⋮ and tap “Add to Home screen”");
+    const evt = installEvt || window.__shInstall;
+    if (evt) {
+      try { evt.prompt(); const r = await evt.userChoice; if (r && r.outcome === "accepted") { setInstalled(true); flash("Installing… the icon will appear on your home screen"); } }
+      catch (e) { setInstallHelp(true); }
+      setInstallEvt(null); window.__shInstall = null;
+      return;
+    }
+    setInstallHelp(true);
   };
   const saveVisitors = mk(setVisitors, "visitors");
   const saveBookings = mk(setBookings, "bookings");
@@ -659,7 +676,7 @@ export default function App() {
       <div className="app">
         <div className="top">
           <div className="brand">
-            <div className="logo">🌇</div>
+            <div className="logo"><img src="icon-192.png" alt="" /></div>
             <div>
               <div className="bname">Sunshine Homes</div>
               <div className="bsub">Apartment Community App</div>
@@ -681,7 +698,7 @@ export default function App() {
             </div>
           )}
           {loaded && !user && !loadErr && <Auth flash={flash} onDone={signIn} onAdmin={signInAdmin} />}
-          {loaded && !user && !installed && <button className="btn ghost" style={{ marginTop: 12 }} onClick={install}>📲 Install the app on this phone</button>}
+          {loaded && !user && !installed && <button className="btn coral" style={{ marginTop: 12 }} onClick={install}>📲 Install app on this phone</button>}
 
           {waiting && <Waiting user={user} status={myStatus} cfg={cfg} logout={signOut} />}
 
@@ -727,6 +744,7 @@ export default function App() {
           </div>
         )}
 
+        {installHelp && <InstallHelp onClose={() => setInstallHelp(false)} />}
         {toast && <div className="toast">{toast}</div>}
       </div>
     </div>
@@ -883,6 +901,42 @@ function Auth({ flash, onDone, onAdmin }) {
   );
 }
 
+/* ------------------------- INSTALL STEPS -------------------------- */
+function InstallHelp({ onClose }) {
+  const ua = navigator.userAgent || "";
+  const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const inApp = /WhatsApp|FBAN|FBAV|FB_IAB|Instagram|Line\/|Snapchat|; wv\)/i.test(ua);
+  const link = "https://raghuslogiclab.com/apps/sunshine-homes/";
+  const copy = () => { try { navigator.clipboard.writeText(link); } catch (e) {} };
+  let title, steps;
+  if (inApp && ios) {
+    title = "Open in Safari first";
+    steps = ["Tap the ••• or Share button in this window", "Choose “Open in Safari”", "In Safari tap Share ⬆ → “Add to Home Screen” → Add"];
+  } else if (inApp) {
+    title = "Open in Chrome first";
+    steps = ["Tap ⋮ (top right) in this window", "Choose “Open in Chrome” (or “Open in browser”)", "In Chrome tap “Install the app” — it goes on your home screen"];
+  } else if (ios) {
+    title = "Add to your iPhone home screen";
+    steps = ["Tap the Share button ⬆ (bottom of Safari, or top right in Chrome)", "Scroll down and tap “Add to Home Screen”", "Tap “Add” — the Sunshine Homes icon appears on your home screen"];
+  } else {
+    title = "Add to your home screen";
+    steps = ["Tap ⋮ (top right of Chrome)", "Tap “Install app” or “Add to Home screen”", "Tap “Install” — the Sunshine Homes icon appears on your home screen"];
+  }
+  return (
+    <div className="sheet-bg" onClick={onClose}>
+      <div className="sheet fade" onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="icon-192.png" alt="" width="52" height="52" style={{ borderRadius: 14 }} />
+          <div><div className="lc-title" style={{ fontSize: 17 }}>{title}</div><div className="mini">Opens like an app — no app store needed.</div></div>
+        </div>
+        <ol className="isteps">{steps.map((t, i) => <li key={i}><span>{i + 1}</span>{t}</li>)}</ol>
+        {inApp && <button className="btn ghost sm" style={{ width: "100%", marginBottom: 9 }} onClick={copy}>Copy app link</button>}
+        <button className="btn" onClick={onClose}>OK, got it</button>
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------- WAITING FOR OK ------------------------- */
 function Waiting({ user, status, cfg, logout }) {
   const rejected = status === "rejected";
@@ -985,7 +1039,7 @@ function Home({ user, cfg, payments, notices, tickets, visitors, go, showAccount
           </div>
         </>
       )}
-      {!installed && <button className="btn ghost" style={{ marginTop: 14 }} onClick={install}>📲 Install Sunshine Homes on this phone</button>}
+      {!installed && <button className="btn coral" style={{ marginTop: 14 }} onClick={install}>📲 Install app on this phone</button>}
     </div>
   );
 }

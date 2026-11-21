@@ -437,6 +437,7 @@
     var apps = RLL.publicApps(data);
     document.getElementById("app-grid").innerHTML = apps.length ? apps.map(function (a) {
       return '<a class="card tool-card app-card" href="' + esc(a.url) + '">' +
+        (a.image ? '<img class="app-thumb" src="' + esc(a.image) + '" alt="' + esc(a.name) + '" loading="lazy" width="1200" height="630">' : "") +
         '<div class="card-top"><div class="p-icon">' + esc(a.icon || RLL.initials(a.name)) + '</div><span class="badge badge-teal">Free app</span></div>' +
         '<h3 style="margin:4px 0 0">' + esc(a.name) + "</h3>" +
         "<p>" + esc(a.tagline || "") + "</p>" +
