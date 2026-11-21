@@ -53,9 +53,20 @@ const FLOORS = [
 ];
 const ALL_FLATS = FLOORS.flatMap((f) => f.flats);
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const FACILITIES = ["Clubhouse", "Gym", "Swimming Pool", "Party Hall", "Tennis Court"];
 const SLOTS = ["Morning (6–11)", "Afternoon (12–4)", "Evening (5–10)"];
 const ROLES = ["Owner", "Tenant", "Family member"];
+const EXPENSE_CATS = ["Watchman salary", "Common power bill", "Lift service & repairs", "Generator diesel & service", "Cleaning & sanitation",
+  "Water sump & tank cleaning", "Electrical & plumbing works", "Festival / events", "Stationery & misc", "Other"];
+const INCOME_CATS = ["Builder contribution", "Donation", "Penalty / late fee", "Hall / terrace rent", "Refund", "Other"];
+const PAY_MODES = ["Cash", "UPI", "Bank transfer", "Cheque"];
+const DEFAULT_CONTACTS = [
+  { name: "Security / Watchman", detail: "Main gate", phone: "" },
+  { name: "Committee — President", detail: "Society matters", phone: "" },
+  { name: "Committee — Treasurer", detail: "Maintenance & accounts", phone: "" },
+  { name: "Emergency / Ambulance", detail: "24×7", phone: "108" },
+  { name: "Police", detail: "24×7", phone: "100" },
+  { name: "Fire", detail: "24×7", phone: "101" },
+];
 
 const monthKey = (i) => `${YEAR}-${String(i + 1).padStart(2, "0")}`;
 const inr = (n) => "₹" + new Intl.NumberFormat("en-IN").format(n || 0);
@@ -66,7 +77,30 @@ const fmtPhone = (p) => "+91 " + p.slice(0, 5) + " " + p.slice(5);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
-const DEFAULTS = { upiId: "sunshinehomes@okicici", monthlyAmount: 2000 };
+const DEFAULTS = { upiId: "sunshinehomes@okicici", monthlyAmount: 800, facilities: ["Terrace"], contacts: DEFAULT_CONTACTS,
+  openingBalance: 0, openingDate: "", showAccounts: true };
+const memberKey = (phone) => "member:" + phone;
+const fmtDay = (d) => (d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "");
+const ymd = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+// Next voucher number for the cashbook: EXP-0001, INC-0001 …
+const nextVoucher = (ledger, kind) => {
+  const pre = kind === "income" ? "INC-" : "EXP-";
+  const max = ledger.filter((e) => e.kind === kind).reduce((m, e) => Math.max(m, +String(e.voucher || "").replace(pre, "") || 0), 0);
+  return pre + String(max + 1).padStart(4, "0");
+};
+// Money in and out. Maintenance counts once the committee has approved it.
+function accountTotals(payments, ledger, cfg, year) {
+  const inYear = (d) => !year || String(d).slice(0, 4) === String(year);
+  const maint = payments.filter((p) => p.status === "approved" && inYear(p.month)).reduce((s, p) => s + (+p.amount || 0), 0);
+  const income = ledger.filter((e) => e.kind === "income" && inYear(e.date)).reduce((s, e) => s + (+e.amount || 0), 0);
+  const spent = ledger.filter((e) => e.kind === "expense" && inYear(e.date)).reduce((s, e) => s + (+e.amount || 0), 0);
+  // Balance in hand = opening balance + money received on/after the opening date − money spent on/after it.
+  const from = cfg.openingDate || "";
+  const allMaint = payments.filter((p) => p.status === "approved" && ymd(p.decidedAt || p.submittedAt) >= from).reduce((s, p) => s + (+p.amount || 0), 0);
+  const allIn = ledger.filter((e) => e.kind === "income" && e.date >= from).reduce((s, e) => s + (+e.amount || 0), 0);
+  const allOut = ledger.filter((e) => e.kind === "expense" && e.date >= from).reduce((s, e) => s + (+e.amount || 0), 0);
+  return { maint, income, spent, balance: (+cfg.openingBalance || 0) + allMaint + allIn - allOut };
+}
 const withDefaults = (c) => { const { adminPin, adminPinHash, ...rest } = c || {}; return { ...DEFAULTS, ...rest }; };
 
 /* localStorage keys are prefixed so they never clash with other pages on the same website */
@@ -221,6 +255,7 @@ function backupSheets(d) {
     ["Notices", (d.notices || []).slice().sort((a, b) => a.at - b.at).map((n) => ({ Date: stamp(n.at), Category: n.cat, Title: n.title, Message: n.body }))],
     ["Visitors", (d.visitors || []).slice().sort((a, b) => a.at - b.at).map((v) => ({ Flat: v.flat, Visitor: v.name, Purpose: v.purpose, "Gate code": v.code, Status: v.status === "arrived" ? "Arrived" : "Expected", Created: stamp(v.at) }))],
     ["Bookings", (d.bookings || []).slice().sort((a, b) => (a.date < b.date ? -1 : 1)).map((b) => ({ Flat: b.flat, Facility: b.fac, Date: b.date, Slot: b.slot, "Booked on": stamp(b.at) }))],
+    ["Expenses & income", (d.ledger || []).slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.at - b.at)).map((e) => ({ Voucher: e.voucher, Date: e.date, Type: e.kind === "income" ? "Income" : "Expense", Category: e.cat, Description: e.desc || "", "Paid to / received from": e.party || "", Mode: e.mode, "Bill / ref": e.ref || "", "In (₹)": e.kind === "income" ? e.amount : "", "Out (₹)": e.kind === "expense" ? e.amount : "", "Entered": stamp(e.at) }))],
     ["Settings", [{ "UPI ID": d.cfg.upiId, "Monthly maintenance (₹)": d.cfg.monthlyAmount, "Backup taken": stamp(Date.now()) }]],
   ];
 }
@@ -370,10 +405,18 @@ table.mx td.fc,table.mx th.fc{position:sticky;left:0;background:#F7FAFB;font-wei
 .cell{width:13px;height:13px;border-radius:4px;display:inline-block}
 .c-ok{background:var(--green)} .c-pend{background:var(--amber)} .c-no{background:#DCE3E6} .c-rej{background:var(--red)}
 
+table.mx.ledger-t{font-size:12.5px}
+table.mx.ledger-t td,table.mx.ledger-t th{padding:8px 10px;text-align:right}
+.seg{display:flex;gap:6px;margin-bottom:12px}
+.seg .btn{flex:1;padding:10px 4px}
+.mini{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5}
+.row-it{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.amt-in{color:var(--green);font-weight:700;font-family:'Sora';white-space:nowrap}
+.amt-out{color:var(--red);font-weight:700;font-family:'Sora';white-space:nowrap}
 .bar-row{display:flex;align-items:center;gap:8px;margin:6px 0}
 .bar-row .lab{width:30px;font-size:11px;color:var(--muted);font-weight:700}
 .bar-track{flex:1;height:16px;background:#EDF2F3;border-radius:6px;overflow:hidden}
-.bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--teal-d));min-width:2px}
+.bar-fill{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--teal-d));min-width:2px}
 .bar-row .val{width:60px;text-align:right;font-size:11px;font-weight:700}
 
 .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
@@ -428,11 +471,14 @@ export default function App() {
   const [visitors, setVisitors] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState({});
+  const [ledger, setLedger] = useState([]);           // expenses & other income (committee only)
+  const [sheetSync, setSheetSync] = useState(null);   // written by the Google Sheets sync script
   const [user, setUser] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState("home");
   const [toast, setToast] = useState("");
   const [loadErr, setLoadErr] = useState(false);
+  const [cfgLoaded, setCfgLoaded] = useState(false);  // true once the saved settings have been read
 
   const flash = (m) => { setToast(m); setTimeout(() => setToast(""), 2200); };
   onSaveError = () => flash("Couldn't save — check your internet connection");
@@ -440,9 +486,11 @@ export default function App() {
   // Loads all shared data. Returns the users map, or null if the database couldn't be reached.
   const loadShared = async (role) => {
     try {
-      const keys = ["config", "payments", "approvals", "notices", "tickets", "ticketStatus", "visitors", "bookings", "users"];
-      const [c, p, ap, n, t, ts, v, b, u] = await Promise.all(keys.map((k) => store.get(k, true, true)));
-      if (c) setCfg(withDefaults(c));
+      const keys = ["config", "payments", "approvals", "notices", "tickets", "ticketStatus", "visitors", "bookings", "users", "ledger", "sheetSync"];
+      const [c, p, ap, n, t, ts, v, b, u, lg, ss] = await Promise.all(keys.map((k) => store.get(k, true, true)));
+      if (lg) setLedger(lg);
+      if (ss) setSheetSync(ss);
+      if (c) { setCfg(withDefaults(c)); setCfgLoaded(true); }
       if (p) setPayRaw(p);
       if (ap) setApprovals(ap);
       if (n) setNotices(n); else if (MODE === "demo" || role === "admin") seedNotices(setNotices);
@@ -495,6 +543,8 @@ export default function App() {
       visitors: (v) => v && setVisitors(v),
       bookings: (v) => v && setBookings(v),
       users: (v) => { if (!v) return; setUsers(v); if (user.role !== "admin" && !v[user.phone]) signOut(true); },
+      ledger: (v) => v && setLedger(v),
+      sheetSync: (v) => v && setSheetSync(v),
     };
     let alive = true;
     const unsubs = [];
@@ -513,11 +563,44 @@ export default function App() {
   const decide = (entries) => { const next = { ...approvals }; entries.forEach(({ id, status }) => { next[id] = { status, at: Date.now() }; }); setApprovals(next); store.set("approvals", next); };
   const setTicketStatus = (id, status) => { const next = { ...ticketStatus, [id]: status }; setTicketStatusMap(next); store.set("ticketStatus", next); };
   const saveNotices = mk(setNotices, "notices");
+  const saveLedger = mk(setLedger, "ledger");
+  // New residents need the committee's OK. The decision lives in the committee-only "approvals" document.
+  // Until the committee has switched approvals on (cfg.memberApproval), everyone already registered counts as approved.
+  const memberStatus = (phone) => {
+    const a = approvals[memberKey(phone)];
+    if (a && a.status) return a.status;
+    return cfg.memberApproval ? "pending" : "approved";
+  };
+  const decideMember = (phone, status) => decide([{ id: memberKey(phone), status }]);
   // everything for backups: readable copy (with statuses) and the exact stored data
   const backupData = () => ({
-    readable: { cfg, users, payments, tickets, notices, visitors, bookings },
-    raw: { config: cfg, users, payments: payRaw, approvals, notices, tickets: tixRaw, ticketStatus, visitors, bookings },
+    readable: { cfg, users, payments, tickets, notices, visitors, bookings, ledger },
+    raw: { config: cfg, users, payments: payRaw, approvals, notices, tickets: tixRaw, ticketStatus, visitors, bookings, ledger },
   });
+
+  // First committee login after this update: approve everyone already registered, then switch approvals on.
+  useEffect(() => {
+    if (!user || user.role !== "admin" || !cfgLoaded || cfg.memberApproval !== undefined) return;
+    const next = { ...approvals };
+    Object.keys(users).forEach((ph) => { if (!next[memberKey(ph)]) next[memberKey(ph)] = { status: "approved", at: Date.now() }; });
+    setApprovals(next); store.set("approvals", next);
+    saveCfg({ ...cfg, memberApproval: true });
+  }, [user?.role, cfgLoaded, cfg.memberApproval]);
+
+  // "Install app" button (Android / desktop Chrome); iPhone users get Share → Add to Home Screen instructions.
+  const [installEvt, setInstallEvt] = useState(null);
+  const [installed, setInstalled] = useState(() => { try { return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { return false; } });
+  useEffect(() => {
+    const h = (e) => { e.preventDefault(); setInstallEvt(e); };
+    const done = () => { setInstalled(true); setInstallEvt(null); };
+    window.addEventListener("beforeinstallprompt", h);
+    window.addEventListener("appinstalled", done);
+    return () => { window.removeEventListener("beforeinstallprompt", h); window.removeEventListener("appinstalled", done); };
+  }, []);
+  const install = async () => {
+    if (installEvt) { installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} setInstallEvt(null); return; }
+    flash(/iphone|ipad|ipod/i.test(navigator.userAgent) ? "Tap Share ⬆ then “Add to Home Screen”" : "Open your browser menu ⋮ and tap “Add to Home screen”");
+  };
   const saveVisitors = mk(setVisitors, "visitors");
   const saveBookings = mk(setBookings, "bookings");
   const saveUsers = mk(setUsers, "users");
@@ -540,8 +623,8 @@ export default function App() {
   };
   // committee login (after its password is accepted)
   const signInAdmin = async () => {
+    if (!(await loadShared("admin"))) { flash("Couldn't reach the server — please try again"); return false; }
     await store.set("session", { admin: true, exp: Date.now() + SESSION_DAYS * 86400000 }, false);
-    await loadShared("admin");
     setUser(ADMIN_USER); setTab("home");
     flash("Logged in as committee");
     return true;
@@ -555,9 +638,13 @@ export default function App() {
 
   const myFlat = user?.flat;
   const isAdmin = user?.role === "admin";
+  const myStatus = user && !isAdmin ? memberStatus(user.phone) : "approved";
   const myOpenTix = tickets.filter((t) => t.flat === myFlat && t.status !== "resolved").length;
-  const inApp = loaded && user && !isAdmin;     // resident screens
+  const inApp = loaded && user && !isAdmin && myStatus === "approved";   // resident screens
+  const waiting = loaded && user && !isAdmin && myStatus !== "approved"; // registered, awaiting committee
   const inAdmin = loaded && user && isAdmin;    // committee screens
+  const showAccounts = cfg.showAccounts !== false;
+  const pendingMembers = Object.values(users).filter((u) => memberStatus(u.phone) === "pending").length;
 
   return (
     <div className="wrap">
@@ -568,7 +655,7 @@ export default function App() {
             <div className="logo">🌇</div>
             <div>
               <div className="bname">Sunshine Homes</div>
-              <div className="bsub">Community Super App</div>
+              <div className="bsub">Apartment Community App</div>
             </div>
             {inApp && <button className="flatchip" onClick={() => setTab("profile")}>🏠 {myFlat} ▾</button>}
             {inAdmin && <span className="flatchip" style={{ cursor: "default" }}>🛡️ Committee</span>}
@@ -587,16 +674,21 @@ export default function App() {
             </div>
           )}
           {loaded && !user && !loadErr && <Auth flash={flash} onDone={signIn} onAdmin={signInAdmin} />}
+          {loaded && !user && !installed && <button className="btn ghost" style={{ marginTop: 12 }} onClick={install}>📲 Install the app on this phone</button>}
+
+          {waiting && <Waiting user={user} status={myStatus} cfg={cfg} logout={signOut} />}
 
           {inAdmin && (
             <AdminPanel cfg={cfg} saveCfg={saveCfg} payments={payments} savePayments={savePayments} decide={decide}
               notices={notices} saveNotices={saveNotices} tickets={tickets} setTicketStatus={setTicketStatus}
-              users={users} saveUsers={saveUsers} flash={flash} signOut={signOut} backupData={backupData} />
+              users={users} saveUsers={saveUsers} flash={flash} signOut={signOut} backupData={backupData}
+              ledger={ledger} saveLedger={saveLedger} memberStatus={memberStatus} decideMember={decideMember}
+              pendingMembers={pendingMembers} sheetSync={sheetSync} />
           )}
 
           {inApp && tab === "home" && (
             <Home user={user} cfg={cfg} payments={payments} notices={notices} tickets={tickets}
-              visitors={visitors} go={setTab} />
+              visitors={visitors} go={setTab} showAccounts={showAccounts} installed={installed} install={install} />
           )}
           {inApp && tab === "profile" && <Profile user={user} logout={signOut} />}
           {inApp && tab === "dues" && (
@@ -610,9 +702,10 @@ export default function App() {
             <Visitors flat={myFlat} visitors={visitors} save={saveVisitors} flash={flash} />
           )}
           {inApp && tab === "amenities" && (
-            <Amenities flat={myFlat} bookings={bookings} save={saveBookings} flash={flash} />
+            <Amenities flat={myFlat} bookings={bookings} save={saveBookings} flash={flash} facilities={cfg.facilities || []} />
           )}
-          {inApp && tab === "directory" && <Directory />}
+          {inApp && tab === "directory" && <Directory contacts={cfg.contacts || DEFAULT_CONTACTS} />}
+          {inApp && tab === "accounts" && showAccounts && <SocietyAccounts payments={payments} ledger={ledger} cfg={cfg} />}
         </div>
 
         {inApp && (
@@ -663,7 +756,7 @@ function Auth({ flash, onDone, onAdmin }) {
     const r = await checkPassword(pw, who);
     if (r.error) { setBusy(false); return setErr(r.error); }
     setPw("");
-    if (who === "admin") return onAdmin();
+    if (who === "admin") { const ok = await onAdmin(); if (ok === false) setBusy(false); return; }
     await lookup();
   };
   const switchWho = (w) => { setWho(w); setErr(""); setPw(""); setShowPw(false); };
@@ -783,6 +876,37 @@ function Auth({ flash, onDone, onAdmin }) {
   );
 }
 
+/* ------------------------- WAITING FOR OK ------------------------- */
+function Waiting({ user, status, cfg, logout }) {
+  const rejected = status === "rejected";
+  const contacts = (cfg.contacts || []).filter((c) => c.phone && /committee/i.test(c.name));
+  return (
+    <div className="fade">
+      <div className="auth-hero">
+        <div className="auth-ic">{rejected ? "⛔" : "⏳"}</div>
+        <div className="greet">{rejected ? "Registration not approved" : "Waiting for committee approval"}
+          <small>{rejected ? "The committee couldn't confirm this registration." : "Thanks, " + user.name.split(" ")[0] + "! The committee will check your details and approve you shortly."}</small></div>
+      </div>
+      <div className="card">
+        <div className="kv"><span>Name</span><span>{user.name}</span></div>
+        <div className="kv"><span>Flat</span><span>{user.flat}</span></div>
+        <div className="kv"><span>Mobile</span><span>{fmtPhone(user.phone)}</span></div>
+        <div className="kv"><span>I am the</span><span>{user.role}</span></div>
+        <p className="note">{rejected
+          ? "If this is a mistake, please speak to the committee. They can remove this registration so you can register again with the right flat."
+          : "This page opens the app by itself as soon as you're approved — you can close it and come back later."}</p>
+      </div>
+      {contacts.length > 0 && (
+        <div className="card">
+          <p className="label">Contact the committee</p>
+          {contacts.map((c) => <div key={c.name} className="kv"><span>{c.name.replace(/^Committee\s*—\s*/, "")}</span><a href={"tel:" + c.phone.replace(/\s/g, "")}>📞 {c.phone}</a></div>)}
+        </div>
+      )}
+      <button className="btn ghost" style={{ marginTop: 14, color: "var(--red)" }} onClick={logout}>Log out</button>
+    </div>
+  );
+}
+
 /* ----------------------------- PROFILE ---------------------------- */
 function Profile({ user, logout }) {
   return (
@@ -805,7 +929,7 @@ function Profile({ user, logout }) {
 }
 
 /* ------------------------------ HOME ------------------------------ */
-function Home({ user, cfg, payments, notices, tickets, visitors, go }) {
+function Home({ user, cfg, payments, notices, tickets, visitors, go, showAccounts, installed, install }) {
   const myFlat = user.flat;
   const owed = MONTHS.reduce((s, _, i) => (i > NOW_MONTH ? s : statusOf(payments, myFlat, monthKey(i)) === "approved" ? s : s + cfg.monthlyAmount), 0);
   const myTix = tickets.filter((t) => t.flat === myFlat && t.status !== "resolved").length;
@@ -817,9 +941,9 @@ function Home({ user, cfg, payments, notices, tickets, visitors, go }) {
     ["notices", "📢", "Notices", "var(--amber-bg)", 0],
     ["help", "🛠️", "Helpdesk", "var(--blue-bg)", myTix],
     ["visitors", "🚪", "Visitors", "var(--red-bg)", myVis],
-    ["amenities", "🏊", "Amenities", "var(--green-bg)", 0],
-    ["directory", "📇", "Directory", "var(--teal-bg)", 0],
-    ["notices", "🗳️", "Events", "var(--amber-bg)", 0],
+    ...((cfg.facilities || []).length ? [["amenities", "🏊", "Amenities", "var(--green-bg)", 0]] : []),
+    ["directory", "📇", "Contacts", "var(--teal-bg)", 0],
+    ...(showAccounts ? [["accounts", "📒", "Accounts", "var(--amber-bg)", 0]] : []),
     ["profile", "👤", "Profile", "#EEF2F4", 0],
   ];
 
@@ -854,6 +978,7 @@ function Home({ user, cfg, payments, notices, tickets, visitors, go }) {
           </div>
         </>
       )}
+      {!installed && <button className="btn ghost" style={{ marginTop: 14 }} onClick={install}>📲 Install Sunshine Homes on this phone</button>}
     </div>
   );
 }
@@ -895,7 +1020,7 @@ function Dues({ flat, user, cfg, payments, save, flash }) {
         {mine.map((p) => (
           <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{MONTHS[+p.month.slice(5) - 1]} {YEAR} · {inr(p.amount)}</div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{monthName(p.month)} · {inr(p.amount)}</div>
               <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>Ref {p.ref || "—"} · {fmtDate(p.submittedAt)}</div>
             </div>
             <Pill s={p.status} />
@@ -1066,8 +1191,9 @@ function Visitors({ flat, visitors, save, flash }) {
 }
 
 /* --------------------------- AMENITIES ---------------------------- */
-function Amenities({ flat, bookings, save, flash }) {
-  const today = new Date().toISOString().slice(0, 10);
+function Amenities({ flat, bookings, save, flash, facilities }) {
+  const today = ymd(Date.now());
+  const FACILITIES = facilities.length ? facilities : ["—"];
   const [fac, setFac] = useState(FACILITIES[0]);
   const [date, setDate] = useState(today);
   const [slot, setSlot] = useState(SLOTS[0]);
@@ -1113,22 +1239,17 @@ function Amenities({ flat, bookings, save, flash }) {
 }
 
 /* ---------------------------- DIRECTORY --------------------------- */
-function Directory() {
-  const contacts = [
-    ["Security Gate", "Main gate intercom", "📞 0 88XX XX0001"],
-    ["Society Manager", "Mon–Sat, 9–6", "📞 0 88XX XX0002"],
-    ["Plumber (on-call)", "Common area issues", "📞 0 88XX XX0003"],
-    ["Electrician", "Common area issues", "📞 0 88XX XX0004"],
-    ["Emergency / Ambulance", "24×7", "📞 108"],
-  ];
+function Directory({ contacts }) {
+  const list = contacts.filter((c) => c.name);
   return (
     <div className="fade">
-      <div className="greet">Directory<small>Emergency & society contacts.</small></div>
+      <div className="greet">Contacts<small>Committee, security & emergency numbers. Tap to call.</small></div>
       <div style={{ marginTop: 12 }}>
-        {contacts.map(([n, d, p]) => (
-          <div key={n} className="listcard">
-            <div className="lc-top"><div className="lc-title">{n}</div><span className="pill p-ok">{p}</span></div>
-            <div className="lc-meta">{d}</div>
+        {list.map((c) => (
+          <div key={c.name} className="listcard">
+            <div className="lc-top"><div className="lc-title">{c.name}</div>
+              {c.phone ? <a className="pill p-ok" style={{ textDecoration: "none" }} href={"tel:" + c.phone.replace(/\s/g, "")}>📞 {c.phone}</a> : <span className="pill p-no">Not added yet</span>}</div>
+            {c.detail && <div className="lc-meta">{c.detail}</div>}
           </div>
         ))}
       </div>
@@ -1141,8 +1262,78 @@ function Directory() {
   );
 }
 
+/* ------------------------ SOCIETY ACCOUNTS ------------------------ */
+// What residents see: money in, money out and the balance — no personal details.
+function SocietyAccounts({ payments, ledger, cfg }) {
+  const [year, setYear] = useState(YEAR);
+  const years = [...new Set([YEAR, ...ledger.map((e) => +e.date.slice(0, 4)), ...payments.map((p) => +p.month.slice(0, 4))])].filter(Boolean).sort((a, b) => b - a);
+  const t = accountTotals(payments, ledger, cfg, year);
+  const rows = MONTHS.map((m, i) => {
+    const k = `${year}-${pad2(i + 1)}`;
+    const maint = payments.filter((p) => p.status === "approved" && p.month === k).reduce((s, p) => s + (+p.amount || 0), 0);
+    const inc = ledger.filter((e) => e.kind === "income" && e.date.slice(0, 7) === k).reduce((s, e) => s + (+e.amount || 0), 0);
+    const out = ledger.filter((e) => e.kind === "expense" && e.date.slice(0, 7) === k).reduce((s, e) => s + (+e.amount || 0), 0);
+    return { m, maint, inc, out };
+  });
+  const byCat = {};
+  ledger.filter((e) => e.kind === "expense" && e.date.slice(0, 4) === String(year)).forEach((e) => { byCat[e.cat] = (byCat[e.cat] || 0) + (+e.amount || 0); });
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const maxC = Math.max(1, ...cats.map((c) => c[1]));
+  const recent = ledger.filter((e) => e.kind === "expense").sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.at - a.at)).slice(0, 15);
+  return (
+    <div className="fade">
+      <div className="greet">Society Accounts<small>Maintenance collected, other income and every expense recorded by the committee.</small></div>
+      {years.length > 1 && <select className="input" style={{ marginTop: 12 }} value={year} onChange={(e) => setYear(+e.target.value)}>{years.map((y) => <option key={y} value={y}>{y}</option>)}</select>}
+      <div className="card dues-hero" style={{ marginTop: 12 }}>
+        <div className="lab">Balance in hand</div>
+        <div className="big" style={{ color: t.balance < 0 ? "#FF8A7E" : "#7DE0C8" }}>{t.balance < 0 ? "−" : ""}{inr(Math.abs(t.balance))}</div>
+        <div className="sub">{cfg.openingDate ? "Since " + fmtDay(cfg.openingDate) + " (opening " + inr(cfg.openingBalance) + ")" : "All recorded entries"}</div>
+      </div>
+      <div className="stat">
+        <div className="statbox"><div className="n">{inr(t.maint)}</div><div className="l">Maintenance {year}</div></div>
+        <div className="statbox"><div className="n">{inr(t.income)}</div><div className="l">Other income {year}</div></div>
+        <div className="statbox"><div className="n">{inr(t.spent)}</div><div className="l">Expenses {year}</div></div>
+        <div className="statbox"><div className="n" style={{ color: t.maint + t.income - t.spent < 0 ? "var(--red)" : undefined }}>{inr(t.maint + t.income - t.spent)}</div><div className="l">Surplus {year}</div></div>
+      </div>
+      <div className="card" style={{ marginTop: 13 }}>
+        <p className="label">Month by month · {year}</p>
+        <div className="matrix-wrap">
+          <table className="mx ledger-t">
+            <thead><tr><th className="fc">Month</th><th>In</th><th>Out</th><th>Net</th></tr></thead>
+            <tbody>{rows.map((r) => (
+              <tr key={r.m}><td className="fc">{r.m}</td><td>{inr(r.maint + r.inc)}</td><td>{inr(r.out)}</td>
+                <td style={{ color: r.maint + r.inc - r.out < 0 ? "var(--red)" : "var(--green)", fontWeight: 700 }}>{inr(r.maint + r.inc - r.out)}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
+      </div>
+      <div className="card">
+        <p className="label">Where the money went · {year}</p>
+        {cats.length === 0 && <div className="empty">No expenses recorded yet.</div>}
+        {cats.map(([c, v]) => (
+          <div className="bar-row" key={c}><span className="lab" style={{ width: 120 }}>{c}</span>
+            <span className="bar-track"><span className="bar-fill" style={{ width: (v / maxC) * 100 + "%", background: "var(--coral)" }} /></span>
+            <span className="val">{inr(v)}</span></div>
+        ))}
+      </div>
+      <div className="card">
+        <p className="label">Latest expenses</p>
+        {recent.length === 0 && <div className="empty">Nothing yet.</div>}
+        {recent.map((e) => (
+          <div key={e.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, padding: "9px 0", borderBottom: "1px solid var(--line)" }}>
+            <div><div style={{ fontWeight: 700, fontSize: 13.5 }}>{e.cat}</div>
+              <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{fmtDay(e.date)} · {e.voucher}{e.desc ? " · " + e.desc : ""}</div></div>
+            <span style={{ fontWeight: 700, fontFamily: "Sora", whiteSpace: "nowrap" }}>{inr(e.amount)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------ ADMIN ----------------------------- */
-function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, saveNotices, tickets, setTicketStatus, users, saveUsers, flash, signOut, backupData }) {
+function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, saveNotices, tickets, setTicketStatus, users, saveUsers, flash, signOut, backupData,
+  ledger, saveLedger, memberStatus, decideMember, pendingMembers, sheetSync }) {
   const [tab, setTab] = useState("overview");
   const approved = payments.filter((p) => p.status === "approved");
   const pending = payments.filter((p) => p.status === "pending").sort((a, b) => a.submittedAt - b.submittedAt);
@@ -1153,6 +1344,9 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, sav
   const rate = expectedSoFar ? Math.round((collected / expectedSoFar) * 100) : 0;
   const residents = Object.values(users);
   const flatsReg = new Set(residents.map((u) => u.flat)).size;
+  const acc = accountTotals(payments, ledger, cfg, YEAR);
+  const thisMonth = ymd(Date.now()).slice(0, 7);
+  const spentMonth = ledger.filter((e) => e.kind === "expense" && e.date.slice(0, 7) === thisMonth).reduce((s, e) => s + (+e.amount || 0), 0);
 
   return (
     <div className="fade">
@@ -1161,8 +1355,8 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, sav
         <button className="btn ghost sm" onClick={signOut}>Log out</button>
       </div>
       <div className="tabs" style={{ marginTop: 12 }}>
-        {[["overview", "Overview"], ["approvals", `Approvals${pending.length ? " (" + pending.length + ")" : ""}`], ["markpaid", "Mark Paid"],
-          ["residents", `Residents (${residents.length})`], ["accounts", "Accounts"], ["reports", "Reports"],
+        {[["overview", "Overview"], ["approvals", `Payments${pending.length ? " (" + pending.length + ")" : ""}`], ["expenses", "Expenses"], ["markpaid", "Mark Paid"],
+          ["residents", `Residents${pendingMembers ? " (" + pendingMembers + " new)" : " (" + residents.length + ")"}`], ["accounts", "Dues Grid"], ["reports", "Reports"],
           ["help", `Helpdesk${openTix.length ? " (" + openTix.length + ")" : ""}`], ["notice", "Notices"], ["settings", "Settings"]].map(([id, lbl]) => (
           <button key={id} className={"tab" + (tab === id ? " on" : "")} onClick={() => setTab(id)}>{lbl}</button>
         ))}
@@ -1175,7 +1369,16 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, sav
             <div className="statbox"><div className="n">{pending.length}</div><div className="l">Pending approval</div></div>
             <div className="statbox"><div className="n">{rate}%</div><div className="l">Collection rate</div></div>
             <div className="statbox"><div className="n">{openTix.length}</div><div className="l">Open complaints</div></div>
+            <div className="statbox"><div className="n" style={{ color: acc.balance < 0 ? "var(--red)" : "var(--teal-d)" }}>{acc.balance < 0 ? "−" : ""}{inr(Math.abs(acc.balance))}</div><div className="l">Balance in hand</div></div>
+            <div className="statbox"><div className="n">{inr(spentMonth)}</div><div className="l">Spent this month</div></div>
           </div>
+          {pendingMembers > 0 && (
+            <div className="card" style={{ marginTop: 13, borderColor: "#F3D9A4", background: "var(--amber-bg)" }} onClick={() => setTab("residents")}>
+              <div className="lc-title">👋 {pendingMembers} new resident{pendingMembers > 1 ? "s" : ""} waiting for approval</div>
+              <div className="lc-meta">Tap to check name, flat and mobile, then approve.</div>
+            </div>
+          )}
+          <SheetCard sheetSync={sheetSync} flash={flash} compact />
           <div className="card" style={{ marginTop: 13 }}>
             <p className="label">Summary</p>
             <p className="note" style={{ marginTop: 0 }}>{ALL_FLATS.length} flats · {residents.length} registered resident(s) across {flatsReg} flat(s) · maintenance {inr(cfg.monthlyAmount)}/mo · expected so far {inr(expectedSoFar)}. {pending.length ? `${pending.length} payment(s) await approval.` : "No payments awaiting approval."}</p>
@@ -1191,7 +1394,7 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, sav
             <div key={p.id} className="listcard">
               <div className="lc-top">
                 <div><div className="lc-title">{p.flat} · {inr(p.amount)}</div>
-                  <div className="lc-meta">{p.payer}{p.phone ? " · " + fmtPhone(p.phone) : ""} · {MONTHS[+p.month.slice(5) - 1]} {YEAR}<br />Ref {p.ref} · {new Date(p.submittedAt).toLocaleString("en-IN")}</div></div>
+                  <div className="lc-meta">{p.payer}{p.phone ? " · " + fmtPhone(p.phone) : ""} · {monthName(p.month)}<br />Ref {p.ref} · {new Date(p.submittedAt).toLocaleString("en-IN")}</div></div>
               </div>
               <div className="row" style={{ marginTop: 11 }}>
                 <button className="btn sm" style={{ flex: 1, background: "var(--green)" }} onClick={() => { act(p.id, "approved"); flash(p.flat + " approved"); }}>✓ Approve</button>
@@ -1203,44 +1406,156 @@ function AdminPanel({ cfg, saveCfg, payments, savePayments, decide, notices, sav
       )}
 
       {tab === "markpaid" && <MarkPaid cfg={cfg} payments={payments} save={savePayments} decide={decide} flash={flash} />}
-      {tab === "residents" && <Residents users={users} save={saveUsers} flash={flash} />}
+      {tab === "expenses" && <Expenses ledger={ledger} save={saveLedger} flash={flash} />}
+      {tab === "residents" && <Residents users={users} save={saveUsers} flash={flash} memberStatus={memberStatus} decideMember={decideMember} />}
       {tab === "accounts" && <Accounts payments={payments} />}
-      {tab === "reports" && <Reports payments={payments} cfg={cfg} />}
+      {tab === "reports" && <Reports payments={payments} cfg={cfg} ledger={ledger} />}
       {tab === "help" && <AdminHelp tickets={tickets} setTicketStatus={setTicketStatus} flash={flash} />}
       {tab === "notice" && <AdminNotices notices={notices} save={saveNotices} flash={flash} />}
-      {tab === "settings" && <Settings cfg={cfg} saveCfg={saveCfg} flash={flash} backupData={backupData} />}
+      {tab === "settings" && <Settings cfg={cfg} saveCfg={saveCfg} flash={flash} backupData={backupData} sheetSync={sheetSync} />}
     </div>
   );
 }
 
 /* --------------------------- RESIDENTS ---------------------------- */
-function Residents({ users, save, flash }) {
+function Residents({ users, save, flash, memberStatus, decideMember }) {
   const [q, setQ] = useState("");
   const [confirm, setConfirm] = useState(null);
-  const list = Object.values(users).sort((a, b) => ALL_FLATS.indexOf(a.flat) - ALL_FLATS.indexOf(b.flat) || a.name.localeCompare(b.name));
+  const all = Object.values(users).sort((a, b) => ALL_FLATS.indexOf(a.flat) - ALL_FLATS.indexOf(b.flat) || a.name.localeCompare(b.name));
+  const waiting = all.filter((u) => memberStatus(u.phone) === "pending").sort((a, b) => a.createdAt - b.createdAt);
+  const list = all.filter((u) => memberStatus(u.phone) !== "pending");
   const ql = q.trim().toLowerCase();
   const shown = ql ? list.filter((u) => (u.name + " " + u.flat + " " + u.phone).toLowerCase().includes(ql)) : list;
   const remove = (ph) => { const next = { ...users }; delete next[ph]; save(next); setConfirm(null); flash("Resident removed"); };
+  const sameFlat = (u) => list.filter((x) => x.flat === u.flat && memberStatus(x.phone) === "approved").map((x) => x.name);
   return (
-    <div className="card">
-      <p className="label">Registered residents</p>
-      <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, flat or mobile" />
-      <div style={{ marginTop: 6 }}>
-        {shown.length === 0 && <div className="empty">{list.length ? "No match." : "No residents have registered yet."}</div>}
-        {shown.map((u) => (
-          <div key={u.phone} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{u.flat} · {u.name}</div>
-              <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2, lineHeight: 1.5 }}>{u.role} · {fmtPhone(u.phone)}<br />Joined {fmtDate(u.createdAt)}{u.lastLogin ? " · last login " + fmtDate(u.lastLogin) : ""}</div>
+    <div>
+      {waiting.length > 0 && (
+        <div className="card" style={{ borderColor: "#F3D9A4" }}>
+          <p className="label">New registrations · approve only people you know</p>
+          {waiting.map((u) => (
+            <div key={u.phone} className="listcard">
+              <div className="lc-title">{u.flat} · {u.name}</div>
+              <div className="lc-meta">{u.role} · {fmtPhone(u.phone)} · registered {fmtDate(u.createdAt)}{sameFlat(u).length ? <><br />Already in {u.flat}: {sameFlat(u).join(", ")}</> : ""}</div>
+              <div className="row" style={{ marginTop: 10 }}>
+                <a href={"tel:+91" + u.phone} style={{ flex: 1 }}><button className="btn ghost sm" style={{ width: "100%" }}>📞 Call</button></a>
+                <button className="btn ghost sm" style={{ flex: 1, color: "var(--red)" }} onClick={() => { decideMember(u.phone, "rejected"); flash("Registration rejected"); }}>✕ Reject</button>
+                <button className="btn sm" style={{ flex: 1, background: "var(--green)" }} onClick={() => { decideMember(u.phone, "approved"); flash(u.name.split(" ")[0] + " approved"); }}>✓ Approve</button>
+              </div>
             </div>
-            {confirm === u.phone
-              ? <div className="row"><button className="btn ghost sm" onClick={() => setConfirm(null)}>Keep</button>
-                  <button className="btn sm" style={{ background: "var(--red)" }} onClick={() => remove(u.phone)}>Remove</button></div>
-              : <button className="btn ghost sm" style={{ color: "var(--red)" }} onClick={() => setConfirm(u.phone)}>Remove</button>}
-          </div>
-        ))}
+          ))}
+        </div>
+      )}
+      <div className="card">
+        <p className="label">Registered residents · {list.length}</p>
+        <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, flat or mobile" />
+        <div style={{ marginTop: 6 }}>
+          {shown.length === 0 && <div className="empty">{list.length ? "No match." : "No residents have registered yet."}</div>}
+          {shown.map((u) => {
+            const st = memberStatus(u.phone);
+            return (
+              <div key={u.phone} className="row-it">
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{u.flat} · {u.name} {st === "rejected" && <span className="pill p-rej">Rejected</span>}</div>
+                  <div className="mini">{u.role} · {fmtPhone(u.phone)}<br />Joined {fmtDate(u.createdAt)}{u.lastLogin ? " · last login " + fmtDate(u.lastLogin) : ""}</div>
+                </div>
+                {confirm === u.phone
+                  ? <div className="row"><button className="btn ghost sm" onClick={() => setConfirm(null)}>Keep</button>
+                      <button className="btn sm" style={{ background: "var(--red)" }} onClick={() => remove(u.phone)}>Remove</button></div>
+                  : <div className="row">{st === "rejected" && <button className="btn ghost sm" onClick={() => { decideMember(u.phone, "approved"); flash("Approved"); }}>Approve</button>}
+                      <button className="btn ghost sm" style={{ color: "var(--red)" }} onClick={() => setConfirm(u.phone)}>Remove</button></div>}
+              </div>
+            );
+          })}
+        </div>
+        <p className="note">Removing a resident signs them out of the app; they'll need to log in and register again (and be approved again).</p>
       </div>
-      <p className="note">Removing a resident signs them out of the app; they'll need to log in and register again.</p>
+    </div>
+  );
+}
+
+/* ---------------------------- EXPENSES ---------------------------- */
+function Expenses({ ledger, save, flash }) {
+  const [kind, setKind] = useState("expense");
+  const cats = kind === "income" ? INCOME_CATS : EXPENSE_CATS;
+  const [date, setDate] = useState(ymd(Date.now()));
+  const [cat, setCat] = useState(EXPENSE_CATS[0]);
+  const [desc, setDesc] = useState("");
+  const [party, setParty] = useState("");
+  const [amount, setAmount] = useState("");
+  const [mode, setMode] = useState(PAY_MODES[0]);
+  const [ref, setRef] = useState("");
+  const [month, setMonth] = useState(ymd(Date.now()).slice(0, 7));
+  const [confirm, setConfirm] = useState(null);
+  const switchKind = (k) => { setKind(k); setCat((k === "income" ? INCOME_CATS : EXPENSE_CATS)[0]); };
+  const add = () => {
+    if (!date) return flash("Pick the date");
+    if (!amount || +amount <= 0) return flash("Enter the amount");
+    if (cat === "Other" && !desc.trim()) return flash("Add a short description");
+    const voucher = nextVoucher(ledger, kind);
+    save([...ledger, { id: uid(), kind, voucher, date, cat, desc: desc.trim(), party: party.trim(), amount: Math.round(+amount * 100) / 100, mode, ref: ref.trim(), at: Date.now() }]);
+    flash(`${voucher} saved · ${inr(+amount)}`); setDesc(""); setParty(""); setAmount(""); setRef("");
+    setMonth(date.slice(0, 7));
+  };
+  const del = (id) => { save(ledger.filter((e) => e.id !== id)); setConfirm(null); flash("Entry deleted"); };
+  const months = [...new Set([ymd(Date.now()).slice(0, 7), ...ledger.map((e) => e.date.slice(0, 7))])].sort().reverse();
+  const shown = ledger.filter((e) => e.date.slice(0, 7) === month).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.at - a.at));
+  const mIn = shown.filter((e) => e.kind === "income").reduce((s, e) => s + (+e.amount || 0), 0);
+  const mOut = shown.filter((e) => e.kind === "expense").reduce((s, e) => s + (+e.amount || 0), 0);
+  return (
+    <div>
+      <div className="card">
+        <div className="seg">
+          <button className={"btn sm " + (kind === "expense" ? "" : "ghost")} style={kind === "expense" ? { background: "var(--coral)" } : {}} onClick={() => switchKind("expense")}>− Expense</button>
+          <button className={"btn sm " + (kind === "income" ? "" : "ghost")} style={kind === "income" ? { background: "var(--green)" } : {}} onClick={() => switchKind("income")}>+ Other income</button>
+        </div>
+        <p className="label">Date</p>
+        <input className="input" type="date" value={date} max={ymd(Date.now())} onChange={(e) => setDate(e.target.value)} />
+        <p className="label" style={{ marginTop: 13 }}>Category</p>
+        <select className="input" value={cat} onChange={(e) => setCat(e.target.value)}>{cats.map((c) => <option key={c}>{c}</option>)}</select>
+        <p className="label" style={{ marginTop: 13 }}>Amount (₹)</p>
+        <input className="input" type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 10500" />
+        <p className="label" style={{ marginTop: 13 }}>{kind === "income" ? "Received from" : "Paid to"}</p>
+        <input className="input" value={party} onChange={(e) => setParty(e.target.value)} placeholder={kind === "income" ? "e.g. Builder" : "e.g. Watchman Ramaiah / APSPDCL"} />
+        <p className="label" style={{ marginTop: 13 }}>Description</p>
+        <input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={kind === "income" ? "e.g. Share for unsold flats, Nov" : "e.g. Nov salary / Meter 3631253000499 bill"} />
+        <p className="label" style={{ marginTop: 13 }}>Paid by</p>
+        <div className="row" style={{ flexWrap: "wrap" }}>
+          {PAY_MODES.map((m) => <button key={m} className={"btn sm " + (mode === m ? "" : "ghost")} style={{ flex: "1 1 22%", padding: "9px 2px" }} onClick={() => setMode(m)}>{m}</button>)}
+        </div>
+        <p className="label" style={{ marginTop: 13 }}>Bill no. / UPI ref (optional)</p>
+        <input className="input" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Receipt or transaction number" />
+        <button className="btn" style={{ marginTop: 15, background: kind === "income" ? "var(--green)" : undefined }} onClick={add}>
+          Save {kind === "income" ? "income" : "expense"} · {nextVoucher(ledger, kind)}</button>
+        <p className="note">Every entry gets a voucher number and goes to the Google Sheet with the next sync. Keep the paper bill with the same voucher number.</p>
+      </div>
+      <div className="card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <p className="label" style={{ margin: 0 }}>Cashbook</p>
+          <select className="input" style={{ width: "auto", padding: "7px 10px" }} value={month} onChange={(e) => setMonth(e.target.value)}>
+            {months.map((m) => <option key={m} value={m}>{monthName(m)}</option>)}
+          </select>
+        </div>
+        <div className="kv"><span>Other income</span><span className="amt-in">{inr(mIn)}</span></div>
+        <div className="kv"><span>Expenses</span><span className="amt-out">{inr(mOut)}</span></div>
+        <div style={{ marginTop: 6 }}>
+          {shown.length === 0 && <div className="empty">No entries in {monthName(month)}.</div>}
+          {shown.map((e) => (
+            <div key={e.id} className="row-it">
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{e.cat}</div>
+                <div className="mini">{e.voucher} · {fmtDay(e.date)} · {e.mode}{e.party ? " · " + e.party : ""}{e.desc ? <><br />{e.desc}</> : ""}{e.ref ? " · ref " + e.ref : ""}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div className={e.kind === "income" ? "amt-in" : "amt-out"}>{e.kind === "income" ? "+" : "−"}{inr(e.amount)}</div>
+                {confirm === e.id
+                  ? <div className="row" style={{ marginTop: 5 }}><button className="btn ghost sm" onClick={() => setConfirm(null)}>Keep</button><button className="btn sm" style={{ background: "var(--red)" }} onClick={() => del(e.id)}>Delete</button></div>
+                  : <button className="linkbtn" style={{ fontSize: 11, color: "var(--red)", marginTop: 4 }} onClick={() => setConfirm(e.id)}>Delete</button>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1313,19 +1628,34 @@ function Accounts({ payments }) {
 }
 
 /* ---------------------------- REPORTS ----------------------------- */
-function Reports({ payments, cfg }) {
+function Reports({ payments, cfg, ledger }) {
   const approved = payments.filter((p) => p.status === "approved");
   const byMonth = MONTHS.map((_, i) => approved.filter((p) => p.month === monthKey(i)).reduce((s, p) => s + p.amount, 0));
   const maxM = Math.max(1, ...byMonth);
   const total = byMonth.reduce((a, b) => a + b, 0);
   const byFloor = FLOORS.map((fl) => ({ name: fl.name, total: approved.filter((p) => fl.flats.includes(p.flat)).reduce((s, p) => s + p.amount, 0) }));
   const defaulters = ALL_FLATS.filter((f) => MONTHS.some((_, i) => i <= NOW_MONTH && statusOf(payments, f, monthKey(i)) !== "approved"));
+  const owedBy = (f) => MONTHS.reduce((s, _, i) => (i <= NOW_MONTH && statusOf(payments, f, monthKey(i)) !== "approved" ? s + cfg.monthlyAmount : s), 0);
+  const acc = accountTotals(payments, ledger, cfg, YEAR);
+  const outByMonth = MONTHS.map((_, i) => ledger.filter((e) => e.kind === "expense" && e.date.slice(0, 7) === monthKey(i)).reduce((s, e) => s + (+e.amount || 0), 0));
   return (
     <div>
       <div className="card">
         <p className="label">Yearly report · {YEAR}</p>
         <div style={{ fontFamily: "Sora", fontSize: 28, fontWeight: 700, color: "var(--teal-d)" }}>{inr(total)}</div>
         <div className="label" style={{ marginTop: 2 }}>Total approved collection</div>
+        <div className="kv" style={{ marginTop: 8 }}><span>Other income</span><span className="amt-in">{inr(acc.income)}</span></div>
+        <div className="kv"><span>Expenses</span><span className="amt-out">{inr(acc.spent)}</span></div>
+        <div className="kv"><span>Surplus / deficit {YEAR}</span><span style={{ fontWeight: 700, color: acc.maint + acc.income - acc.spent < 0 ? "var(--red)" : "var(--green)" }}>{inr(acc.maint + acc.income - acc.spent)}</span></div>
+        <div className="kv"><span>Balance in hand</span><span style={{ fontWeight: 700 }}>{acc.balance < 0 ? "−" : ""}{inr(Math.abs(acc.balance))}</span></div>
+      </div>
+      <div className="card">
+        <p className="label">Monthly expenses</p>
+        {MONTHS.map((m, i) => (
+          <div className="bar-row" key={m}><span className="lab">{m}</span>
+            <span className="bar-track"><span className="bar-fill" style={{ width: (outByMonth[i] / Math.max(1, ...outByMonth)) * 100 + "%", background: "var(--coral)" }} /></span>
+            <span className="val">{inr(outByMonth[i])}</span></div>
+        ))}
       </div>
       <div className="card">
         <p className="label">Monthly collection</p>
@@ -1345,7 +1675,7 @@ function Reports({ payments, cfg }) {
       <div className="card">
         <p className="label">Defaulters · {defaulters.length} flat(s)</p>
         {defaulters.length === 0 && <div className="empty">Everyone is up to date 🎉</div>}
-        {defaulters.length > 0 && <div className="flatgrid">{defaulters.map((f) => <div key={f} className="flat" style={{ background: "var(--red-bg)", borderColor: "#EFC9C9", color: "var(--red)", cursor: "default" }}>{f}</div>)}</div>}
+        {defaulters.map((f) => <div key={f} className="kv"><span>{f}</span><span className="amt-out">{inr(owedBy(f))}</span></div>)}
       </div>
     </div>
   );
@@ -1408,10 +1738,51 @@ function AdminNotices({ notices, save, flash }) {
   );
 }
 
+/* ------------------------- GOOGLE SHEET --------------------------- */
+// The Google Apps Script (apps/sunshine-homes/sheets-sync/Code.gs) copies every record to the
+// society's Google Sheet every 5 minutes and writes its status into the "sheetSync" document.
+function SheetCard({ sheetSync, flash, compact }) {
+  const [busy, setBusy] = useState(false);
+  const s = sheetSync;
+  const mins = s && s.at ? Math.round((Date.now() - s.at) / 60000) : null;
+  const ok = s && !s.error && mins !== null && mins <= 40;
+  const syncNow = async () => {
+    if (!s || !s.webAppUrl) return;
+    setBusy(true);
+    try {
+      const r = await fetch(s.webAppUrl + "?action=sync");
+      const j = await r.json();
+      flash(j.ok ? "Google Sheet updated ✓" : "Sync problem: " + (j.error || "unknown"));
+    } catch (e) { window.open(s.webAppUrl + "?action=sync", "_blank"); }
+    setBusy(false);
+  };
+  if (compact && !s) return null;
+  return (
+    <div className="card" style={{ marginTop: compact ? 13 : 0 }}>
+      <p className="label">📗 Google Sheet (raghuslogiclab@gmail.com)</p>
+      {!s && <p className="note" style={{ marginTop: 0 }}>Not connected yet. Follow “Connect the Google Sheet” in the setup guide — after that every payment, expense, resident and complaint is copied to the sheet automatically every 5 minutes.</p>}
+      {s && <>
+        <div className="kv"><span>Last copied</span><span className={"pill " + (ok ? "p-ok" : "p-pend")}>● {mins === null ? "—" : mins < 1 ? "just now" : mins < 60 ? mins + " min ago" : fmtDate(s.at) + " " + new Date(s.at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></div>
+        {s.rows && <div className="kv"><span>Rows in sheet</span><span>{s.rows.payments || 0} payments · {s.rows.ledger || 0} expenses/income</span></div>}
+        {s.error && <div className="err">Last sync problem: {s.error}</div>}
+        <div className="row" style={{ marginTop: 11 }}>
+          {s.url && <a href={s.url} target="_blank" rel="noopener" style={{ flex: 1 }}><button className="btn ghost sm" style={{ width: "100%" }}>Open sheet</button></a>}
+          {s.webAppUrl && <button className="btn sm" style={{ flex: 1 }} disabled={busy} onClick={syncNow}>{busy ? "Syncing…" : "Sync now"}</button>}
+        </div>
+      </>}
+    </div>
+  );
+}
+
 /* ---------------------------- SETTINGS ---------------------------- */
-function Settings({ cfg, saveCfg, flash, backupData }) {
+function Settings({ cfg, saveCfg, flash, backupData, sheetSync }) {
   const [upi, setUpi] = useState(cfg.upiId);
   const [amt, setAmt] = useState(String(cfg.monthlyAmount));
+  const [ob, setOb] = useState(String(cfg.openingBalance || 0));
+  const [od, setOd] = useState(cfg.openingDate || "");
+  const [fac, setFac] = useState((cfg.facilities || []).join(", "));
+  const [contacts, setContacts] = useState(() => (cfg.contacts || DEFAULT_CONTACTS).map((c) => ({ ...c })));
+  const setC = (i, k, v) => setContacts((cs) => cs.map((c, j) => (j === i ? { ...c, [k]: v } : c)));
   const [busy, setBusy] = useState("");
   const markBackup = () => saveCfg({ ...cfg, lastBackupAt: Date.now() });
   const excel = async () => {
@@ -1427,13 +1798,57 @@ function Settings({ cfg, saveCfg, flash, backupData }) {
   const daysSince = cfg.lastBackupAt ? Math.floor((Date.now() - cfg.lastBackupAt) / 86400000) : null;
   return (
     <div>
+      <SheetCard sheetSync={sheetSync} flash={flash} />
+      <div className="card">
+        <p className="label">New residents</p>
+        <div className="kv"><span>Committee must approve new registrations</span>
+          <button className={"btn sm " + (cfg.memberApproval ? "" : "ghost")} onClick={() => { saveCfg({ ...cfg, memberApproval: !cfg.memberApproval }); flash(cfg.memberApproval ? "Approval turned off" : "Approval turned on"); }}>{cfg.memberApproval ? "On" : "Off"}</button></div>
+        <div className="kv"><span>Residents can see society accounts</span>
+          <button className={"btn sm " + (cfg.showAccounts !== false ? "" : "ghost")} onClick={() => saveCfg({ ...cfg, showAccounts: cfg.showAccounts === false })}>{cfg.showAccounts !== false ? "On" : "Off"}</button></div>
+        <p className="note">With approval on, anyone who registers waits on a "waiting for approval" screen until you approve them in Residents. Residents see totals and expenses only — never other residents' numbers.</p>
+      </div>
+      <div className="card">
+        <p className="label">Opening balance (cash in hand when you started)</p>
+        <div className="row">
+          <input className="input" type="number" value={ob} onChange={(e) => setOb(e.target.value)} placeholder="₹" />
+          <input className="input" type="date" value={od} onChange={(e) => setOd(e.target.value)} />
+        </div>
+        <button className="btn" style={{ marginTop: 11 }} onClick={() => { saveCfg({ ...cfg, openingBalance: +ob || 0, openingDate: od }); flash("Opening balance saved"); }}>Save opening balance</button>
+        <p className="note">Balance in hand = this amount + maintenance approved and other income from this date − expenses from this date.</p>
+      </div>
+      <div className="card">
+        <p className="label">Contacts shown to residents</p>
+        {contacts.map((c, i) => (
+          <div key={i} style={{ borderBottom: "1px solid var(--line)", padding: "8px 0" }}>
+            <div className="row">
+              <input className="input" value={c.name} onChange={(e) => setC(i, "name", e.target.value)} placeholder="Name / role" />
+              <input className="input" type="tel" value={c.phone} onChange={(e) => setC(i, "phone", e.target.value)} placeholder="Phone" />
+            </div>
+            <div className="row" style={{ marginTop: 6 }}>
+              <input className="input" value={c.detail} onChange={(e) => setC(i, "detail", e.target.value)} placeholder="Note (e.g. Mon–Sat, 9–6)" />
+              <button className="btn ghost sm" style={{ color: "var(--red)" }} onClick={() => setContacts((cs) => cs.filter((_, j) => j !== i))}>✕</button>
+            </div>
+          </div>
+        ))}
+        <div className="row" style={{ marginTop: 10 }}>
+          <button className="btn ghost sm" style={{ flex: 1 }} onClick={() => setContacts((cs) => [...cs, { name: "", detail: "", phone: "" }])}>+ Add contact</button>
+          <button className="btn sm" style={{ flex: 1 }} onClick={() => { saveCfg({ ...cfg, contacts: contacts.filter((c) => c.name.trim()).map((c) => ({ name: c.name.trim(), detail: c.detail.trim(), phone: c.phone.trim() })) }); flash("Contacts saved"); }}>Save contacts</button>
+        </div>
+        <p className="note">Contacts whose name starts with "Committee" are also shown to new residents waiting for approval.</p>
+      </div>
+      <div className="card">
+        <p className="label">Bookable common areas</p>
+        <input className="input" value={fac} onChange={(e) => setFac(e.target.value)} placeholder="e.g. Terrace, Common hall" />
+        <button className="btn" style={{ marginTop: 11 }} onClick={() => { saveCfg({ ...cfg, facilities: fac.split(",").map((x) => x.trim()).filter(Boolean) }); flash("Saved"); }}>Save</button>
+        <p className="note">Separate with commas. Leave empty to hide Amenities from residents.</p>
+      </div>
       <div className="card">
         <p className="label">Backup</p>
         <div className="kv"><span>Last backup</span>
           <span className={"pill " + (daysSince !== null && daysSince <= 31 ? "p-ok" : "p-pend")}>● {cfg.lastBackupAt ? fmtDate(cfg.lastBackupAt) + (daysSince === 0 ? " (today)" : ` (${daysSince} day${daysSince === 1 ? "" : "s"} ago)`) : "Never"}</span></div>
         <button className="btn" style={{ marginTop: 12 }} disabled={!!busy} onClick={excel}>{busy === "excel" ? "Preparing Excel file…" : "⬇ Download Excel backup (.xlsx)"}</button>
         <button className="btn ghost" style={{ marginTop: 9 }} disabled={!!busy} onClick={json}>⬇ Download full backup (.json)</button>
-        <p className="note">Download a backup at least once a month and keep it safe (e.g. Google Drive or email it to yourself). The Excel file has a sheet each for residents, dues by flat, payments, complaints, notices, visitors, bookings and settings. The full backup is an exact copy of everything, for restoring if ever needed.</p>
+        <p className="note">The Google Sheet above is your live copy. Also download a backup at least once a month and keep it safe. The Excel file has a sheet each for residents, dues by flat, payments, expenses & income, complaints, notices, visitors, bookings and settings. The full backup is an exact copy of everything, for restoring if ever needed.</p>
       </div>
       <div className="card">
         <p className="label">Login</p>

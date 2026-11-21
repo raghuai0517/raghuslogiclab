@@ -92,9 +92,12 @@ Tool pages download PDF/Word files straight from the browser. They need internet
 The **Apps ▾** menu and the **APPS** section on the home page list everything in the `apps` array at the bottom of `data/site-data.js`.
 Each app lives in its own folder under `apps/` (for example `apps/sunshine-homes/`).
 
-**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app with two logins:
-- **Resident** — mobile number + the society password. Pay maintenance by UPI, see dues, notices, raise complaints, visitor passes, amenity booking.
-- **Committee** — its own password, no mobile number. Opens the admin panel: payment approvals, mark paid, residents, accounts, reports, complaints, notices, settings.
+**Sunshine Homes** (`apps/sunshine-homes/`) — apartment community app for Sunshine Homes Apartment, Sulurpeta (30 flats, G1–F406), with two logins:
+- **Resident** — mobile number + the society password. First-time users register (name, flat, Owner/Tenant/Family) and wait until the committee approves them. Then: pay maintenance by UPI, see dues, society accounts (money in/out, expenses by category, balance), notices, complaints, visitor passes, common-area booking, contacts.
+- **Committee** — its own password, no mobile number. Opens the admin panel: payment approvals, **Expenses** (cashbook: expenses and other income with voucher numbers EXP-0001 / INC-0001, date, category, paid to, mode, bill no.), mark paid, residents (approve / reject new registrations), dues grid, reports (collection, expenses, surplus, balance in hand, defaulters with amounts), complaints, notices, settings (UPI ID, monthly amount — ₹800, opening balance, contacts, common areas, approval switch, residents-see-accounts switch, Google Sheet status, backups).
+- Installable: `manifest.webmanifest` + icons, and an "Install app" button (Android/desktop) or Share → Add to Home Screen hint (iPhone).
+
+**Google Sheet (raghuslogiclab@gmail.com):** `sheets-sync/Code.gs` is a Google Apps Script bound to the sheet "Sunshine Homes – Live Records" in the raghuslogiclab@gmail.com Drive. Every 5 minutes it logs in to Firebase as the committee (password kept only in the script's Script properties), reads the `sunshine` collection and rewrites the tabs Summary, Maintenance Payments, Dues <year>, Expenses & Income, Residents, Complaints, Notices, Visitors and Bookings (read-only copy; entries are made in the app). It writes its status into the `sunshine/sheetSync` document, which the committee sees in Admin → Overview / Settings with "Open sheet" and, if the script is deployed as a web app (Execute as: Me, Anyone), "Sync now". Setup steps are at the top of `Code.gs`.
 
 Files:
 - `index.html` + `app.js` are what the website serves. `app.js` is a built file — don't edit it by hand.
@@ -110,7 +113,7 @@ Firebase (project `sunshine-homes-d5e7b`, console: https://console.firebase.goog
 - Accounts (Authentication → Users): `residents@sunshine-homes-d5e7b.firebaseapp.com` (society password) and `admin@sunshine-homes-d5e7b.firebaseapp.com` (committee password).
 - **Change a password:** Authentication → Users → delete that account, then **Add user** with the same email and the new password. Data isn't affected; people using that login sign in again.
 - Settings in use: Email/Password sign-in ON, Phone OFF, user sign-up and delete OFF (Authentication → Settings → User actions).
-- Payment approvals and complaint status live in their own documents (`approvals`, `ticketStatus`) that only the committee can write, so a resident can't mark their own payment as paid. Firestore rules:
+- Payment approvals, resident approvals (`member:<mobile>` keys) and complaint status live in their own documents (`approvals`, `ticketStatus`) that only the committee can write, so a resident can't mark their own payment as paid or approve themselves. The cashbook is the `ledger` document and the sheet status is `sheetSync`; both are committee-only. Firestore rules:
   ```
   rules_version = '2';
   service cloud.firestore {
@@ -119,12 +122,12 @@ Firebase (project `sunshine-homes-d5e7b`, console: https://console.firebase.goog
         function isResident() { return request.auth != null && request.auth.token.email == "residents@sunshine-homes-d5e7b.firebaseapp.com"; }
         function isAdmin() { return request.auth != null && request.auth.token.email == "admin@sunshine-homes-d5e7b.firebaseapp.com"; }
         allow read: if isResident() || isAdmin();
-        allow write: if isAdmin() || (isResident() && !(key in ["config", "notices", "approvals", "ticketStatus"]));
+        allow write: if isAdmin() || (isResident() && !(key in ["config", "notices", "approvals", "ticketStatus", "ledger", "sheetSync"]));
       }
     }
   }
   ```
-- **Backups:** the free Firebase plan has no automatic backups. Committee login → Admin → Settings → **Backup** downloads an Excel file (residents, dues by flat, payments, complaints, notices, visitors, bookings, settings) and a full `.json` copy of all data. Settings shows when the last backup was taken; download one at least monthly. The Excel library (SheetJS) loads from cdn.sheetjs.com only when that button is pressed.
+- **Backups:** the free Firebase plan has no automatic backups; the Google Sheet is the live copy. Committee login → Admin → Settings → **Backup** also downloads an Excel file (residents, dues by flat, payments, expenses & income, complaints, notices, visitors, bookings, settings) and a full `.json` copy of all data. Settings shows when the last backup was taken; download one at least monthly. The Excel library (SheetJS) loads from cdn.sheetjs.com only when that button is pressed.
 - **Without Firebase** (`FIREBASE_CONFIG = null`) it runs in demo mode: any password works and data is saved only in that browser.
 
 To add another app: put it in `apps/<name>/`, then add an entry to `"apps"` in `data/site-data.js` (copy the Sunshine Homes one and change `id`, `slug`, `name`, `tagline`, `description`, `icon`, `url`, `color`, `added`).

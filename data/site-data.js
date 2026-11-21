@@ -34,6 +34,14 @@ window.RLL_DATA = {
   ],
   "updates": [
     {
+      "id": "u-sunshine-sheets-expenses",
+      "date": "2026-11-21",
+      "type": "feature",
+      "title": "Sunshine Homes: expenses, society accounts and Google Sheet",
+      "body": "The committee can now record expenses and other income with voucher numbers; residents see money in, money out and the balance. New residents wait for committee approval. Every payment, expense and resident is copied to the society's Google Sheet every 5 minutes, and the app can be installed on the phone's home screen.",
+      "project": "raghuslogiclab-main"
+    },
+    {
       "id": "u-census-household-schedule",
       "date": "2026-11-20",
       "type": "launch",
@@ -483,8 +491,8 @@ window.RLL_DATA = {
       "id": "a-sunshine-homes",
       "slug": "sunshine-homes",
       "name": "Sunshine Homes",
-      "tagline": "Apartment community app: maintenance by UPI, notices, helpdesk, visitors and amenities.",
-      "description": "Residents log in with their mobile number and the society password, pay monthly maintenance by UPI and track dues. The management committee has its own login to approve payments, track every flat and post notices.",
+      "tagline": "Apartment app: maintenance by UPI, society accounts & expenses, notices, helpdesk and visitors.",
+      "description": "Residents log in with their mobile number and the society password (new residents are approved by the committee), pay monthly maintenance by UPI, track dues and see the society's accounts. The committee has its own login to approve payments, record expenses and income, approve residents and post notices; every record is copied to the society's Google Sheet.",
       "category": "Community",
       "icon": "🌇",
       "url": "apps/sunshine-homes/",
