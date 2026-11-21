@@ -114,7 +114,7 @@ Firebase (project `sunshine-homes-d5e7b`, console: https://console.firebase.goog
 - Accounts (Authentication → Users): `residents@sunshine-homes-d5e7b.firebaseapp.com` (society password) and `admin@sunshine-homes-d5e7b.firebaseapp.com` (committee password).
 - **Change a password:** Authentication → Users → delete that account, then **Add user** with the same email and the new password. Data isn't affected; people using that login sign in again.
 - Settings in use: Email/Password sign-in ON, Phone OFF, user sign-up and delete OFF (Authentication → Settings → User actions).
-- Payment approvals, resident approvals (`member:<mobile>` keys) and complaint status live in their own documents (`approvals`, `ticketStatus`) that only the committee can write, so a resident can't mark their own payment as paid or approve themselves. The cashbook is the `ledger` document and the sheet status is `sheetSync`; both are committee-only. Firestore rules:
+- Payment approvals, resident approvals (`member:<mobile>` keys) and complaint status live in their own documents (`approvals`, `ticketStatus`) that only the committee can write, so a resident can't mark their own payment as paid or approve themselves. The cashbook is the `ledger` document, the owner register (flat → owner name + mobile) is `owners` and the sheet status is `sheetSync`; all three are committee-only. A resident who registers with the owner's mobile number for that flat is approved automatically. Owner details are never committed to this public repo: they were loaded once through an import link (`#owners=` + base64url of `[[flat, name, mobile], …]`), which `index.html` moves into sessionStorage and removes from the address bar before anything else runs; the committee confirms the import after logging in. Admin → Flats & Owners edits them afterwards. Firestore rules:
   ```
   rules_version = '2';
   service cloud.firestore {
@@ -123,7 +123,7 @@ Firebase (project `sunshine-homes-d5e7b`, console: https://console.firebase.goog
         function isResident() { return request.auth != null && request.auth.token.email == "residents@sunshine-homes-d5e7b.firebaseapp.com"; }
         function isAdmin() { return request.auth != null && request.auth.token.email == "admin@sunshine-homes-d5e7b.firebaseapp.com"; }
         allow read: if isResident() || isAdmin();
-        allow write: if isAdmin() || (isResident() && !(key in ["config", "notices", "approvals", "ticketStatus", "ledger", "sheetSync"]));
+        allow write: if isAdmin() || (isResident() && !(key in ["config", "notices", "approvals", "ticketStatus", "ledger", "sheetSync", "owners"]));
       }
     }
   }

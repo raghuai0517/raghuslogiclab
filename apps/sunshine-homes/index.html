@@ -33,7 +33,11 @@
     .lab-bar a:hover { text-decoration: underline; }
     noscript { display: block; padding: 24px; font-family: system-ui, sans-serif; text-align: center; }
   </style>
-<script defer src="../../assets/track.js?v=1"></script>
+<script>
+    /* One-time owner-list import link (#owners=…): keep it in this tab only and take it out of the address bar. */
+    if (location.hash.indexOf("#owners=") === 0) { try { sessionStorage.setItem("sh-owners-import", location.hash.slice(8)); } catch (e) {} history.replaceState(null, "", location.pathname + location.search); }
+  </script>
+  <script defer src="../../assets/track.js?v=1"></script>
   <script>
     /* Keep the browser's "install" offer as soon as it arrives, so the app's Install button can use it. */
     window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__shInstall = e; window.dispatchEvent(new Event("sh-installable")); });
@@ -46,6 +50,6 @@
   <noscript>Please turn on JavaScript to use the Sunshine Homes app.</noscript>
   <!-- Built from src/ — see the README section "Apps" for how to rebuild app.js.
        After rebuilding, change the ?v= value below so phones load the new version straight away. -->
-  <script src="app.js?v=a7b922435e"></script>
+  <script src="app.js?v=d96d98d919"></script>
 </body>
 </html>

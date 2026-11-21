@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * Copies everything from the Sunshine Homes app (Firebase project
  * sunshine-homes-d5e7b) into this Google Sheet every 5 minutes:
- * Summary, Maintenance Payments, Dues by flat, Expenses & Income, Residents,
+ * Summary, Maintenance Payments, Dues by flat, Expenses & Income, Owners, Residents,
  * Complaints, Notices, Visitors and Bookings.
  *
  * SET UP (once, on a computer, signed in as raghuslogiclab@gmail.com):
@@ -220,6 +220,8 @@ function writeSheets_(ss, d) {
   var approvals = d.approvals || {};
   var tStatus = d.ticketStatus || {};
   var users = d.users || {};
+  var owners = d.owners || {};
+  var ownerOf = function (f) { return owners[f] ? owners[f].name || "" : ""; };
   var ledger = (d.ledger || []).slice();
   var payments = (d.payments || []).map(function (p) {
     var a = approvals[p.id] || {};
@@ -227,7 +229,10 @@ function writeSheets_(ss, d) {
   }).sort(function (a, b) { return (a.submittedAt || 0) - (b.submittedAt || 0); });
   var memberStatus = function (ph) {
     var a = approvals["member:" + ph];
-    return a && a.status ? a.status : (cfg.memberApproval ? "pending" : "approved");
+    if (a && a.status) return a.status;
+    var u = users[ph];
+    if (u && owners[u.flat] && owners[u.flat].phone === ph) return "approved";
+    return cfg.memberApproval ? "pending" : "approved";
   };
   var year = +Utilities.formatDate(new Date(), TZ, "yyyy");
   var curMonth = +Utilities.formatDate(new Date(), TZ, "M") - 1;
@@ -331,10 +336,10 @@ function writeSheets_(ss, d) {
         if (s === "approved") paid++; else if (due) owed += monthly;
         return s === "none" ? (due ? "Due" : "") : (LABEL[s] || s);
       });
-      return [f, residentsOf(f)].concat(cells).concat([paid, owed]);
+      return [f, ownerOf(f), residentsOf(f)].concat(cells).concat([paid, owed]);
     });
-    var sh = writeTab_(ss, "Dues " + y, pos++, ["Flat", "Residents"].concat(MONTHS).concat(["Months paid", "Outstanding (₹)"]), dRows,
-      { money: [16], widths: [60, 200, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 90, 120] });
+    var sh = writeTab_(ss, "Dues " + y, pos++, ["Flat", "Owner", "Residents in app"].concat(MONTHS).concat(["Months paid", "Outstanding (₹)"]), dRows,
+      { money: [17], widths: [60, 170, 170, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 90, 120] });
     colourDues_(sh, dRows.length);
   });
 
@@ -349,6 +354,14 @@ function writeSheets_(ss, d) {
     ["Voucher", "Date", "Type", "Category", "Description", "Paid to / received from", "Mode", "Bill / ref", "In (₹)", "Out (₹)", "Entered on"],
     lRows, { money: [9, 10], day: [2], stamp: [11], widths: [85, 95, 70, 170, 220, 170, 90, 120, 90, 90, 130] });
   if (lRows.length) lsh.getRange(lRows.length + 1, 1, 1, 11).setFontWeight("bold").setBackground("#F2F6F7");
+
+  /* Owners */
+  writeTab_(ss, "Owners", pos++, ["Flat", "Owner", "Mobile", "Registered in the app", "Outstanding " + year + " (₹)"],
+    FLATS.map(function (f) {
+      var owed = 0;
+      MONTHS.forEach(function (m, i) { if (i <= curMonth && statusOf(f, year + "-" + ("0" + (i + 1)).slice(-2)) !== "approved") owed += monthly; });
+      return [f, ownerOf(f), owners[f] && owners[f].phone ? "+91 " + owners[f].phone : "", residentsOf(f), owed];
+    }), { money: [5], widths: [60, 190, 130, 220, 140] });
 
   /* Residents */
   writeTab_(ss, "Residents", pos++, ["Flat", "Name", "Mobile", "Role", "Status", "Registered on", "Last login"],
@@ -411,7 +424,7 @@ function table_(sh, r, c, head, rows, opt) {
 
 function colourDues_(sh, n) {
   if (!n) return;
-  var rng = sh.getRange(2, 3, n, 12);
+  var rng = sh.getRange(2, 4, n, 12);
   var rule = function (text, bg, fg) { return SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(text).setBackground(bg).setFontColor(fg).setRanges([rng]).build(); };
   sh.setConditionalFormatRules([
     rule("Paid", "#E5F4EA", "#16A34A"), rule("Pending", "#FCEFD4", "#B7791F"),
