@@ -354,3 +354,22 @@ th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: up
 .badge-appsc { color: var(--appsc-gold-light); }
 .btn-appsc { background: var(--appsc); border: 2px solid var(--appsc-gold); color: var(--appsc-cream); }
 .btn-appsc:hover { background: var(--appsc-dark); border-color: var(--appsc-gold-light); }
+
+/* ---------- Personal section: black tile, white letters, gold border ---------- */
+.btn-personal { background: #000; border-color: #d4af37; color: #fff; }
+.btn-personal:hover { background: #d4af37; border-color: #d4af37; color: #000; }
+.eyebrow-personal { color: #d4af37; }
+.personal-group-title { letter-spacing: .04em; }
+.personal-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  min-height: 240px; padding: 26px 18px; text-align: center; text-decoration: none;
+  background: #000; color: #fff; border: 2px solid #d4af37; border-radius: 20px;
+  box-shadow: 0 0 0 5px #000, 0 0 0 6px rgba(212,175,55,.35); transition: transform .15s, box-shadow .15s; }
+.personal-tile:hover { transform: translateY(-3px); box-shadow: 0 0 0 5px #000, 0 0 0 6px #d4af37, 0 14px 30px rgba(212,175,55,.25); }
+.personal-tile:focus-visible { outline: 3px solid #fff; outline-offset: 6px; }
+.personal-tile .pt-badge { width: 56px; height: 56px; border-radius: 16px; border: 1.5px solid #d4af37; color: #d4af37;
+  display: grid; place-items: center; font-size: 30px; margin-bottom: 6px; }
+.personal-tile .pt-title { font-size: 1.35rem; font-weight: 700; color: #fff; }
+.personal-tile .pt-sub { font-size: .85rem; color: #cfcfcf; letter-spacing: .04em; }
+.personal-tile .pt-lock { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600;
+  color: #d4af37; border: 1px solid rgba(212,175,55,.5); border-radius: 999px; padding: 4px 10px; }
+@media (prefers-reduced-motion: reduce) { .personal-tile { transition: none; } }
