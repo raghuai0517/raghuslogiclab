@@ -86,6 +86,8 @@ h2{font:600 26px/1.2 "Tiro Telugu",serif;margin:36px 0 4px}
 .poem{font-family:"Tiro Telugu",serif;font-size:20px;line-height:1.85;min-height:220px}
 .pane[data-l=en] .poem{font-style:italic}
 .acts{margin-top:18px}.acts>*{flex:1 1 130px}
+.two>*{flex:1 1 140px}
+.speaking{background:var(--gold)!important;color:#3a1a00!important;border-color:var(--gold)!important}
 details{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
 summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display:flex;align-items:center}
 .set h2{margin-top:18px}
@@ -128,6 +130,10 @@ summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display
         </label>
         <button id="make" class="primary" type="button">కవితగా మార్చి దాచు<small>Make poem &amp; save</small></button>
       </div>
+      <div class="row two">
+        <button id="saveWords" class="ghost" type="button">మాటలు దాచు<small>Save words</small></button>
+        <button id="readRaw" class="ghost" type="button">చదివి వినిపించు<small>Read aloud</small></button>
+      </div>
       <p class="hint" id="hint">మైక్ పనిచేయకపోతే, ఫోన్ కీబోర్డ్‌లోని మైక్ నొక్కి తెలుగులో చెప్పండి. · If the mic doesn't work, tap the mic on your phone's keyboard and speak into the box.</p>
     </section>
     <section>
@@ -165,6 +171,9 @@ summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display
     <label class="lbl">Note</label>
     <textarea data-f="note_en" lang="en" aria-label="English note"></textarea>
     <div class="row"><a id="gt" class="ghost" href="#" target="_blank" rel="noopener">Google Translate<small>Open the Telugu there</small></a></div>
+  </div>
+  <div class="row acts">
+    <button id="speak" class="primary" type="button">చదివి వినిపించు<small>Read aloud</small></button>
   </div>
   <div class="row acts">
     <button id="share" class="ghost" type="button">పంపు<small>Share</small></button>
@@ -296,7 +305,7 @@ function renderList(){
   $('#list').innerHTML = shown.map(i => {
     const first = (i.poem_te || i.note_te || i.raw || '').split('\n').find(l => l.trim()) || '';
     const d = new Date(i.created || Date.now()).toLocaleDateString('te-IN', {day: 'numeric', month: 'short', year: 'numeric'});
-    const pill = i.status === 'working' ? '<span class="pill">రాస్తోంది…</span>' : (!i.poem_te && !i.poem_en) ? '<span class="pill">కవిత ఇంకా లేదు</span>' : '';
+    const pill = i.status === 'working' ? '<span class="pill">రాస్తోంది…</span>' : i.status === 'note' ? '<span class="pill">మాటలు</span>' : (!i.poem_te && !i.poem_en) ? '<span class="pill">కవిత ఇంకా లేదు</span>' : '';
     return '<button class="item" type="button" data-id="' + esc(i.id) + '"><b>' + esc(i.title_te || (i.raw || '').slice(0, 40) || 'కొత్త ఆలోచన') + pill + '</b>'
       + '<span class="en">' + esc(i.title_en || '') + (i.title_en ? ' · ' : '') + esc(d) + '</span><span class="first">' + esc(first) + '</span></button>';
   }).join('');
@@ -305,7 +314,7 @@ $('#q').addEventListener('input', renderList);
 $('#list').addEventListener('click', e => { const b = e.target.closest('.item'); if (b){ const it = items.find(i => i.id === b.dataset.id); if (it) openDetail(it); } });
 
 /* ---------- screens ---------- */
-function show(id){ for (const s of ['home','detail','settings']) $('#' + s).hidden = s !== id; window.scrollTo(0, 0); }
+function show(id){ stopSpeaking(); for (const s of ['home','detail','settings']) $('#' + s).hidden = s !== id; window.scrollTo(0, 0); }
 $('#openSet').addEventListener('click', () => { $('#cUrl').value = cfg.url; $('#cCode').value = cfg.code; $('#cMsg').textContent = ''; show('settings'); });
 $('#closeSet').addEventListener('click', () => { show('home'); renderList(); });
 
@@ -313,6 +322,7 @@ $('#closeSet').addEventListener('click', () => { show('home'); renderList(); });
 let current = null, lang = 'te';
 function autosize(ta){ ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 4) + 'px'; }
 function showTab(l){
+  if (l !== lang) stopSpeaking();
   lang = l;
   $$('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.l === l)));
   $$('.pane').forEach(p => { p.hidden = p.dataset.l !== l; });
@@ -325,6 +335,7 @@ function fillDetail(){
   const st = current.status;
   $('#dStatus').textContent = st === 'working' ? 'కవిత రాస్తోంది, ఒక్క నిమిషం… · Writing the poem, one moment…'
     : st === 'error' ? 'ఇంటర్నెట్ లేదు లేదా సర్వర్ స్పందించలేదు. మాటలు దాచాం. "మళ్ళీ రాయి" నొక్కండి. · Could not reach the server; your words are saved. Tap Rewrite.'
+    : st === 'note' ? 'మాటలు మాత్రమే దాచాం. కవిత కావాలంటే "మళ్ళీ రాయి" నొక్కండి. · Saved as words only. Tap Rewrite to make a poem.'
     : st === 'local' ? 'మాటలు దాచాం. అనువాదం కోసం అమరికలలో లింక్ ఇవ్వండి. · Words saved. Add the backend link in Settings for translation and poems.' : '';
   $('#redo').disabled = st === 'working';
   $('#toEn').disabled = st === 'working';
@@ -425,6 +436,65 @@ $('#make').addEventListener('click', () => {
     openDetail(it); compose(it);
   }, wasOn ? 600 : 0);
 });
+
+/* ---------- save words only (no poem) ---------- */
+$('#saveWords').addEventListener('click', () => {
+  const wasOn = recOn;
+  if (wasOn) stopRec();
+  setTimeout(() => {
+    const text = raw.value.trim();
+    if (!text){ say('ముందు మైక్ నొక్కి మాట్లాడండి · Please speak or type your idea first.'); return; }
+    const te = isTe(text), t = text.replace(/[.,!?;।|]/g, ' ').trim().split(/\s+/).slice(0, 4).join(' ');
+    const it = {id: newId(), created: Date.now(), raw: text, style: $('#style').value, status: 'note',
+      note_te: te ? text : '', note_en: te ? '' : text, title_te: te ? t : '', title_en: te ? '' : t};
+    upsert(it); push(it);
+    raw.value = ''; partial.textContent = ''; saveDraft(); autosize(raw);
+    say('మాటలు దాచాం. కింద "నా కవితలు"లో ఉన్నాయి. · Words saved. They are in "My poems" below.', true);
+  }, wasOn ? 600 : 0);
+});
+
+/* ---------- read aloud (phone's text-to-speech) ---------- */
+const TTS = window.speechSynthesis;
+let ttsBtn = null;
+function voiceFor(l){
+  const vs = TTS ? TTS.getVoices() : [], want = l.toLowerCase();
+  return vs.find(v => v.lang.replace('_', '-').toLowerCase() === want) || vs.find(v => v.lang.toLowerCase().startsWith(want.slice(0, 2)));
+}
+if (TTS){ TTS.getVoices(); TTS.addEventListener?.('voiceschanged', () => TTS.getVoices()); }
+function ttsReset(){
+  if (ttsBtn){ ttsBtn.innerHTML = ttsBtn.dataset.html; ttsBtn.classList.remove('speaking'); }
+  ttsBtn = null;
+}
+function stopSpeaking(){ if (TTS) TTS.cancel(); ttsReset(); }
+function speak(text, l, btn, out){
+  if (!TTS){ out('ఈ బ్రౌజర్‌లో చదివి వినిపించడం లేదు. Chrome వాడండి. · Read aloud isn\'t available in this browser; use Chrome.'); return; }
+  const was = ttsBtn;
+  if (TTS.speaking || TTS.pending || was){ stopSpeaking(); if (was === btn) return; }
+  text = (text || '').trim();
+  if (!text){ out('చదవడానికి ఏమీ లేదు · Nothing to read yet.'); return; }
+  const v = voiceFor(l);
+  if (!v && l.startsWith('te')) out('తెలుగు గొంతు దొరకలేదు: ఫోన్ Settings → Text-to-speech → Google → Telugu ఇన్‌స్టాల్ చేయండి. · No Telugu voice found: install Telugu in phone Settings → Text-to-speech.');
+  const parts = text.split(/\n+|(?<=[.!?।])\s+/).map(s => s.trim()).filter(Boolean);
+  btn.dataset.html = btn.dataset.html || btn.innerHTML;
+  btn.innerHTML = 'ఆపు<small>Stop reading</small>'; btn.classList.add('speaking'); ttsBtn = btn;
+  parts.forEach((p, i) => {
+    const u = new SpeechSynthesisUtterance(p);
+    u.lang = l; if (v) u.voice = v; u.rate = 0.9;
+    if (i === parts.length - 1){ u.onend = () => { if (ttsBtn === btn) ttsReset(); }; }
+    u.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled' && ttsBtn === btn) ttsReset(); };
+    TTS.speak(u);
+  });
+}
+$('#readRaw').addEventListener('click', () => {
+  const t = (raw.value.trim() + ' ' + partial.textContent).trim();
+  speak(t, isTe(t) ? 'te-IN' : 'en-IN', $('#readRaw'), m => say(m));
+});
+$('#speak').addEventListener('click', () => {
+  if (!current) return;
+  const t = poemText() || (lang === 'te' ? current.note_te : current.note_en) || current.raw || '';
+  speak(t, isTe(t) ? 'te-IN' : 'en-IN', $('#speak'), m => { $('#saved').textContent = m; });
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopSpeaking(); });
 
 /* ---------- speech to text (Chrome's speech recognition) ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
