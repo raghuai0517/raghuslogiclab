@@ -189,30 +189,39 @@ function geminiCall_(model, prompt) {
   });
   return { code: res.getResponseCode(), body: res.getContentText() };
 }
-/* The newest general Flash model that can generate text, if the saved name stops working. */
-function pickGeminiModel_() {
+/* Current general Flash models that can generate text, newest first (stable before preview). */
+function geminiModels_() {
   const res = UrlFetchApp.fetch(GEMINI + 'models?pageSize=200', { muteHttpExceptions: true, headers: { 'x-goog-api-key': prop_('GEMINI_API_KEY') } });
-  if (res.getResponseCode() !== 200) return '';
+  if (res.getResponseCode() !== 200) { console.warn('Gemini model list: ' + res.getResponseCode() + ' ' + res.getContentText().slice(0, 200)); return []; }
   const ver = function (n) { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
-  const names = (JSON.parse(res.getContentText()).models || [])
+  return (JSON.parse(res.getContentText()).models || [])
     .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0; })
     .map(function (m) { return String(m.name).replace(/^models\//, ''); })
-    .filter(function (n) { return /^gemini-.*flash/.test(n) && !/(image|tts|live|audio|lite|exp|thinking|embedding|robotics)/.test(n); })
-    .sort(function (a, b) { return ver(b) - ver(a) || (/preview/.test(a) ? 1 : 0) - (/preview/.test(b) ? 1 : 0); });
-  return names[0] || '';
+    .filter(function (n) { return /^gemini-.*flash/.test(n) && !/(image|tts|live|audio|exp|thinking|embedding|robotics|computer)/.test(n); })
+    .sort(function (a, b) {
+      return ver(b) - ver(a) || (/preview/.test(a) ? 1 : 0) - (/preview/.test(b) ? 1 : 0) || (/lite/.test(a) ? 1 : 0) - (/lite/.test(b) ? 1 : 0);
+    });
 }
+/* Try the remembered model first; if Google says it is busy, gone or unknown, try up to 4 other current
+   Flash models and remember the one that answers. A wrong key (401/403) or used-up quota (429) stops at once. */
 function gemini_(text, style) {
   const prompt = prompt_(text, style);
-  let model = prop_('GEMINI_MODEL') || 'gemini-flash-latest';
-  let r = geminiCall_(model, prompt);
-  if (r.code === 404 || r.code === 400 && /model/i.test(r.body)) {
-    const m = pickGeminiModel_();
-    if (m && m !== model) { model = m; PropertiesService.getScriptProperties().setProperty('GEMINI_MODEL', m); r = geminiCall_(m, prompt); }
+  const first = prop_('GEMINI_MODEL') || 'gemini-flash-latest';
+  let r = geminiCall_(first, prompt), used = first;
+  if (r.code !== 200 && [401, 403, 429].indexOf(r.code) < 0) {
+    console.warn('Gemini ' + first + ': ' + r.code + ' ' + String(r.body).slice(0, 200));
+    const tried = {}; tried[first] = true;
+    const list = geminiModels_().filter(function (m) { return !tried[m]; }).slice(0, 4);
+    for (let i = 0; i < list.length && r.code !== 200; i++) {
+      used = list[i]; r = geminiCall_(used, prompt);
+      if (r.code !== 200) console.warn('Gemini ' + used + ': ' + r.code + ' ' + String(r.body).slice(0, 200));
+    }
+    if (r.code === 200 && used !== first) PropertiesService.getScriptProperties().setProperty('GEMINI_MODEL', used);
   }
-  if (r.code !== 200) throw new Error('Gemini failed (' + r.code + ')');
+  if (r.code !== 200) throw new Error('Gemini failed (' + r.code + ') ' + String(r.body).slice(0, 160));
   const body = JSON.parse(r.body || '{}');
   const parts = (((body.candidates || [])[0] || {}).content || {}).parts || [];
-  return parsePoem_(parts.map(function (x) { return x.text || ''; }).join(''));
+  return parsePoem_(parts.filter(function (x) { return !x.thought; }).map(function (x) { return x.text || ''; }).join(''));
 }
 
 /* ---------- Claude (optional) ---------- */
