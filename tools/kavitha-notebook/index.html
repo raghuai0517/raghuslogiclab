@@ -517,7 +517,19 @@ async function compose(it){
     const r = (await api('compose', {text: base, style: it.style || 'free', shaped_te: te ? sh.poem : '', shaped_en: te ? '' : sh.poem})).result || {};
     for (const f of FIELDS) if (typeof r[f] === 'string' && r[f].trim()) it[f] = r[f].trim();
     it.source = r.source || '';
-    if (it.source === 'shaper' && sh.title){ if (te) it.title_te = sh.title; else it.title_en = sh.title; }
+    if (it.source !== 'gemini' && it.source !== 'claude'){
+      /* No AI answered (or an older backend that only split lines): use the shaped poem and translate it line by line. */
+      if (it.source !== 'shaper'){
+        if (te) it.poem_te = sh.poem; else it.poem_en = sh.poem;
+        try { const lines = sh.poem.split('\n'), out = [];
+          const tr = await Promise.all(lines.map(l => l.trim() ? api('translate', {text: l, to: te ? 'en' : 'te'}).then(x => x.text || '', () => '') : Promise.resolve('')));
+          for (let i = 0; i < lines.length; i++) out.push(lines[i].trim() ? (tr[i] || '') : '');
+          if (out.some(Boolean)){ if (te) it.poem_en = out.join('\n'); else it.poem_te = out.join('\n'); }
+        } catch(e){}
+      }
+      it.source = 'shaper';
+      if (sh.title){ if (te) it.title_te = sh.title; else it.title_en = sh.title; }
+    }
     it.status = 'done'; online = true;
   } catch(e){ applyShape(it, base); it.status = 'error'; }
   upsert(it); if (current === it) fillDetail();
