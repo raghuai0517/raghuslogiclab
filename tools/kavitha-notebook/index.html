@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="te">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kavitha Notebook · RaghusLogicLab</title>
+<meta name="description" content="Speak a poem idea in Telugu; it is written down as a note and shaped into Telugu and English poems, saved on your phone.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://raghuslogiclab.com/tools/kavitha-notebook/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#a3192b">
+<script defer src="../../assets/track.js?v=1"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Guntur:wght@400;500;600&family=Tiro+Telugu:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* Kavitha Notebook: a red-bound poet's notebook. Big round mic on the cover, words box, then the shelf of poems.
+   Poems in Tiro Telugu, controls in Hind Guntur. Large type and 48px+ buttons for older eyes. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#140a08);--ink:light-dark(#2b1a14,#f6ece6);--soft:light-dark(#76605a,#b9a59c);
+--line:light-dark(#eddcd3,#3b2521);--card:light-dark(#ffffff,#1e110e);--page:light-dark(#fdf8f4,#1a0e0c);
+--red:light-dark(#a3192b,#7a1424);--onred:#fff5ee;--gold:#f4b400;--danger:light-dark(#a3192b,#ff8a8a);--ok:light-dark(#1d7a46,#7fd6a3)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Hind Guntur",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:720px;margin:0 auto;padding:0 max(4vw,16px)}
+[hidden]{display:none!important}
+.top{background:var(--red);color:var(--onred);padding:18px 0 34px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.bar a{color:var(--onred);opacity:.85;font-size:15px}
+.gear{background:rgba(255,255,255,.14);color:var(--onred);border:0;border-radius:12px;min-height:44px;padding:4px 14px;font-weight:600}
+h1{font:600 clamp(32px,8vw,44px)/1.05 "Tiro Telugu",serif;margin:0;text-wrap:balance}
+h1 small{display:block;font:500 17px/1.4 "Hind Guntur",sans-serif;opacity:.85;margin-top:6px}
+.sub{margin:12px 0 18px;opacity:.92}
+.langs{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
+.langs button{min-height:44px;border-radius:99px;border:1.5px solid rgba(255,255,255,.5);background:none;color:var(--onred);padding:4px 18px;font-weight:600}
+.langs button[aria-pressed=true]{background:var(--onred);color:var(--red);border-color:var(--onred)}
+.rec{display:flex;flex-direction:column;align-items:center;gap:12px}
+.mic{width:128px;height:128px;border-radius:50%;border:0;background:var(--onred);color:var(--red);display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 0 rgba(0,0,0,.18),0 0 0 8px rgba(255,255,255,.14);transition:transform .15s}
+.mic:active{transform:translateY(3px)}
+.mic.on{background:var(--gold);color:#3a1a00;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 10px 0 rgba(0,0,0,.18),0 0 0 22px rgba(244,180,0,.3)}}
+@media(prefers-reduced-motion:reduce){.mic.on{animation:none}}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.micLabel{font-weight:600;font-size:18px;text-align:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:-18px;position:relative;box-shadow:0 6px 24px rgba(60,20,10,.08)}
+.lbl{display:block;font-weight:600;color:var(--soft);font-size:15px;margin:14px 0 6px}
+.lbl:first-child{margin-top:0}
+textarea,input,select{font:inherit;color:inherit;background:var(--page);border:1px solid var(--line);border-radius:12px;width:100%;padding:12px 14px;font-size:17px}
+textarea{resize:vertical;min-height:120px;line-height:1.7}
+#raw{font-family:"Tiro Telugu",serif;font-size:19px}
+.partial{color:var(--soft);font-style:italic;min-height:1.6em;font-family:"Tiro Telugu",serif}
+.msg{margin:4px 0 0;color:var(--danger);font-weight:500}.msg.ok{color:var(--ok)}
+.msg:empty{display:none}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:12px}
+.sel{flex:1 1 180px}.sel span{display:block;font-size:15px;color:var(--soft);font-weight:600;margin-bottom:4px}
+select{min-height:48px}
+button{font:inherit;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+.primary{flex:1 1 220px;min-height:56px;border:0;border-radius:14px;background:var(--red);color:var(--onred);font-weight:600;font-size:18px;padding:8px 16px;line-height:1.3}
+.primary small,.ghost small{display:block;font-weight:500;font-size:14px;opacity:.85}
+.ghost{min-height:48px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:6px 14px;font-weight:600;text-decoration:none;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.danger{color:var(--danger)}
+.hint{font-size:15px;color:var(--soft);margin:14px 0 0}
+h2{font:600 26px/1.2 "Tiro Telugu",serif;margin:36px 0 4px}
+.where{font-size:15px;color:var(--soft);margin:0 0 12px}
+#q{margin-bottom:14px;min-height:48px}
+.item{display:block;width:100%;text-align:start;background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--red);border-radius:14px;padding:14px 16px;margin-bottom:12px;color:inherit}
+.item b{display:block;font:600 21px/1.3 "Tiro Telugu",serif}
+.item .en{color:var(--soft);font-size:15px}
+.item .first{display:block;font-family:"Tiro Telugu",serif;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-block;font:600 13px/1.6 "Hind Guntur",sans-serif;background:var(--gold);color:#3a1a00;border-radius:99px;padding:0 10px;margin-inline-start:6px;vertical-align:middle}
+.empty{border:2px dashed var(--line);border-radius:16px;padding:26px;text-align:center;color:var(--soft)}
+.screen{padding-top:18px;padding-bottom:48px}
+.dtop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.saved{font-size:14px;color:var(--soft)}
+.tin{background:none;border:0;border-bottom:1px dashed var(--line);border-radius:0;padding:4px 0;font:600 clamp(28px,7vw,38px)/1.2 "Tiro Telugu",serif;margin-top:14px}
+.tin.en{font:500 19px/1.4 "Hind Guntur",sans-serif;color:var(--soft);margin-top:4px}
+.status{font-weight:600;color:var(--red);margin:10px 0 0}
+@media(prefers-color-scheme:dark){.status{color:var(--gold)}}
+.status:empty{display:none}
+.tabs{display:flex;gap:6px;margin:18px 0 4px;border-bottom:2px solid var(--line)}
+.tabs button{flex:1;min-height:52px;border:0;background:none;color:var(--soft);font-weight:600;font-size:19px;border-bottom:4px solid transparent;margin-bottom:-2px}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--red)}
+.poem{font-family:"Tiro Telugu",serif;font-size:20px;line-height:1.85;min-height:220px}
+.pane[data-l=en] .poem{font-style:italic}
+.acts{margin-top:18px}.acts>*{flex:1 1 130px}
+.two>*{flex:1 1 140px}
+.speaking{background:var(--gold)!important;color:#3a1a00!important;border-color:var(--gold)!important}
+details{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display:flex;align-items:center}
+.set h2{margin-top:18px}
+.set p{color:var(--soft);font-size:15px}
+.set .field{margin-top:12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--soft);margin-inline-end:6px}
+.dot.on{background:var(--ok)}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <header class="top">
+    <div class="wrap">
+      <div class="bar"><a href="/#personal">← RaghusLogicLab</a><button id="openSet" class="gear" type="button">అమరికలు · Settings</button></div>
+      <h1>కవితల పుస్తకం<small>Kavitha notebook · ideas for poems</small></h1>
+      <p class="sub">మైక్ నొక్కి మీ ఆలోచన చెప్పండి. మళ్ళీ నొక్కితే ఆగుతుంది.<br>Tap the mic and speak your idea. Tap again to stop.</p>
+      <div class="langs" role="group" aria-label="Speaking language">
+        <button type="button" data-lang="te-IN" aria-pressed="true">తెలుగు</button>
+        <button type="button" data-lang="en-IN" aria-pressed="false">English</button>
+      </div>
+      <div class="rec">
+        <button id="mic" class="mic" type="button" aria-label="Record · రికార్డ్">
+          <svg viewBox="0 0 24 24" width="52" height="52" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div id="micLabel" class="micLabel">నొక్కి మాట్లాడండి · Tap to speak</div>
+      </div>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="card">
+      <label for="raw" class="lbl">మీ మాటలు · Your words</label>
+      <textarea id="raw" lang="te" rows="5" placeholder="మీరు చెప్పిన మాటలు ఇక్కడ కనిపిస్తాయి. టైప్ కూడా చేయవచ్చు."></textarea>
+      <div id="partial" class="partial" aria-live="polite"></div>
+      <p id="msg" class="msg" role="status"></p>
+      <div class="row">
+        <label class="sel"><span>కవిత రూపం · Poem form</span>
+          <select id="style"><option value="free">వచన కవిత · Free verse</option><option value="rhyme">ప్రాస కవిత · Rhyming</option><option value="short">చిన్న కవిత · Short</option></select>
+        </label>
+        <button id="make" class="primary" type="button">కవితగా మార్చి దాచు<small>Make poem &amp; save</small></button>
+      </div>
+      <div class="row two">
+        <button id="saveWords" class="ghost" type="button">మాటలు దాచు<small>Save words</small></button>
+        <button id="readRaw" class="ghost" type="button">చదివి వినిపించు<small>Read aloud</small></button>
+      </div>
+      <p class="hint" id="hint">మైక్ పనిచేయకపోతే, ఫోన్ కీబోర్డ్‌లోని మైక్ నొక్కి తెలుగులో చెప్పండి. · If the mic doesn't work, tap the mic on your phone's keyboard and speak into the box.</p>
+    </section>
+    <section>
+      <h2>నా కవితలు · My poems <span id="count"></span></h2>
+      <p id="where" class="where"></p>
+      <input id="q" type="search" placeholder="వెతకండి · Search" aria-label="Search">
+      <div id="list"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ONE POEM -->
+<section id="detail" class="wrap screen" hidden>
+  <div class="dtop">
+    <button id="back" class="ghost" type="button">← వెనక్కి · Back</button>
+    <span id="saved" class="saved" aria-live="polite"></span>
+  </div>
+  <input class="tin" data-f="title_te" lang="te" aria-label="Telugu title" placeholder="శీర్షిక">
+  <input class="tin en" data-f="title_en" lang="en" aria-label="English title" placeholder="Title">
+  <p id="dStatus" class="status" role="status"></p>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" data-l="te" aria-selected="true">తెలుగు</button>
+    <button type="button" role="tab" data-l="en" aria-selected="false">English</button>
+  </div>
+  <div class="pane" data-l="te">
+    <label class="lbl">కవిత</label>
+    <textarea class="poem" data-f="poem_te" lang="te" aria-label="Telugu poem"></textarea>
+    <label class="lbl">ఆలోచన (నోట్)</label>
+    <textarea data-f="note_te" lang="te" aria-label="Telugu note"></textarea>
+    <div class="row"><button id="toEn" class="ghost" type="button">ఇంగ్లీష్‌లోకి అనువదించు<small>Translate this into English</small></button></div>
+  </div>
+  <div class="pane" data-l="en" hidden>
+    <label class="lbl">Poem</label>
+    <textarea class="poem" data-f="poem_en" lang="en" aria-label="English poem"></textarea>
+    <label class="lbl">Note</label>
+    <textarea data-f="note_en" lang="en" aria-label="English note"></textarea>
+    <div class="row"><a id="gt" class="ghost" href="#" target="_blank" rel="noopener">Google Translate<small>Open the Telugu there</small></a></div>
+  </div>
+  <div class="row acts">
+    <button id="speak" class="primary" type="button">చదివి వినిపించు<small>Read aloud</small></button>
+  </div>
+  <div class="row acts">
+    <button id="share" class="ghost" type="button">పంపు<small>Share</small></button>
+    <button id="copy" class="ghost" type="button">కాపీ<small>Copy poem</small></button>
+    <label class="sel"><span>కొత్త రూపం · New form</span>
+      <select id="style2"><option value="free">వచన కవిత · Free verse</option><option value="rhyme">ప్రాస కవిత · Rhyming</option><option value="short">చిన్న కవిత · Short</option></select>
+    </label>
+    <button id="redo" class="ghost" type="button">మళ్ళీ రాయి<small>Rewrite</small></button>
+    <button id="del" class="ghost danger" type="button">తొలగించు<small>Delete</small></button>
+  </div>
+  <details>
+    <summary>మీరు చెప్పిన అసలు మాటలు · Your original words</summary>
+    <textarea data-f="raw" lang="te" aria-label="Original words"></textarea>
+  </details>
+</section>
+
+<!-- SETTINGS -->
+<section id="settings" class="wrap screen set" hidden>
+  <button id="closeSet" class="ghost" type="button">← వెనక్కి · Back</button>
+  <h2>అమరికలు · Settings</h2>
+  <p>కవితలు ఎప్పుడూ ఈ ఫోన్‌లో దాచబడతాయి. అనువాదం, కవిత రాయడం, Google Sheet బ్యాకప్ కోసం కింద లింక్, కోడ్ ఇవ్వండి.<br>Poems are always kept on this phone. For translation, poem writing and a Google Sheet backup, enter the link and family code below.</p>
+  <label class="lbl field" for="cUrl">Backend link (Apps Script /exec)</label>
+  <input id="cUrl" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+  <label class="lbl field" for="cCode">కుటుంబ కోడ్ · Family code</label>
+  <input id="cCode" type="text" autocomplete="off" autocapitalize="characters" placeholder="ABC123">
+  <div class="row"><button id="cSave" class="primary" type="button">దాచి పరీక్షించు<small>Save &amp; test</small></button></div>
+  <p id="cMsg" class="msg" role="status"></p>
+  <div class="row">
+    <button id="cLink" class="ghost" type="button">నాన్నగారి ఫోన్ కోసం లింక్<small>Copy setup link for another phone</small></button>
+  </div>
+  <h2>బ్యాకప్ · Backup</h2>
+  <p>అన్ని కవితలను ఫైల్‌గా దాచండి, లేదా ఆ ఫైల్‌ను మళ్ళీ తెరవండి. · Save all poems as a file, or load that file back.</p>
+  <div class="row">
+    <button id="exp" class="ghost" type="button">ఫైల్‌గా దాచు<small>Download backup</small></button>
+    <label class="ghost" for="imp" style="cursor:pointer">ఫైల్ తెరువు<small>Load backup</small></label>
+    <input id="imp" type="file" accept="application/json,.json" hidden>
+  </div>
+  <p id="bMsg" class="msg" role="status"></p>
+</section>
+
+<script>
+{
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = 'kn-poems-v1', CFG = 'kn-cfg-v1', DRAFT = 'kn-draft-v1', DELS = 'kn-dels-v1';
+const FIELDS = ['title_te','title_en','note_te','note_en','poem_te','poem_en'];
+const get = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } };
+const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } };
+const newId = () => 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const isTe = s => /[ఀ-౿]/.test(s || '');
+const raw = $('#raw'), mic = $('#mic'), micLabel = $('#micLabel'), partial = $('#partial'), msg = $('#msg');
+const say = (t, ok) => { msg.textContent = t || ''; msg.classList.toggle('ok', !!ok); };
+
+/* ---------- setup link: #setup=<base64 of {u,c}> ---------- */
+(() => {
+  const m = location.hash.match(/^#setup=([A-Za-z0-9_\-+/=]+)$/);
+  if (!m) return;
+  try {
+    const j = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')))));
+    if (/^https:\/\/script\.google\.com\//.test(j.u || '')) put(CFG, {url: j.u, code: String(j.c || '')});
+  } catch(e){}
+  history.replaceState(null, '', location.pathname);
+})();
+let cfg = get(CFG, {url: '', code: ''});
+let online = false, ai = false;
+
+/* ---------- local store ---------- */
+let items = get(LS, []);
+function persist(){ if (!put(LS, items)) say('ఫోన్‌లో స్థలం లేదు · Phone storage is full. Download a backup in Settings.'); }
+function upsert(it, dirty){
+  it.updated = Date.now(); if (dirty !== false) it.dirty = true;
+  const i = items.findIndex(x => x.id === it.id);
+  if (i >= 0) items[i] = it; else items.push(it);
+  persist(); renderList();
+}
+
+/* ---------- backend ---------- */
+async function api(action, payload){
+  if (!cfg.url) throw new Error('nobackend');
+  let res;
+  try {
+    res = await fetch(cfg.url, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, redirect: 'follow',
+      body: JSON.stringify({code: cfg.code, action, payload: payload || {}})});
+  } catch(e){ throw new Error('offline'); }
+  let out; try { out = await res.json(); } catch(e){ throw new Error('badreply'); }
+  if (!out.ok) throw new Error(out.error || 'failed');
+  return out;
+}
+const clean = it => { const o = {}; for (const k of ['id','created','updated','style','raw',...FIELDS]) o[k] = it[k] ?? ''; return o; };
+async function push(it){
+  if (!online) return false;
+  try { await api('save', {record: clean(it)}); const cur = items.find(x => x.id === it.id); if (cur && cur.updated <= it.updated){ delete cur.dirty; persist(); } return true; }
+  catch(e){ return false; }
+}
+async function sync(){
+  if (!cfg.url){ online = false; whereText(); return; }
+  try {
+    const p = await api('ping'); online = true; ai = !!p.ai;
+    for (const id of get(DELS, [])) { try { await api('delete', {id}); } catch(e){} }
+    put(DELS, []);
+    const remote = (await api('list')).records || [];
+    const byId = new Map(items.map(x => [x.id, x]));
+    for (const r of remote){
+      const l = byId.get(r.id);
+      if (!l || (!l.dirty && (r.updated || 0) > (l.updated || 0))) { const n = Object.assign({}, l || {}, r, {status: (l && l.status) || 'done'}); delete n.dirty; byId.set(r.id, n); }
+    }
+    items = [...byId.values()]; persist(); renderList();
+    const remoteIds = new Set(remote.map(r => r.id));
+    for (const it of items) if (it.dirty || !remoteIds.has(it.id)) await push(it);
+  } catch(e){ online = false; if (/access code/i.test(e.message)) online = false; }
+  whereText();
+  if (current) fillDetail();
+}
+function whereText(){
+  $('#where').innerHTML = online
+    ? '<span class="dot on"></span>ఈ ఫోన్‌లో, Google Sheet‌లో దాచబడతాయి · Saved on this phone and in your Google Sheet' + (ai ? '' : ' · poems are laid out from the translation')
+    : '<span class="dot"></span>ఈ ఫోన్‌లో మాత్రమే దాచబడతాయి · Saved on this phone only' + (cfg.url ? ' (offline)' : '');
+}
+
+/* ---------- list ---------- */
+function renderList(){
+  const q = $('#q').value.trim().toLowerCase();
+  const all = items.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
+  const shown = all.filter(i => !q || [i.raw, ...FIELDS.map(f => i[f])].join(' ').toLowerCase().includes(q));
+  $('#count').textContent = all.length ? '(' + all.length + ')' : '';
+  if (!all.length){ $('#list').innerHTML = '<div class="empty">ఇంకా కవితలు లేవు. పైన మైక్ నొక్కి మీ మొదటి ఆలోచన చెప్పండి.<br>No poems yet. Tap the mic above and say your first idea.</div>'; return; }
+  if (!shown.length){ $('#list').innerHTML = '<div class="empty">ఏమీ దొరకలేదు · Nothing found</div>'; return; }
+  $('#list').innerHTML = shown.map(i => {
+    const first = (i.poem_te || i.note_te || i.raw || '').split('\n').find(l => l.trim()) || '';
+    const d = new Date(i.created || Date.now()).toLocaleDateString('te-IN', {day: 'numeric', month: 'short', year: 'numeric'});
+    const pill = i.status === 'working' ? '<span class="pill">రాస్తోంది…</span>' : i.status === 'note' ? '<span class="pill">మాటలు</span>' : (!i.poem_te && !i.poem_en) ? '<span class="pill">కవిత ఇంకా లేదు</span>' : '';
+    return '<button class="item" type="button" data-id="' + esc(i.id) + '"><b>' + esc(i.title_te || (i.raw || '').slice(0, 40) || 'కొత్త ఆలోచన') + pill + '</b>'
+      + '<span class="en">' + esc(i.title_en || '') + (i.title_en ? ' · ' : '') + esc(d) + '</span><span class="first">' + esc(first) + '</span></button>';
+  }).join('');
+}
+$('#q').addEventListener('input', renderList);
+$('#list').addEventListener('click', e => { const b = e.target.closest('.item'); if (b){ const it = items.find(i => i.id === b.dataset.id); if (it) openDetail(it); } });
+
+/* ---------- screens ---------- */
+function show(id){ stopSpeaking(); for (const s of ['home','detail','settings']) $('#' + s).hidden = s !== id; window.scrollTo(0, 0); }
+$('#openSet').addEventListener('click', () => { $('#cUrl').value = cfg.url; $('#cCode').value = cfg.code; $('#cMsg').textContent = ''; show('settings'); });
+$('#closeSet').addEventListener('click', () => { show('home'); renderList(); });
+
+/* ---------- one poem ---------- */
+let current = null, lang = 'te';
+function autosize(ta){ ta.style.height = 'auto'; ta.style.height = (ta.scrollHeight + 4) + 'px'; }
+function showTab(l){
+  if (l !== lang) stopSpeaking();
+  lang = l;
+  $$('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.l === l)));
+  $$('.pane').forEach(p => { p.hidden = p.dataset.l !== l; });
+  $$('.pane:not([hidden]) textarea').forEach(autosize);
+}
+$$('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.l)));
+function fillDetail(){
+  if (!current) return;
+  $$('#detail [data-f]').forEach(el => { if (document.activeElement !== el) el.value = current[el.dataset.f] || ''; });
+  const st = current.status;
+  $('#dStatus').textContent = st === 'working' ? 'కవిత రాస్తోంది, ఒక్క నిమిషం… · Writing the poem, one moment…'
+    : st === 'error' ? 'ఇంటర్నెట్ లేదు లేదా సర్వర్ స్పందించలేదు. మాటలు దాచాం. "మళ్ళీ రాయి" నొక్కండి. · Could not reach the server; your words are saved. Tap Rewrite.'
+    : st === 'note' ? 'మాటలు మాత్రమే దాచాం. కవిత కావాలంటే "మళ్ళీ రాయి" నొక్కండి. · Saved as words only. Tap Rewrite to make a poem.'
+    : st === 'local' ? 'మాటలు దాచాం. అనువాదం కోసం అమరికలలో లింక్ ఇవ్వండి. · Words saved. Add the backend link in Settings for translation and poems.' : '';
+  $('#redo').disabled = st === 'working';
+  $('#toEn').disabled = st === 'working';
+  $('#style2').value = current.style || 'free';
+  $('#gt').href = 'https://translate.google.com/?sl=te&tl=en&op=translate&text=' + encodeURIComponent((current.poem_te || current.note_te || current.raw || '').slice(0, 4000));
+  $$('#detail textarea').forEach(autosize);
+}
+function openDetail(it){ current = it; $('#saved').textContent = ''; show('detail'); showTab(lang); fillDetail(); }
+$('#back').addEventListener('click', () => { current = null; show('home'); renderList(); });
+
+let editTimer = null;
+$$('#detail [data-f]').forEach(el => el.addEventListener('input', () => {
+  if (el.tagName === 'TEXTAREA') autosize(el);
+  if (!current) return;
+  current[el.dataset.f] = el.value;
+  $('#saved').textContent = '…';
+  clearTimeout(editTimer);
+  const it = current;
+  editTimer = setTimeout(async () => { upsert(it); $('#saved').textContent = 'దాచాం · Saved'; await push(it); }, 800);
+}));
+
+function poemText(){
+  return (lang === 'te' ? [current.title_te, current.poem_te] : [current.title_en, current.poem_en]).filter(Boolean).join('\n\n').trim();
+}
+$('#copy').addEventListener('click', () => {
+  if (!current) return;
+  const t = poemText();
+  navigator.clipboard?.writeText(t).then(() => { $('#saved').textContent = 'కాపీ అయింది · Copied'; },
+    () => { const ta = $('.pane:not([hidden]) .poem'); ta.focus(); ta.select(); });
+});
+$('#share').addEventListener('click', () => {
+  if (!current) return;
+  const t = poemText();
+  if (navigator.share) navigator.share({text: t}).catch(() => {});
+  else location.href = 'https://wa.me/?text=' + encodeURIComponent(t);
+});
+let delArmed = null;
+$('#del').addEventListener('click', async () => {
+  if (!current) return;
+  const b = $('#del');
+  if (!delArmed){
+    b.innerHTML = 'మళ్ళీ నొక్కండి<small>Tap again to delete</small>';
+    delArmed = setTimeout(() => { delArmed = null; b.innerHTML = 'తొలగించు<small>Delete</small>'; }, 4000);
+    return;
+  }
+  clearTimeout(delArmed); delArmed = null; b.innerHTML = 'తొలగించు<small>Delete</small>';
+  const id = current.id;
+  items = items.filter(x => x.id !== id); persist();
+  $('#back').click();
+  if (online){ try { await api('delete', {id}); return; } catch(e){} }
+  if (cfg.url){ const d = get(DELS, []); d.push(id); put(DELS, d); }
+});
+$('#redo').addEventListener('click', () => { if (current){ current.style = $('#style2').value; compose(current); } });
+$('#toEn').addEventListener('click', async () => {
+  if (!current) return;
+  if (!online){ $('#saved').textContent = 'అనువాదానికి ఇంటర్నెట్, అమరికలు కావాలి · Needs internet and Settings'; return; }
+  const it = current, b = $('#toEn'); b.disabled = true; $('#saved').textContent = 'అనువదిస్తోంది… · Translating…';
+  try {
+    const [p, n] = await Promise.all([it.poem_te ? api('translate', {text: it.poem_te, to: 'en'}) : null, it.note_te ? api('translate', {text: it.note_te, to: 'en'}) : null]);
+    if (p) it.poem_en = p.text; if (n) it.note_en = n.text;
+    if (it.title_te){ try { it.title_en = (await api('translate', {text: it.title_te, to: 'en'})).text; } catch(e){} }
+    upsert(it); await push(it); if (current === it){ fillDetail(); showTab('en'); } $('#saved').textContent = 'దాచాం · Saved';
+  } catch(e){ $('#saved').textContent = 'అనువాదం కుదరలేదు · Translation failed'; }
+  b.disabled = false;
+});
+
+/* ---------- make the note + poems ---------- */
+function plainLines(s){ return s.replace(/\s+/g, ' ').split(/(?<=[.,!?;।|])\s+/).map(l => l.trim()).filter(Boolean).join('\n'); }
+async function compose(it){
+  if (!cfg.url){
+    if (!it.note_te && isTe(it.raw)) it.note_te = it.raw;
+    if (!it.note_en && !isTe(it.raw)) it.note_en = it.raw;
+    if (!it.poem_te && isTe(it.raw)) it.poem_te = plainLines(it.raw);
+    if (!it.poem_en && !isTe(it.raw)) it.poem_en = plainLines(it.raw);
+    const t = it.raw.replace(/[.,!?;।|]/g, ' ').trim().split(/\s+/).slice(0, 4).join(' ');
+    if (isTe(it.raw)) it.title_te = it.title_te || t; else it.title_en = it.title_en || t;
+    it.status = 'local'; upsert(it); if (current === it) fillDetail(); return;
+  }
+  it.status = 'working'; upsert(it); if (current === it) fillDetail();
+  try {
+    const r = (await api('compose', {text: it.raw || it.note_te || '', style: it.style || 'free'})).result || {};
+    for (const f of FIELDS) if (typeof r[f] === 'string' && r[f].trim()) it[f] = r[f].trim();
+    it.status = 'done'; online = true;
+  } catch(e){ it.status = 'error'; }
+  upsert(it); if (current === it) fillDetail();
+  if (it.status === 'done' && await push(it) && current === it) $('#saved').textContent = 'దాచాం · Saved';
+}
+$('#make').addEventListener('click', () => {
+  const wasOn = recOn;
+  if (wasOn) stopRec();
+  setTimeout(() => {
+    const text = raw.value.trim();
+    if (!text){ say('ముందు మైక్ నొక్కి మాట్లాడండి · Please speak or type your idea first.'); return; }
+    say('');
+    const it = {id: newId(), created: Date.now(), raw: text, style: $('#style').value, status: 'working'};
+    upsert(it);
+    raw.value = ''; partial.textContent = ''; saveDraft();
+    openDetail(it); compose(it);
+  }, wasOn ? 600 : 0);
+});
+
+/* ---------- save words only (no poem) ---------- */
+$('#saveWords').addEventListener('click', () => {
+  const wasOn = recOn;
+  if (wasOn) stopRec();
+  setTimeout(() => {
+    const text = raw.value.trim();
+    if (!text){ say('ముందు మైక్ నొక్కి మాట్లాడండి · Please speak or type your idea first.'); return; }
+    const te = isTe(text), t = text.replace(/[.,!?;।|]/g, ' ').trim().split(/\s+/).slice(0, 4).join(' ');
+    const it = {id: newId(), created: Date.now(), raw: text, style: $('#style').value, status: 'note',
+      note_te: te ? text : '', note_en: te ? '' : text, title_te: te ? t : '', title_en: te ? '' : t};
+    upsert(it); push(it);
+    raw.value = ''; partial.textContent = ''; saveDraft(); autosize(raw);
+    say('మాటలు దాచాం. కింద "నా కవితలు"లో ఉన్నాయి. · Words saved. They are in "My poems" below.', true);
+  }, wasOn ? 600 : 0);
+});
+
+/* ---------- read aloud (phone's text-to-speech) ---------- */
+const TTS = window.speechSynthesis;
+let ttsBtn = null;
+function voiceFor(l){
+  const vs = TTS ? TTS.getVoices() : [], want = l.toLowerCase();
+  return vs.find(v => v.lang.replace('_', '-').toLowerCase() === want) || vs.find(v => v.lang.toLowerCase().startsWith(want.slice(0, 2)));
+}
+if (TTS){ TTS.getVoices(); TTS.addEventListener?.('voiceschanged', () => TTS.getVoices()); }
+function ttsReset(){
+  if (ttsBtn){ ttsBtn.innerHTML = ttsBtn.dataset.html; ttsBtn.classList.remove('speaking'); }
+  ttsBtn = null;
+}
+function stopSpeaking(){ if (TTS) TTS.cancel(); ttsReset(); }
+function speak(text, l, btn, out){
+  if (!TTS){ out('ఈ బ్రౌజర్‌లో చదివి వినిపించడం లేదు. Chrome వాడండి. · Read aloud isn\'t available in this browser; use Chrome.'); return; }
+  const was = ttsBtn;
+  if (TTS.speaking || TTS.pending || was){ stopSpeaking(); if (was === btn) return; }
+  text = (text || '').trim();
+  if (!text){ out('చదవడానికి ఏమీ లేదు · Nothing to read yet.'); return; }
+  const v = voiceFor(l);
+  if (!v && l.startsWith('te')) out('తెలుగు గొంతు దొరకలేదు: ఫోన్ Settings → Text-to-speech → Google → Telugu ఇన్‌స్టాల్ చేయండి. · No Telugu voice found: install Telugu in phone Settings → Text-to-speech.');
+  const parts = text.split(/\n+|(?<=[.!?।])\s+/).map(s => s.trim()).filter(Boolean);
+  btn.dataset.html = btn.dataset.html || btn.innerHTML;
+  btn.innerHTML = 'ఆపు<small>Stop reading</small>'; btn.classList.add('speaking'); ttsBtn = btn;
+  parts.forEach((p, i) => {
+    const u = new SpeechSynthesisUtterance(p);
+    u.lang = l; if (v) u.voice = v; u.rate = 0.9;
+    if (i === parts.length - 1){ u.onend = () => { if (ttsBtn === btn) ttsReset(); }; }
+    u.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled' && ttsBtn === btn) ttsReset(); };
+    TTS.speak(u);
+  });
+}
+$('#readRaw').addEventListener('click', () => {
+  const t = (raw.value.trim() + ' ' + partial.textContent).trim();
+  speak(t, isTe(t) ? 'te-IN' : 'en-IN', $('#readRaw'), m => say(m));
+});
+$('#speak').addEventListener('click', () => {
+  if (!current) return;
+  const t = poemText() || (lang === 'te' ? current.note_te : current.note_en) || current.raw || '';
+  speak(t, isTe(t) ? 'te-IN' : 'en-IN', $('#speak'), m => { $('#saved').textContent = m; });
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopSpeaking(); });
+
+/* ---------- speech to text (Chrome's speech recognition) ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recOn = false, recLang = get('kn-lang-v1', 'te-IN'), quiet = 0;
+try { raw.value = localStorage.getItem(DRAFT) || ''; } catch(e){}
+function saveDraft(){ try { localStorage.setItem(DRAFT, raw.value); } catch(e){} }
+raw.addEventListener('input', saveDraft);
+function micUI(){
+  mic.classList.toggle('on', recOn);
+  micLabel.textContent = recOn ? 'వింటున్నాను… ఆపడానికి నొక్కండి · Listening… tap to stop' : 'నొక్కి మాట్లాడండి · Tap to speak';
+}
+function langUI(){ $$('.langs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === recLang))); raw.lang = recLang.slice(0, 2); }
+$$('.langs button').forEach(b => b.addEventListener('click', () => { recLang = b.dataset.lang; put('kn-lang-v1', recLang); langUI(); if (recOn){ stopRec(); setTimeout(startRec, 400); } }));
+function append(t){
+  t = t.trim(); if (!t) return;
+  raw.value = raw.value.trim() ? raw.value.replace(/\s+$/, '') + ' ' + t : t;
+  saveDraft(); autosize(raw);
+}
+function listen(){
+  rec = new SR();
+  rec.lang = recLang; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+  rec.onresult = e => {
+    let fin = '', int = '';
+    for (let i = e.resultIndex; i < e.results.length; i++){ const r = e.results[i]; if (r.isFinal) fin += r[0].transcript; else int += r[0].transcript; }
+    partial.textContent = int;
+    if (fin){ append(fin); partial.textContent = ''; quiet = 0; }
+  };
+  rec.onerror = e => {
+    if (e.error === 'no-speech'){ quiet++; if (quiet >= 6){ recOn = false; say('చాలా సేపు మాటలు వినిపించలేదు, ఆపాం. · Stopped after a long silence.', true); } return; }
+    if (e.error === 'aborted') return;
+    recOn = false;
+    say(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'మైక్ అనుమతి ఇవ్వండి (చిరునామా పక్కన తాళం గుర్తు నొక్కండి). · Please allow the microphone (tap the lock next to the address).'
+      : e.error === 'network' ? 'మాటలు రాయడానికి ఇంటర్నెట్ కావాలి. · Speech-to-text needs the internet.'
+      : e.error === 'language-not-supported' ? 'ఈ ఫోన్‌లో తెలుగు మాటలు గుర్తించలేదు. కీబోర్డ్ మైక్ వాడండి. · Telugu speech isn\'t supported on this phone; use the keyboard mic.'
+      : 'మైక్ సమస్య. మళ్ళీ నొక్కండి. · Microphone problem; tap again.');
+  };
+  rec.onend = () => { partial.textContent = ''; if (recOn){ try { listen(); } catch(e){ recOn = false; micUI(); } } else micUI(); };
+  rec.start();
+}
+function startRec(){
+  if (!SR){ say('ఈ బ్రౌజర్‌లో మైక్ పనిచేయదు. Chrome వాడండి, లేదా కీబోర్డ్ మైక్ నొక్కండి. · This browser can\'t do speech-to-text. Use Chrome, or the keyboard mic.'); raw.focus(); return; }
+  say(''); quiet = 0; recOn = true; micUI();
+  try { listen(); } catch(e){ recOn = false; micUI(); }
+}
+function stopRec(){ recOn = false; micUI(); try { rec && rec.stop(); } catch(e){} }
+mic.addEventListener('click', () => recOn ? stopRec() : startRec());
+document.addEventListener('visibilitychange', () => { if (document.hidden && recOn) stopRec(); });
+
+/* ---------- settings ---------- */
+function setupLink(){
+  const b = btoa(unescape(encodeURIComponent(JSON.stringify({u: cfg.url, c: cfg.code})))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return location.origin + location.pathname + '#setup=' + b;
+}
+$('#cSave').addEventListener('click', async () => {
+  const url = $('#cUrl').value.trim(), code = $('#cCode').value.trim().toUpperCase();
+  const m = $('#cMsg'); m.classList.remove('ok');
+  if (url && !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)){ m.textContent = 'లింక్ "https://script.google.com/macros/s/…/exec" లా ఉండాలి · The link should look like https://script.google.com/macros/s/…/exec'; return; }
+  cfg = {url, code}; put(CFG, cfg);
+  if (!url){ online = false; whereText(); m.textContent = 'లింక్ తీసేశాం. కవితలు ఈ ఫోన్‌లో మాత్రమే. · Link removed; poems stay on this phone only.'; m.classList.add('ok'); return; }
+  m.textContent = 'పరీక్షిస్తోంది… · Testing…';
+  try { const p = await api('ping'); ai = !!p.ai; online = true;
+    m.textContent = 'పనిచేస్తోంది! · Connected. ' + (ai ? 'Poem writing is on.' : 'Translation is on; add ANTHROPIC_API_KEY in the script for poem writing.'); m.classList.add('ok'); sync(); }
+  catch(e){ online = false; m.textContent = /access code/i.test(e.message) ? 'కోడ్ తప్పు · Wrong family code.' : e.message === 'offline' ? 'చేరలేకపోయాం. లింక్, ఇంటర్నెట్ చూడండి. · Could not reach the link; check it and the internet.' : 'సమస్య: ' + e.message; }
+  whereText();
+});
+$('#cLink').addEventListener('click', () => {
+  const m = $('#cMsg'); m.classList.remove('ok');
+  if (!cfg.url){ m.textContent = 'ముందు లింక్, కోడ్ దాచండి · Save the link and code first.'; return; }
+  const l = setupLink();
+  navigator.clipboard?.writeText(l).then(() => { m.textContent = 'కాపీ అయింది. ఈ లింక్‌ను నాన్నగారికి పంపండి; తెరిస్తే అన్నీ సిద్ధం. · Copied. Send this link to the other phone; opening it sets everything up.'; m.classList.add('ok'); },
+    () => { $('#cUrl').value = l; $('#cUrl').select(); });
+});
+$('#exp').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({app: 'kavitha-notebook', saved: new Date().toISOString(), poems: items.map(clean)}, null, 1)], {type: 'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'kavithalu-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+});
+$('#imp').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return; const m = $('#bMsg'); m.classList.remove('ok');
+  try {
+    const j = JSON.parse(await f.text()); const list = Array.isArray(j) ? j : j.poems;
+    if (!Array.isArray(list)) throw 0;
+    let n = 0;
+    for (const r of list){
+      if (!r || typeof r.id !== 'string' || !/^[a-z0-9]{6,40}$/i.test(r.id)) continue;
+      const o = {}; for (const k of ['id','style','raw',...FIELDS]) o[k] = typeof r[k] === 'string' ? r[k] : '';
+      o.created = Number(r.created) || Date.now(); o.status = 'done';
+      const l = items.find(x => x.id === o.id);
+      if (!l || (Number(r.updated) || 0) > (l.updated || 0)){ upsert(o); n++; }
+    }
+    m.textContent = n + ' కవితలు తెరిచాం · ' + n + ' poems loaded.'; m.classList.add('ok'); sync();
+  } catch(err){ m.textContent = 'ఈ ఫైల్ సరైనది కాదు · That file is not a Kavitha backup.'; }
+  e.target.value = '';
+});
+
+/* ---------- start ---------- */
+for (const it of items) if (it.status === 'working') it.status = 'error';
+langUI(); renderList(); whereText(); autosize(raw);
+sync();
+window.addEventListener('online', sync);
+}
+</script>
+</body>
+</html>
