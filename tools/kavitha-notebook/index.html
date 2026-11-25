@@ -80,6 +80,8 @@ h2{font:600 26px/1.2 "Tiro Telugu",serif;margin:36px 0 4px}
 .status{font-weight:600;color:var(--red);margin:10px 0 0}
 @media(prefers-color-scheme:dark){.status{color:var(--gold)}}
 .status:empty{display:none}
+.status.info{color:var(--soft);font-weight:500}
+.rh{font-size:15px;color:var(--soft);margin:6px 0 0;white-space:pre-line}.rh:empty{display:none}
 .tabs{display:flex;gap:6px;margin:18px 0 4px;border-bottom:2px solid var(--line)}
 .tabs button{flex:1;min-height:52px;border:0;background:none;color:var(--soft);font-weight:600;font-size:19px;border-bottom:4px solid transparent;margin-bottom:-2px}
 .tabs button[aria-selected=true]{color:var(--ink);border-color:var(--red)}
@@ -161,6 +163,7 @@ summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display
   <div class="pane" data-l="te">
     <label class="lbl">కవిత</label>
     <textarea class="poem" data-f="poem_te" lang="te" aria-label="Telugu poem"></textarea>
+    <p class="rh" id="rhTe" lang="te"></p>
     <label class="lbl">ఆలోచన (నోట్)</label>
     <textarea data-f="note_te" lang="te" aria-label="Telugu note"></textarea>
     <div class="row"><button id="toEn" class="ghost" type="button">ఇంగ్లీష్‌లోకి అనువదించు<small>Translate this into English</small></button></div>
@@ -168,6 +171,7 @@ summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display
   <div class="pane" data-l="en" hidden>
     <label class="lbl">Poem</label>
     <textarea class="poem" data-f="poem_en" lang="en" aria-label="English poem"></textarea>
+    <p class="rh" id="rhEn" lang="en"></p>
     <label class="lbl">Note</label>
     <textarea data-f="note_en" lang="en" aria-label="English note"></textarea>
     <div class="row"><a id="gt" class="ghost" href="#" target="_blank" rel="noopener">Google Translate<small>Open the Telugu there</small></a></div>
@@ -182,6 +186,7 @@ summary{cursor:pointer;font-weight:600;color:var(--soft);min-height:44px;display
       <select id="style2"><option value="free">వచన కవిత · Free verse</option><option value="rhyme">ప్రాస కవిత · Rhyming</option><option value="short">చిన్న కవిత · Short</option></select>
     </label>
     <button id="redo" class="ghost" type="button">మళ్ళీ రాయి<small>Rewrite</small></button>
+    <button id="arrange" class="ghost" type="button">నా మాటలతో అమర్చు<small>Arrange my words (no AI)</small></button>
     <button id="del" class="ghost danger" type="button">తొలగించు<small>Delete</small></button>
   </div>
   <details>
@@ -239,7 +244,7 @@ const say = (t, ok) => { msg.textContent = t || ''; msg.classList.toggle('ok', !
   history.replaceState(null, '', location.pathname);
 })();
 let cfg = get(CFG, {url: '', code: ''});
-let online = false, ai = false;
+let online = false, ai = '';
 
 /* ---------- local store ---------- */
 let items = get(LS, []);
@@ -272,7 +277,7 @@ async function push(it){
 async function sync(){
   if (!cfg.url){ online = false; whereText(); return; }
   try {
-    const p = await api('ping'); online = true; ai = !!p.ai;
+    const p = await api('ping'); online = true; ai = p.ai === true ? 'claude' : (p.ai || '');
     for (const id of get(DELS, [])) { try { await api('delete', {id}); } catch(e){} }
     put(DELS, []);
     const remote = (await api('list')).records || [];
@@ -290,7 +295,7 @@ async function sync(){
 }
 function whereText(){
   $('#where').innerHTML = online
-    ? '<span class="dot on"></span>ఈ ఫోన్‌లో, Google Sheet‌లో దాచబడతాయి · Saved on this phone and in your Google Sheet' + (ai ? '' : ' · poems are laid out from the translation')
+    ? '<span class="dot on"></span>ఈ ఫోన్‌లో, Google Sheet‌లో దాచబడతాయి · Saved on this phone and in your Google Sheet' + (ai === 'gemini' ? ' · Gemini writes the poems' : ai ? ' · AI writes the poems' : ' · poems arranged from his own words')
     : '<span class="dot"></span>ఈ ఫోన్‌లో మాత్రమే దాచబడతాయి · Saved on this phone only' + (cfg.url ? ' (offline)' : '');
 }
 
@@ -334,10 +339,15 @@ function fillDetail(){
   $$('#detail [data-f]').forEach(el => { if (document.activeElement !== el) el.value = current[el.dataset.f] || ''; });
   const st = current.status;
   $('#dStatus').textContent = st === 'working' ? 'కవిత రాస్తోంది, ఒక్క నిమిషం… · Writing the poem, one moment…'
-    : st === 'error' ? 'ఇంటర్నెట్ లేదు లేదా సర్వర్ స్పందించలేదు. మాటలు దాచాం. "మళ్ళీ రాయి" నొక్కండి. · Could not reach the server; your words are saved. Tap Rewrite.'
+    : st === 'error' ? 'ఇంటర్నెట్ అందలేదు, అందుకే మీ మాటలతోనే కవిత అమర్చాం. ఇంగ్లీష్ కోసం తర్వాత "మళ్ళీ రాయి" నొక్కండి. · No internet, so the poem was arranged from your own words. Tap Rewrite later for English.'
     : st === 'note' ? 'మాటలు మాత్రమే దాచాం. కవిత కావాలంటే "మళ్ళీ రాయి" నొక్కండి. · Saved as words only. Tap Rewrite to make a poem.'
-    : st === 'local' ? 'మాటలు దాచాం. అనువాదం కోసం అమరికలలో లింక్ ఇవ్వండి. · Words saved. Add the backend link in Settings for translation and poems.' : '';
+    : st === 'local' ? 'మీ మాటలతో కవిత అమర్చాం. ఇంగ్లీష్ కోసం అమరికలలో లింక్ ఇవ్వండి. · Poem arranged from your own words. Add the link in Settings for English.'
+    : current.source === 'shaper' ? 'మీ మాటలనే కవితగా అమర్చాం (AI లేకుండా). · Arranged from your own words, no AI.' : '';
+  $('#dStatus').classList.toggle('info', st === 'local' || st === 'note' || (st === 'done' && current.source === 'shaper'));
+  $('#rhTe').textContent = rhymeText([current.raw, current.note_te, current.poem_te].join(' '), true);
+  $('#rhEn').textContent = rhymeText([current.note_en, current.poem_en].join(' '), false);
   $('#redo').disabled = st === 'working';
+  $('#arrange').disabled = st === 'working';
   $('#toEn').disabled = st === 'working';
   $('#style2').value = current.style || 'free';
   $('#gt').href = 'https://translate.google.com/?sl=te&tl=en&op=translate&text=' + encodeURIComponent((current.poem_te || current.note_te || current.raw || '').slice(0, 4000));
@@ -403,26 +413,134 @@ $('#toEn').addEventListener('click', async () => {
 });
 
 /* ---------- make the note + poems ---------- */
-function plainLines(s){ return s.replace(/\s+/g, ' ').split(/(?<=[.,!?;।|])\s+/).map(l => l.trim()).filter(Boolean).join('\n'); }
-async function compose(it){
-  if (!cfg.url){
-    if (!it.note_te && isTe(it.raw)) it.note_te = it.raw;
-    if (!it.note_en && !isTe(it.raw)) it.note_en = it.raw;
-    if (!it.poem_te && isTe(it.raw)) it.poem_te = plainLines(it.raw);
-    if (!it.poem_en && !isTe(it.raw)) it.poem_en = plainLines(it.raw);
-    const t = it.raw.replace(/[.,!?;।|]/g, ' ').trim().split(/\s+/).slice(0, 4).join(' ');
-    if (isTe(it.raw)) it.title_te = it.title_te || t; else it.title_en = it.title_en || t;
-    it.status = 'local'; upsert(it); if (current === it) fillDetail(); return;
+/* Built-in poem shaper: no AI, no internet. It arranges his own words into lines and stanzas,
+   pairs lines that end in the same sound for the rhyming form, and echoes the opening line at the end. */
+const SEG = (window.Intl && Intl.Segmenter) ? new Intl.Segmenter('te', {granularity: 'grapheme'}) : null;
+const graph = w => SEG ? Array.from(SEG.segment(w), x => x.segment) : Array.from(w);
+const STOP = new Set('a an the and or but of to in on at for with is are was were be been it its this that i me my we our you your he she his her they them their so as by from not no yes very just ఈ ఆ ఒక నా మా మన నీ మీ అని కూడా లో ఇది అది ఇక్కడ అక్కడ చాలా ఇంకా'.split(' '));
+const wordsOf = s => (String(s || '').match(/[\p{L}\p{M}\p{N}']+/gu) || []);
+function endSound(w){
+  w = w.toLowerCase();
+  if (isTe(w)){ const g = graph(w); return g[g.length - 1] || ''; }
+  w = w.replace(/([^aeiou])e$/, '$1');
+  const m = w.match(/[aeiouy]+[^aeiouy]*$/); return m ? m[0] : w.slice(-2);
+}
+const lastWord = l => { const w = wordsOf(l); return w[w.length - 1] || ''; };
+const TE_END = /(?:ంది|ారు|ాను|ాము|ాయి|ావు|ేను|ేవు|ాడు|ింది|లేదు|కాదు)$/;
+const EN_BREAK = new Set('and but when while because so then as if where though yet or'.split(' '));
+function chunk(w, maxW){
+  if (w.length <= maxW + 1) return [w.join(' ')];
+  const n = Math.ceil(w.length / maxW), size = Math.ceil(w.length / n), out = [];
+  for (let i = 0; i < w.length; i += size) out.push(w.slice(i, i + size).join(' '));
+  return out;
+}
+function splitLines(text){
+  const te = isTe(text), maxW = te ? 4 : 6, out = [];
+  let t = text.replace(/\s+/g, ' ').trim();
+  if (te) t = t.split(' ').map(w => TE_END.test(w) ? w + '.' : w).join(' ').replace(/([.,!?;:।|])\.+/g, '$1');
+  const phrases = t.split(/(?<=[.,!?;:।|])\s+/).map(x => x.replace(/[.,;:।|]+$/, '').trim()).filter(Boolean);
+  for (const ph of phrases){
+    const w = ph.split(' ');
+    if (te || w.length <= maxW + 1){ out.push(...chunk(w, maxW)); continue; }
+    let seg = [];
+    for (const x of w){ if (seg.length >= 3 && EN_BREAK.has(x.toLowerCase())){ out.push(...chunk(seg, maxW)); seg = []; } seg.push(x); }
+    if (seg.length) out.push(...chunk(seg, maxW));
   }
+  return out.filter((l, i) => i === 0 || l.toLowerCase() !== out[i - 1].toLowerCase());
+}
+function stanzas(lines, size){
+  const out = [];
+  for (let i = 0; i < lines.length; i += size) out.push(lines.slice(i, i + size));
+  if (out.length > 1 && out[out.length - 1].length === 1) out[out.length - 2].push(out.pop()[0]);
+  return out;
+}
+function pickTitle(text, lines){
+  const te = isTe(text), count = new Map();
+  for (const w of wordsOf(text)){
+    const k = w.toLowerCase();
+    if (STOP.has(k) || (te ? graph(k).length < 3 : k.length < 4)) continue;
+    count.set(k, (count.get(k) || 0) + 1);
+  }
+  const top = [...count].sort((a, b) => b[1] - a[1])[0];
+  const t = top && top[1] > 1 ? top[0] : (lines[0] || '').split(' ').slice(0, 3).join(' ');
+  return te ? t : t.charAt(0).toUpperCase() + t.slice(1);
+}
+function shapePoem(text, style){
+  text = String(text || '').trim();
+  if (!text) return {poem: '', title: ''};
+  let lines = splitLines(text), groups;
+  if (style === 'short'){
+    if (lines.length > 6){ const m = Math.floor(lines.length / 2); lines = [lines[0], lines[1], lines[m], lines[m + 1], lines[lines.length - 2], lines[lines.length - 1]]; }
+    groups = stanzas(lines, 3);
+  } else if (style === 'rhyme'){
+    const used = lines.map(() => false); groups = [];
+    for (let i = 0; i < lines.length; i++){
+      if (used[i]) continue; used[i] = true;
+      const e = endSound(lastWord(lines[i]));
+      let j = -1;
+      for (let k = i + 1; k < lines.length; k++) if (!used[k] && e && endSound(lastWord(lines[k])) === e){ j = k; break; }
+      if (j < 0) for (let k = i + 1; k < lines.length; k++) if (!used[k]){ j = k; break; }
+      const pair = [lines[i]]; if (j >= 0){ used[j] = true; pair.push(lines[j]); }
+      groups.push(pair);
+    }
+  } else groups = stanzas(lines, lines.length <= 4 ? 2 : 3);
+  let poem = groups.map(g => g.join('\n')).join('\n\n');
+  if (style !== 'short' && lines.length >= 4 && lines[0].split(' ').length <= 5) poem += '\n\n' + lines[0] + (/[.!?…]$/.test(lines[0]) ? '' : '…');
+  return {poem, title: pickTitle(text, lines)};
+}
+function rhymeText(text, te){
+  const g = new Map();
+  for (const w of wordsOf(text)){
+    const k = w.toLowerCase();
+    if (STOP.has(k) || isTe(k) !== te || (te ? graph(k).length < 2 : k.length < 3)) continue;
+    const e = endSound(k); if (!e) continue;
+    if (!g.has(e)) g.set(e, new Set()); g.get(e).add(k);
+  }
+  const rows = [...g].filter(([, v]) => v.size > 1).sort((a, b) => b[1].size - a[1].size).slice(0, 5)
+    .map(([e, v]) => '–' + e + ':  ' + [...v].slice(0, 8).join(', '));
+  return rows.length ? (te ? 'ప్రాస పదాలు (మీ మాటల నుండి):\n' : 'Rhyming words (from his words):\n') + rows.join('\n') : '';
+}
+function applyShape(it, base){
+  const sh = shapePoem(base, it.style || 'free');
+  if (isTe(base)){ it.poem_te = sh.poem; it.note_te = it.note_te || base; it.title_te = it.title_te || sh.title; }
+  else { it.poem_en = sh.poem; it.note_en = it.note_en || base; it.title_en = it.title_en || sh.title; }
+  it.source = 'shaper';
+  return sh;
+}
+async function compose(it){
+  const base = (it.raw || it.note_te || it.note_en || '').trim();
+  const te = isTe(base);
+  if (!cfg.url){ applyShape(it, base); it.status = 'local'; upsert(it); if (current === it) fillDetail(); return; }
   it.status = 'working'; upsert(it); if (current === it) fillDetail();
+  const sh = shapePoem(base, it.style || 'free');
   try {
-    const r = (await api('compose', {text: it.raw || it.note_te || '', style: it.style || 'free'})).result || {};
+    const r = (await api('compose', {text: base, style: it.style || 'free', shaped_te: te ? sh.poem : '', shaped_en: te ? '' : sh.poem})).result || {};
     for (const f of FIELDS) if (typeof r[f] === 'string' && r[f].trim()) it[f] = r[f].trim();
+    it.source = r.source || '';
+    if (it.source === 'shaper' && sh.title){ if (te) it.title_te = sh.title; else it.title_en = sh.title; }
     it.status = 'done'; online = true;
-  } catch(e){ it.status = 'error'; }
+  } catch(e){ applyShape(it, base); it.status = 'error'; }
   upsert(it); if (current === it) fillDetail();
   if (it.status === 'done' && await push(it) && current === it) $('#saved').textContent = 'దాచాం · Saved';
 }
+/* "Arrange my words": always the built-in shaper, then a line-by-line translation when online. */
+async function arrange(it){
+  const te = isTe(it.note_te || it.raw);
+  const base = te ? (it.note_te || it.raw) : (it.note_en || it.raw);
+  if (!base || !base.trim()) return;
+  it.style = $('#style2').value;
+  const sh = shapePoem(base, it.style);
+  if (te){ it.poem_te = sh.poem; } else { it.poem_en = sh.poem; }
+  it.source = 'shaper'; it.status = cfg.url ? 'done' : 'local';
+  upsert(it); if (current === it){ fillDetail(); showTab(te ? 'te' : 'en'); }
+  if (online){
+    $('#saved').textContent = 'అనువదిస్తోంది… · Translating…';
+    try { const t = (await api('translate', {text: sh.poem, to: te ? 'en' : 'te'})).text || ''; if (t){ if (te) it.poem_en = t; else it.poem_te = t; } } catch(e){}
+    upsert(it); if (current === it) fillDetail();
+    await push(it); if (current === it) $('#saved').textContent = 'దాచాం · Saved';
+  }
+}
+$('#arrange').addEventListener('click', () => { if (current) arrange(current); });
 $('#make').addEventListener('click', () => {
   const wasOn = recOn;
   if (wasOn) stopRec();
@@ -555,8 +673,8 @@ $('#cSave').addEventListener('click', async () => {
   cfg = {url, code}; put(CFG, cfg);
   if (!url){ online = false; whereText(); m.textContent = 'లింక్ తీసేశాం. కవితలు ఈ ఫోన్‌లో మాత్రమే. · Link removed; poems stay on this phone only.'; m.classList.add('ok'); return; }
   m.textContent = 'పరీక్షిస్తోంది… · Testing…';
-  try { const p = await api('ping'); ai = !!p.ai; online = true;
-    m.textContent = 'పనిచేస్తోంది! · Connected. ' + (ai ? 'Poem writing is on.' : 'Translation is on; add ANTHROPIC_API_KEY in the script for poem writing.'); m.classList.add('ok'); sync(); }
+  try { const p = await api('ping'); ai = p.ai === true ? 'claude' : (p.ai || ''); online = true;
+    m.textContent = 'పనిచేస్తోంది! · Connected. ' + (ai === 'gemini' ? 'Gemini writes the poems.' : ai ? 'AI poem writing is on.' : 'Translation is on; poems are arranged from his own words. Add GEMINI_API_KEY in the script for AI poems.'); m.classList.add('ok'); sync(); }
   catch(e){ online = false; m.textContent = /access code/i.test(e.message) ? 'కోడ్ తప్పు · Wrong family code.' : e.message === 'offline' ? 'చేరలేకపోయాం. లింక్, ఇంటర్నెట్ చూడండి. · Could not reach the link; check it and the internet.' : 'సమస్య: ' + e.message; }
   whereText();
 });
